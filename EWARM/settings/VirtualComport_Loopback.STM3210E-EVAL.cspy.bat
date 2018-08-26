@@ -19,6 +19,6 @@
 @REM 
 
 
-"E:\Program x86\IAR Systems\Embedded Workbench 7.0\common\bin\cspybat" "E:\Program x86\IAR Systems\Embedded Workbench 7.0\arm\bin\armproc.dll" "E:\Program x86\IAR Systems\Embedded Workbench 7.0\arm\bin\armsim2.dll"  %1 --plugin "E:\Program x86\IAR Systems\Embedded Workbench 7.0\arm\bin\armbat.dll" --backend -B "--endian=little" "--cpu=ARM7TDMI" "--fpu=None" "--semihosting" "--multicore_nr_of_cores=1" 
+"E:\Program x86\IAR Systems\Embedded Workbench 7.0\common\bin\cspybat" "E:\Program x86\IAR Systems\Embedded Workbench 7.0\arm\bin\armproc.dll" "E:\Program x86\IAR Systems\Embedded Workbench 7.0\arm\bin\armjlink.dll"  %1 --plugin "E:\Program x86\IAR Systems\Embedded Workbench 7.0\arm\bin\armbat.dll" --device_macro "E:\Program x86\IAR Systems\Embedded Workbench 7.0\arm\config\debugger\ST\Trace_STM32F1xx.dmac" --flash_loader "E:\Program x86\IAR Systems\Embedded Workbench 7.0\arm\config\flashloader\ST\FlashSTM32F10xxE.board" --backend -B "--endian=little" "--cpu=Cortex-M3" "--fpu=None" "-p" "E:\Program x86\IAR Systems\Embedded Workbench 7.0\arm\CONFIG\debugger\ST\STM32F103xE.ddf" "--drv_verify_download" "--semihosting" "--device=STM32F103xE" "--drv_communication=USB0" "--jlink_speed=auto" "--jlink_initial_speed=1000" "--jlink_reset_strategy=0,0" "--drv_catch_exceptions=0x000" "--drv_swo_clock_setup=72000000,0,2000000" 
 
 

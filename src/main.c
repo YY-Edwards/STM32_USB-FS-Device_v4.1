@@ -41,6 +41,7 @@
 #include "usb_lib.h"
 #include "usb_desc.h"
 #include "usb_pwr.h"
+#include "delay.h"
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,13 +66,19 @@ uint32_t packet_receive=1;
 *******************************************************************************/
 int main(void)
 {
+  delay_init(72);//延时功能初始化
+  STM_EVAL_LEDInit(LED2);
   Set_System();
-  Set_USBClock();
-  USB_Interrupts_Config();
-  USB_Init();
+  Set_USBClock();// 配置 USB 时钟，也就是从 72M 的主频得到 48M 的 USB 时钟（1.5 分频）
+  USB_Interrupts_Config();// USB 唤醒中断和USB 低优先级数据处理中断
+  USB_Init();//用于初始化 USB，;
   
   while (1)
   {
+    STM_EVAL_LEDOn(LED2);   
+    delay_ms(500); 
+    STM_EVAL_LEDOff(LED2);   
+    delay_ms(500);
     if (bDeviceState == CONFIGURED)
     {
       CDC_Receive_DATA();

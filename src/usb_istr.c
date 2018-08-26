@@ -109,7 +109,7 @@ void USB_Istr(void)
   {
     /* servicing of the endpoint correct transfer interrupt */
     /* clear of the CTR flag into the sub */
-    CTR_LP();
+    CTR_LP();//处理中断，其中会处理USB收到来自Host的数据
 #ifdef CTR_CALLBACK
     CTR_Callback();
 #endif

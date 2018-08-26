@@ -182,7 +182,7 @@ void USB_LP_IRQHandler(void)
 void USB_LP_CAN1_RX0_IRQHandler(void)
 #endif
 {
-  USB_Istr();
+  USB_Istr();//处理 USB 发生的各种中断，
 }
 
 /*******************************************************************************
@@ -199,7 +199,7 @@ void USB_FS_WKUP_IRQHandler(void)
 void USBWakeUp_IRQHandler(void)
 #endif
 {
-  EXTI_ClearITPendingBit(EXTI_Line18);
+  EXTI_ClearITPendingBit(EXTI_Line18);//清除中断标志,低功耗用于唤醒设备的
 }
 
 /******************************************************************************/
