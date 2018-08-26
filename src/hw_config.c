@@ -140,14 +140,15 @@ void Set_System(void)
   
 #elif defined(STM32F10X_HD) || defined(STM32F10X_MD)  || defined(STM32F10X_XL)
   
+    /* Enable the USB disconnect GPIO clock */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIO_DISCONNECT, ENABLE);
+  
   /* USB_DISCONNECT used as USB pull-up */
   GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_PIN;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
   GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
   
-  /* Enable the USB disconnect GPIO clock */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIO_DISCONNECT, ENABLE);
   
 #else  /* defined(STM32F37X) || defined(STM32F303xC) */
   
@@ -268,7 +269,7 @@ NVIC_InitTypeDef NVIC_InitStructure;
 #else
   /* Enable the USB interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
@@ -302,11 +303,13 @@ void USB_Cable_Config (FunctionalState NewState)
 #else 
   if (NewState != DISABLE)
   {
-    GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
+    GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
+    //GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
   }
   else
   {
-    GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
+    GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
+    //GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
   }
 #endif
 }

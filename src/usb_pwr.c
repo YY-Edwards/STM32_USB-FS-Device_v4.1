@@ -74,7 +74,7 @@ RESULT PowerOn(void)
   
 #if !defined (USE_NUCLEO)
   /*** cable plugged-in ? ***/
-  USB_Cable_Config(ENABLE);
+  //USB_Cable_Config(ENABLE);
 #endif
 
   /*** CNTR_PWDN = 0 ***/
