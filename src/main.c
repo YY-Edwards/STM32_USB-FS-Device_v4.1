@@ -72,7 +72,6 @@ int main(void)
   Set_USBClock();// 配置 USB 时钟，也就是从 72M 的主频得到 48M 的 USB 时钟（1.5 分频）
   USB_Interrupts_Config();// USB 唤醒中断和USB 低优先级数据处理中断
   USB_Init();//用于初始化 USB，;
-  //USB_Cable_Config(ENABLE);
   while (1)
   {
     STM_EVAL_LEDOn(LED2);   

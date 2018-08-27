@@ -146,8 +146,14 @@ void Set_System(void)
   /* USB_DISCONNECT used as USB pull-up */
   GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_PIN;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;//GPIO_Mode_Out_OD,
+  //坑爹啊，这里评估板的开漏输出是可以的，因为外部通过三极管并接上拉电阻的
+  //一般来说，开漏是用来连接不同电平的器件，匹配电平用的，因为开漏引脚不连接外部的上拉电阻时，只能输出低电平，如果需要同时具备输出高电平的功能，则需要接上拉电阻，很好的一个优点是通过改变上拉电源的电压，便可以改变传输电平。
+  //比如加上上拉电阻就可以提供TTL/CMOS电平输出等.
+  //但自己的开发板得用推挽输出啊。通过软件控制PG11的高低电平输出，以让PC识别。
   GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
+  
+  GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
   
   
 #else  /* defined(STM32F37X) || defined(STM32F303xC) */
@@ -303,8 +309,8 @@ void USB_Cable_Config (FunctionalState NewState)
 #else 
   if (NewState != DISABLE)
   {
-    GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
-    //GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
+    GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);//针对神州3号开发板
+    //GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);//此处置高还是置低根据的是评估板的设计
   }
   else
   {
