@@ -187,7 +187,7 @@ void Virtual_Com_Port_Reset(void)
   SetEPRxStatus(ENDP2, EP_RX_DIS);
   SetEPTxStatus(ENDP2, EP_TX_NAK);
 
-  /* Initialize Endpoint 3 */
+  /* Initialize Endpoint 3 *///这里可以将USB更改为双缓冲接收模式
   SetEPType(ENDP3, EP_BULK);
   SetEPRxAddr(ENDP3, ENDP3_RXADDR);
   SetEPRxCount(ENDP3, VIRTUAL_COM_PORT_DATA_SIZE);
@@ -215,6 +215,7 @@ void Virtual_Com_Port_SetConfiguration(void)
   {
     /* Device configured */
     bDeviceState = CONFIGURED;
+    STM_EVAL_LEDOff(LED2); 
   }
 }
 

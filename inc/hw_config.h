@@ -62,6 +62,7 @@ void USB_Interrupts_Config(void);
 void USB_Cable_Config (FunctionalState NewState);
 void Get_SerialNum(void);
 void LCD_Control(void);
+void TIM3_Int_Init(u16 arr,u16 psc);
 uint32_t CDC_Send_DATA (uint8_t *ptrBuffer, uint8_t Send_length);
 uint32_t CDC_Receive_DATA(void);
 /* External variables --------------------------------------------------------*/

@@ -68,7 +68,7 @@ uint32_t Receive_length;
 
 void EP1_IN_Callback (void)
 {
-  packet_sent = 1;
+  packet_sent = 1;//发送成功的标志
 }
 
 /*******************************************************************************
@@ -81,7 +81,8 @@ void EP1_IN_Callback (void)
 void EP3_OUT_Callback(void)
 {
   packet_receive = 1;
-  Receive_length = GetEPRxCount(ENDP3);
+  Receive_length = GetEPRxCount(ENDP3);//获取接收PC端发送的数据长度
+  //将接收到的数据从PMA区域取出放到自定义缓冲区
   PMAToUserBufferCopy((unsigned char*)Receive_Buffer, ENDP3_RXADDR, Receive_length);
 }
 

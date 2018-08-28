@@ -239,4 +239,15 @@ void USB_Istr(void)
 } /* USB_Istr */
 
 
+
+void CTR_Callback(void)
+{
+
+  STM_EVAL_LEDToggle(LED1);  
+  STM_EVAL_LEDToggle(LED1);
+}
+
+
+
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

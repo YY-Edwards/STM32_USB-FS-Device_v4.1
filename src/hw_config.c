@@ -73,72 +73,24 @@ extern LINE_CODING linecoding;
 void Set_System(void)
 {
   GPIO_InitTypeDef  GPIO_InitStructure;  
-  /*!< At this stage the microcontroller clock setting is already configured, 
-       this is done through SystemInit() function which is called from startup
-       file (startup_stm32xxx.s) before to branch to application main.
-       To reconfigure the default setting of SystemInit() function, refer to
-       system_stm32xxx.c file
-     */ 
-  
-#if defined(STM32L1XX_MD) || defined(STM32L1XX_HD) || defined(STM32F37X) || defined(STM32F303xC) || defined(STM32F303xE) || defined(STM32F302x8)
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-
-#else /* defined(STM32F10X_HD) || defined(STM32F10X_MD) defined(STM32F10X_XL)*/
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-#endif
-  
+
   /********************************************/
   /*  Configure USB DM/DP pins                */
   /********************************************/
-  
-#if defined(STM32L1XX_MD) || defined(STM32L1XX_HD)
-  
-  /* Configure USB DM/DP pin. This is optional, and maintained only for user guidance.
-  For the STM32L products there is no need to configure the PA12/PA11 pins couple 
-  as Alternate Function */
-  
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
-  
-#elif defined(STM32F10X_HD) || defined(STM32F10X_MD)  || defined(STM32F10X_XL)
+
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
   
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  
   /* Enable all GPIOs Clock*/
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_ALLGPIO, ENABLE);
 
-#else /* defined(STM32F37X) || defined(STM32F303xC) */
-  
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-    
-  /*SET PA11,12 for USB: USB_DM,DP*/
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_14);
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource12, GPIO_AF_14);
-  
-#endif 
-
-#if ! defined(USE_NUCLEO)  
-  /********************************************/
-  /* Enable the USB PULL UP                   */
-  /********************************************/
-#if defined(STM32L1XX_MD) || defined(STM32L1XX_HD)
-  
-  /* Enable integrated STM32L15xx internal pull up 
-  Enable the SYSCFG module clock*/
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-  
-#elif defined(STM32F10X_HD) || defined(STM32F10X_MD)  || defined(STM32F10X_XL)
   
     /* Enable the USB disconnect GPIO clock */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIO_DISCONNECT, ENABLE);
@@ -156,21 +108,6 @@ void Set_System(void)
   GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
   
   
-#else  /* defined(STM32F37X) || defined(STM32F303xC) */
-  
-  /* Enable the USB disconnect GPIO clock */
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIO_DISCONNECT, ENABLE);
-
-  /* USB_DISCONNECT used as USB pull-up */
-  GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_PIN;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
-  
-#endif
-#endif /* USE_NUCLEO */    
 #ifdef USB_LOW_PWR_MGMT_SUPPORT
   
   /**********************************************************************/
@@ -239,40 +176,11 @@ void Leave_LowPowerMode(void)
 *******************************************************************************/
 void USB_Interrupts_Config(void)
 {
-NVIC_InitTypeDef NVIC_InitStructure;
+  NVIC_InitTypeDef NVIC_InitStructure;
 
   /* 2 bit for pre-emption priority, 2 bits for subpriority */
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
  
-#if defined(STM32L1XX_MD)|| defined(STM32L1XX_HD) || defined(STM32L1XX_MD_PLUS)
-  /* Enable the USB interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = USB_LP_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-
-  /* Enable the USB Wake-up interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = USB_FS_WKUP_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-
-#elif defined(STM32F37X)
-  /* Enable the USB interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = USB_LP_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-  
-  /* Enable the USB Wake-up interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = USBWakeUp_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-  
-#else
   /* Enable the USB interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
@@ -283,9 +191,41 @@ NVIC_InitTypeDef NVIC_InitStructure;
   /* Enable the USB Wake-up interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = USBWakeUp_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_Init(&NVIC_InitStructure);   
-#endif
+  NVIC_Init(&NVIC_InitStructure); 
+ 
 }
+
+
+
+//通用定时器 3 中断初始化
+//这里时钟选择为 APB1 的 2 倍，而 APB1 为 36M
+//arr：自动重装值。
+//psc：时钟预分频数
+//这里使用的是定时器 3!
+void TIM3_Int_Init(u16 arr,u16 psc)
+{
+  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+  NVIC_InitTypeDef NVIC_InitStructure;
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE); //①时钟 TIM3 使能
+  //定时器 TIM3 初始化
+  TIM_TimeBaseStructure.TIM_Period = arr; //设置自动重装载寄存器周期的值
+  TIM_TimeBaseStructure.TIM_Prescaler =psc; //设置时钟频率除数的预分频值
+  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1; //设置时钟分割
+  
+  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; //TIM 向上计数
+  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure); //②初始化 TIM3
+  TIM_ITConfig(TIM3,TIM_IT_Update,ENABLE ); //③允许更新中断
+  //中断优先级 NVIC 设置
+  NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn; //TIM3 中断
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0; //先占优先级 0 级
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1; //从优先级 1级
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
+  NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
+  
+  //TIM_Cmd(TIM3, ENABLE); //⑤使能 TIM3
+  
+}
+
 
 #if !defined (USE_NUCLEO)
 /*******************************************************************************
@@ -389,8 +329,8 @@ uint32_t CDC_Send_DATA (uint8_t *ptrBuffer, uint8_t Send_length)
     packet_sent = 0;
     /* send  packet to PMA*/
     UserToPMABufferCopy((unsigned char*)ptrBuffer, ENDP1_TXADDR, Send_length);
-    SetEPTxCount(ENDP1, Send_length);
-    SetEPTxValid(ENDP1);
+    SetEPTxCount(ENDP1, Send_length);//从端点1发送Send_length字节数据
+    SetEPTxValid(ENDP1);//使能端点1的发送状态
   }
   else
   {
@@ -410,7 +350,7 @@ uint32_t CDC_Receive_DATA(void)
 { 
   /*Receive flag*/
   packet_receive = 0;
-  SetEPRxValid(ENDP3); 
+  SetEPRxValid(ENDP3); //重新设置端点接收状态有效，因为当接收数据后，端点就会被关闭.
   return 1 ;
 }
 
