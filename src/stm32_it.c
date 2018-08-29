@@ -43,6 +43,7 @@
 #include "usb_lib.h"
 #include "usb_istr.h"
 #include "usb_pwr.h"
+#include <string.h>
 static int check_count = 0;  
 static unsigned char PTT_Sta = 1;//默认高电平
 extern __IO uint32_t packet_sent;  
@@ -246,7 +247,15 @@ void TIM3_IRQHandler(void)
       if (packet_sent == 1)
       {
           unsigned char temp_send = PTT_Sta;
-          CDC_Send_DATA ((unsigned char*)&temp_send,sizeof(temp_send));
+          FootPtt_Pro_t send_pro;
+          memset((void*)&send_pro, 0x00, sizeof(FootPtt_Pro_t));
+          send_pro.header       = PRO_HEADER;
+          send_pro.opcode       = PRO_OPCODE_PTT;
+          send_pro.length       = 0x01;
+          send_pro.payload      = temp_send;
+          send_pro.checksum     = (send_pro.opcode + send_pro.length + send_pro.payload);
+          send_pro.end          = PRO_END;           
+          CDC_Send_DATA ((unsigned char*)&send_pro,sizeof(FootPtt_Pro_t));
       }
     
     }

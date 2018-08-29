@@ -48,6 +48,23 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported define -----------------------------------------------------------*/
+#pragma pack(1)
+typedef struct{
+
+  unsigned char         header;
+  unsigned short        opcode;
+  unsigned char         length;
+  unsigned char         payload;
+  unsigned short        checksum;
+  unsigned char         end;
+
+}FootPtt_Pro_t;
+#pragma pack()
+
+#define PRO_HEADER      0x7C
+#define PRO_END         0x03
+#define PRO_OPCODE_PTT  0xB001
+
 #define MASS_MEMORY_START     0x04002000
 #define BULK_MAX_PACKET_SIZE  0x00000040
 #define LED_ON                0xF0
