@@ -80,7 +80,7 @@ int main(void)
   USB_Interrupts_Config();// USB 唤醒中断和USB 低优先级数据处理中断
   USB_Init();//用于初始化 USB，;
   
-  TIM3_Int_Init(7999,7199); //10Khz 的计数频率，计数到 800 为 80ms
+  TIM3_Int_Init(999,7199); //10Khz 的计数频率，计数到 1000 为 100ms
                         //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
   while (1)
   {
