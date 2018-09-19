@@ -45,7 +45,7 @@
         </option>
         <option>
           <name>MemFile</name>
-          <state>$TOOLKIT_DIR$\CONFIG\debugger\ST\STM32F103xE.ddf</state>
+          <state>$TOOLKIT_DIR$\config\debugger\ST\STM32F103xB.ddf</state>
         </option>
         <option>
           <name>RunToEnable</name>
@@ -117,7 +117,7 @@
         </option>
         <option>
           <name>FlashLoadersV3</name>
-          <state>$TOOLKIT_DIR$\config\flashloader\ST\FlashSTM32F10xxE.board</state>
+          <state>$TOOLKIT_DIR$\config\flashloader\ST\FlashSTM32F10xxB.board</state>
         </option>
         <option>
           <name>OCImagesSuppressCheck1</name>
@@ -1001,7 +1001,7 @@
         <option>
           <name>CEmuCommPort</name>
           <version>0</version>
-          <state>0</state>
+          <state>4</state>
         </option>
         <option>
           <name>jtago</name>
@@ -1068,7 +1068,7 @@
         </option>
         <option>
           <name>CCPEMicroJtagSpeed</name>
-          <state>#UNINITIALIZED#</state>
+          <state>5000</state>
         </option>
         <option>
           <name>CCJPEMicroShowSettings</name>
@@ -1490,7 +1490,7 @@
         </option>
         <option>
           <name>MemFile</name>
-          <state></state>
+          <state>$TOOLKIT_DIR$\CONFIG\debugger\ST\STM32F103xB.ddf</state>
         </option>
         <option>
           <name>RunToEnable</name>
@@ -1530,11 +1530,11 @@
         </option>
         <option>
           <name>OCDynDriverList</name>
-          <state>ARMSIM_ID</state>
+          <state>JLINK_ID</state>
         </option>
         <option>
           <name>OCLastSavedByProductVersion</name>
-          <state></state>
+          <state>7.10.1.6733</state>
         </option>
         <option>
           <name>OCDownloadAttachToProgram</name>
@@ -1562,7 +1562,7 @@
         </option>
         <option>
           <name>FlashLoadersV3</name>
-          <state></state>
+          <state>$TOOLKIT_DIR$\config\flashloader\ST\FlashSTM32F10xxB.board</state>
         </option>
         <option>
           <name>OCImagesSuppressCheck1</name>
@@ -2280,7 +2280,7 @@
         <option>
           <name>CCJLinkResetList</name>
           <version>6</version>
-          <state>5</state>
+          <state>7</state>
         </option>
         <option>
           <name>CCJLinkInterfaceCmdLine</name>

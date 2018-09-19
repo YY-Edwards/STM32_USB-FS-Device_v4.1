@@ -68,11 +68,11 @@ uint32_t packet_receive=1;
 int main(void)
 {
   delay_init(72);//延时功能初始化
-  SysTick_Config(SYSTEM_CLOCK / 500);//2ms
-  STM_EVAL_LEDInit(LED2);
+  //SysTick_Config(SYSTEM_CLOCK / 500);//2ms
+  STM_EVAL_LEDInit(LED2);//根据原理图，修改函数里的LED宏定义即可
   STM_EVAL_LEDInit(LED1);
   
-  STM_EVAL_LEDOn(LED2);
+  STM_EVAL_LEDOn(LED2);//高电平，点亮
   STM_EVAL_LEDOn(LED1);
   
   Set_System();
@@ -80,13 +80,21 @@ int main(void)
   USB_Interrupts_Config();// USB 唤醒中断和USB 低优先级数据处理中断
   USB_Init();//用于初始化 USB，;
   
+  TIM2_Int_Init(20, 7199);//2ms
   TIM3_Int_Init(999,7199); //10Khz 的计数频率，计数到 1000 为 100ms
                         //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
+  unsigned int run_counts = 0;
+  unsigned char timer3_run_flag = 0;
   while (1)
   {
     if (bDeviceState == CONFIGURED)
     {
-      TIM_Cmd(TIM3, ENABLE);//启动定时器3
+      run_counts++;
+      if(timer3_run_flag == 0)
+      {
+        TIM_Cmd(TIM3, ENABLE);//启动定时器3
+        timer3_run_flag = 1;
+      }
       CDC_Receive_DATA();
       /*Check to see if we have data yet */
       if (Receive_length  != 0)
@@ -95,13 +103,16 @@ int main(void)
 //          CDC_Send_DATA ((unsigned char*)Receive_Buffer,Receive_length);
        Receive_length = 0;
       }
+      if(run_counts == 60000)
+      {
+        STM_EVAL_LEDToggle(LED2);
+        run_counts = 0;
+      }
     }
     else
     {
-//      STM_EVAL_LEDOn(LED1);   
-//      delay_ms(100); 
-//      STM_EVAL_LEDOff(LED1);   
-//      delay_ms(100);
+      STM_EVAL_LEDToggle(LED1);   
+      delay_ms(100); 
     }
   }
 } 

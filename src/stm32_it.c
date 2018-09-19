@@ -169,32 +169,37 @@ void PendSV_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
+
 void SysTick_Handler(void)
 {
-  check_count++;
-  if(check_count >= 8)
-  {
-    check_count =0;
-    static u8 Keybuf1 = 0xff;
-    
-    //PA8,调试用PA8
-    Keybuf1 = ( ( Keybuf1 << 1 ) | GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_8) );//缓存区左移1位，并将当前值移入最低位
-
-    if ( 0x00 == Keybuf1 )//连续8次扫描都为0，即16毫秒内都检测到按下状态，即认为按键按下
-    {
-      PTT_Sta = 0;
-    }
-    else if ( 0xff == Keybuf1 )//按键弹起
-    {
-      PTT_Sta = 1;
-    }
-    else//其它情况则说明按键状态尚未稳定，则不对 KeySta 变量值进行更新
-    //Key1Sta = 1;//default value 
-    {
-    }
-    
-  } 
 }
+
+//void SysTick_Handler(void)
+//{
+//  check_count++;
+//  if(check_count >= 8)
+//  {
+//    check_count =0;
+//    static u8 Keybuf1 = 0xff;
+////    
+////    //PA8,调试用PA8
+////    Keybuf1 = ( ( Keybuf1 << 1 ) | GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) );//缓存区左移1位，并将当前值移入最低位
+////
+////    if ( 0x00 == Keybuf1 )//连续8次扫描都为0，即16毫秒内都检测到按下状态，即认为按键按下
+////    {
+////      PTT_Sta = 0;
+////    }
+////    else if ( 0xff == Keybuf1 )//按键弹起
+////    {
+////      PTT_Sta = 1;
+////    }
+////    else//其它情况则说明按键状态尚未稳定，则不对 KeySta 变量值进行更新
+////    //Key1Sta = 1;//default value 
+////    {
+////    }
+//    
+//  } 
+//}
 
 /*******************************************************************************
 * Function Name  : USB_IRQHandler
@@ -231,6 +236,39 @@ void USBWakeUp_IRQHandler(void)
 }
 
 
+void TIM2_IRQHandler(void)
+{
+
+  if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
+  {
+     check_count++;
+     if(check_count >= 8)
+    {
+      check_count =0;
+      static u8 Keybuf1 = 0xff;
+      
+      //PA3
+      Keybuf1 = ( ( Keybuf1 << 1 ) | GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) );//缓存区左移1位，并将当前值移入最低位
+
+      if ( 0x00 == Keybuf1 )//连续8次扫描都为0，即16毫秒内都检测到按下状态，即认为按键按下
+      {
+        PTT_Sta = 0;
+      }
+      else if ( 0xff == Keybuf1 )//按键弹起
+      {
+        PTT_Sta = 1;
+      }
+      else//其它情况则说明按键状态尚未稳定，则不对 KeySta 变量值进行更新
+      //Key1Sta = 1;//default value 
+      {
+      }
+      
+    } 
+
+    TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+  }
+
+}
 
 /**
   * @brief  This function handles TIM3 global interrupt request.

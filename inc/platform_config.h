@@ -98,18 +98,18 @@
 
 /* Define the STM32F10x hardware depending on the used evaluation board */
 #ifdef USE_STM3210B_EVAL
-  #define USB_DISCONNECT                      GPIOD  
-  #define USB_DISCONNECT_PIN                  GPIO_Pin_9
-  #define RCC_APB2Periph_GPIO_DISCONNECT      RCC_APB2Periph_GPIOD
+  #define USB_DISCONNECT                      GPIOA  
+  #define USB_DISCONNECT_PIN                  GPIO_Pin_1
+  #define RCC_APB2Periph_GPIO_DISCONNECT      RCC_APB2Periph_GPIOA
   #define RCC_APB2Periph_ALLGPIO              (RCC_APB2Periph_GPIOA \
                                                | RCC_APB2Periph_GPIOB \
                                                | RCC_APB2Periph_GPIOC \
                                                | RCC_APB2Periph_GPIOD \
                                                | RCC_APB2Periph_GPIOE )
 #elif defined (USE_STM3210E_EVAL)
-  #define USB_DISCONNECT                      GPIOG  
-  #define USB_DISCONNECT_PIN                  GPIO_Pin_11
-  #define RCC_APB2Periph_GPIO_DISCONNECT      RCC_APB2Periph_GPIOG
+  #define USB_DISCONNECT                      GPIOA  
+  #define USB_DISCONNECT_PIN                  GPIO_Pin_1
+  #define RCC_APB2Periph_GPIO_DISCONNECT      RCC_APB2Periph_GPIOA
   #define RCC_APB2Periph_ALLGPIO              (RCC_APB2Periph_GPIOA \
                                                | RCC_APB2Periph_GPIOB \
                                                | RCC_APB2Periph_GPIOC \
