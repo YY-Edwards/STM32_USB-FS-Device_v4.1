@@ -50,12 +50,12 @@ const uint8_t Virtual_Com_Port_DeviceDescriptor[] =
     0x02,   /* bDeviceSubClass */
     0x02,   /* bDeviceProtocol */
     0x40,   /* bMaxPacketSize0 */
-    0x73,
-    0x19,   /* idVendor = 0x1973 *///可以用于区别不同的USB设备
-    0x18,
-    0x20,   /* idProduct = 0x2018 */
+    0x72,
+    0x12,   /* idVendor = 0x1272 *///可以用于区别不同的USB设备
+    0x04,
+    0x80,   /* idProduct = 0x8004 */
     0x00,
-    0x02,   /* bcdDevice = 2.00 */
+    0x01,   /* bcdDevice = 1.00 */
     1,              /* Index of string descriptor describing manufacturer */
     2,              /* Index of string descriptor describing product */
     3,              /* Index of string descriptor describing the device's serial number */
