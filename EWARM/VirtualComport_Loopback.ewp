@@ -313,6 +313,10 @@
           <state>$PROJ_DIR$\..\..\..\Utilities\STM32_EVAL\Common</state>
           <state>$PROJ_DIR$\..\..\..\Utilities\STM32_EVAL\STM3210E_EVAL</state>
           <state>$PROJ_DIR$\..\mylib</state>
+          <state>$PROJ_DIR$\..\mylib\SMBus\IIC</state>
+          <state>$PROJ_DIR$\..\mylib\SYS</state>
+          <state>$PROJ_DIR$\..\mylib\SMBus</state>
+          <state>$PROJ_DIR$\..\mylib\SMBus\LTC4015</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -8851,6 +8855,51 @@
     <name>User</name>
     <group>
       <name>mylib</name>
+      <group>
+        <name>SMBus</name>
+        <group>
+          <name>IIC</name>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\SMBus\IIC\myiic.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\SMBus\IIC\myiic.h</name>
+          </file>
+        </group>
+        <group>
+          <name>LTC4015</name>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\LTC4015.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\LTC4015.h</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\LTC4015_formats.h</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\LTC4015_reg_defs.h</name>
+          </file>
+        </group>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\SMBus\SMBus.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\SMBus\SMBus.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\SMBus\Typedefs.h</name>
+        </file>
+      </group>
+      <group>
+        <name>SYS</name>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\SYS\sys.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\SYS\sys.h</name>
+        </file>
+      </group>
       <file>
         <name>$PROJ_DIR$\..\mylib\delay.c</name>
       </file>

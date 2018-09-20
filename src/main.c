@@ -42,6 +42,7 @@
 #include "usb_desc.h"
 #include "usb_pwr.h"
 #include "delay.h"
+#include "SMBus.h"
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -83,6 +84,9 @@ int main(void)
   TIM2_Int_Init(20, 7199);//2ms
   TIM3_Int_Init(999,7199); //10Khz 的计数频率，计数到 1000 为 100ms
                         //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
+  
+  SMBus_Init();
+  
   unsigned int run_counts = 0;
   unsigned char timer3_run_flag = 0;
   while (1)
