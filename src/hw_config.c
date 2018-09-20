@@ -83,11 +83,6 @@ void Set_System(void)
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
-  
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  
   /* Enable all GPIOs Clock*/
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_ALLGPIO, ENABLE);
 
@@ -105,7 +100,9 @@ void Set_System(void)
   //但自己的开发板得用推挽输出啊。通过软件控制PG11的高低电平输出，以让PC识别。
   GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
   
-  GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
+  GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);//先拉低，等初始化完成后再拉高，
+                                                    //以便主机识别后再发送请求，
+                                                    //这样MCU才可正常响应。
   
   
 #ifdef USB_LOW_PWR_MGMT_SUPPORT
@@ -273,7 +270,8 @@ void USB_Cable_Config (FunctionalState NewState)
 #else 
   if (NewState != DISABLE)
   {
-    GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);//针对神州3号开发板
+    GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);//针对神州3号开发板，此处设备初始化完成，拉高
+                                                      //让主机可以正常识别
     //GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);//此处置高还是置低根据的是评估板的设计
   }
   else

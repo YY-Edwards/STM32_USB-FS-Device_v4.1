@@ -70,10 +70,10 @@ int main(void)
   delay_init(72);//延时功能初始化
   //SysTick_Config(SYSTEM_CLOCK / 500);//2ms
   STM_EVAL_LEDInit(LED2);//根据原理图，修改函数里的LED宏定义即可
-  STM_EVAL_LEDInit(LED1);
+  STM_EVAL_LEDInit(LED3);
   
   STM_EVAL_LEDOn(LED2);//高电平，点亮
-  STM_EVAL_LEDOn(LED1);
+  STM_EVAL_LEDOn(LED3);
   
   Set_System();
   Set_USBClock();// 配置 USB 时钟，也就是从 72M 的主频得到 48M 的 USB 时钟（1.5 分频）
@@ -111,7 +111,7 @@ int main(void)
     }
     else
     {
-      STM_EVAL_LEDToggle(LED1);   
+      STM_EVAL_LEDToggle(LED3);   
       delay_ms(100); 
     }
   }
