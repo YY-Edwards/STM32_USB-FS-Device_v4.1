@@ -2,7 +2,7 @@
 
 <project>
   <fileVersion>2</fileVersion>
-  <fileChecksum>401985124</fileChecksum>
+  <fileChecksum>4167324727</fileChecksum>
   <configuration>
     <name>STM3210B-EVAL</name>
     <outputs>
@@ -1282,6 +1282,9 @@
       <file>$PROJ_DIR$\STM3210E-EVAL\Obj\myiic.o</file>
       <file>$PROJ_DIR$\..\mylib\SYS\sys.h</file>
       <file>$PROJ_DIR$\..\mylib\SYS\sys.c</file>
+      <file>$PROJ_DIR$\STM3210E-EVAL\Obj\stm32f10x_adc.o</file>
+      <file>$PROJ_DIR$\STM3210E-EVAL\Obj\stm32f10x_adc.pbi</file>
+      <file>$PROJ_DIR$\..\..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_adc.c</file>
       <file>$PROJ_DIR$\STM3210E-EVAL\Obj\LTC4015.o</file>
       <file>$PROJ_DIR$\STM3210E-EVAL\Obj\LTC4015.pbi</file>
       <file>$PROJ_DIR$\..\mylib\SMBus\Typedefs.h</file>
@@ -1309,6 +1312,10 @@
         </tool>
       </outputs>
       <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 169 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 119 77 67 59 71</file>
+        </tool>
         <tool>
           <name>ICCARM</name>
           <file> 169 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 119 77 67 59 71</file>
@@ -1730,11 +1737,11 @@
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 70 166 171 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 130 112 68 122 73 129 104 66 69 152 61 110 115 63</file>
+          <file> 70 166 171 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 130 112 68 122 73 129 104 66 69 152 61 110 115 63 222 216 215 214 223 120 228 217</file>
         </tool>
         <tool>
           <name>ICCARM</name>
-          <file> 70 166 171 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 130 112 68 122 73 129 104 66 69 152 61 110 115 63 222 216 215 214 223 120</file>
+          <file> 70 166 171 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 130 112 68 122 73 129 104 66 69 152 61 110 115 63 222 216 215 214 223 120 228 217</file>
         </tool>
       </inputs>
     </file>
@@ -1979,7 +1986,7 @@
       <inputs>
         <tool>
           <name>ILINK</name>
-          <file> 210 135 177 143 172 227 184 155 200 189 204 201 187 192 158 156 180 179 207 149 212 182 188 137 144 147 176 139 146 185 196 195 153 132 111 121 65</file>
+          <file> 210 135 177 233 143 172 227 219 184 155 200 230 189 204 201 187 192 158 156 180 179 207 149 212 182 188 137 144 147 176 139 146 185 196 195 153 132 111 121 65</file>
         </tool>
       </inputs>
     </file>
@@ -1988,11 +1995,11 @@
       <outputs>
         <tool>
           <name>BICOMP</name>
-          <file> 231</file>
+          <file> 234</file>
         </tool>
         <tool>
           <name>ICCARM</name>
-          <file> 230</file>
+          <file> 233</file>
         </tool>
       </outputs>
       <inputs>
@@ -2021,11 +2028,11 @@
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 233 228 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 217 63</file>
+          <file> 236 228 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 217 63</file>
         </tool>
         <tool>
           <name>ICCARM</name>
-          <file> 233 228 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 217 63</file>
+          <file> 236 228 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 217 63</file>
         </tool>
       </inputs>
     </file>
@@ -2036,15 +2043,19 @@
           <name>BICOMP</name>
           <file> 218</file>
         </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 219</file>
+        </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 232 217 125 118 74 124 150 72 165 60 233 228 62 154 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 222 216 215 214 223 120</file>
+          <file> 235 217 125 118 74 124 150 72 165 60 236 228 62 154 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 222 216 215 214 223 120</file>
         </tool>
         <tool>
           <name>ICCARM</name>
-          <file> 232 217 125 118 74 124 150 72 165 60 233 228 62 154 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 222 216 215 214 223 120</file>
+          <file> 235 217 125 118 74 124 150 72 165 60 236 228 62 154 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71 222 216 215 214 223 120</file>
         </tool>
       </inputs>
     </file>
@@ -2087,6 +2098,29 @@
         <tool>
           <name>ICCARM</name>
           <file> 228 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 131 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_adc.c</name>
+      <outputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 231</file>
+        </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 230</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 131 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71</file>
+        </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 131 62 154 125 118 74 124 150 72 165 60 128 167 105 103 109 78 136 127 114 134 133 126 162 108 168 64 116 117 123 106 113 169 119 77 67 59 71</file>
         </tool>
       </inputs>
     </file>
@@ -2267,16 +2301,8 @@
       <tool>ICCARM</tool>
     </forcedrebuild>
     <forcedrebuild>
-      <name>$PROJ_DIR$\..\mylib\SMBus\SMBus.c</name>
-      <tool>ICCARM</tool>
-    </forcedrebuild>
-    <forcedrebuild>
       <name>$PROJ_DIR$\..\mylib\IIC\myiic.c</name>
       <tool>ICCARM</tool>
-    </forcedrebuild>
-    <forcedrebuild>
-      <name>[MULTI_TOOL]</name>
-      <tool>ILINK</tool>
     </forcedrebuild>
   </configuration>
   <configuration>

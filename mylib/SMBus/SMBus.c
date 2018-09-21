@@ -159,6 +159,71 @@ int SMBus_ARA_Read(uint8_t *addr,                           //!< Memory location
   return !result; // LTC driver expects 0 = good, where i2c driver returns True for success.
 }
 
+
+void CAT5140_Read_Handle(uint8_t addr,  uint8_t command_code,  uint8_t *data)
+{
+   uint8_t temp_buffer[2];
+  int8_t result = true;
+
+  temp_buffer[0] = addr << 1;           // Write the command code address first.
+  temp_buffer[1] = command_code;
+  IIC_Start(CAT5140_IIC);
+  if (result) result &= IIC_Write_Nbytes(CAT5140_IIC, temp_buffer, sizeof(temp_buffer));
+  IIC_Start(CAT5140_IIC);
+  temp_buffer[0] |= 1;                  // Now read the data for that command code.
+  if (result) result &= IIC_Write_Nbytes(CAT5140_IIC, temp_buffer, sizeof(*temp_buffer));
+  if (result) result &= IIC_Read_Nbytes(CAT5140_IIC, temp_buffer, 1);
+  IIC_Stop(CAT5140_IIC);
+  if (result)
+  {
+    *data = temp_buffer[0];
+  }
+
+}
+                     
+void CAT5140_Write_Handle(uint8_t addr,  uint8_t command_code,  uint8_t data)
+{
+  uint8_t temp_buffer[3];
+  int8_t result =true;
+
+  temp_buffer[0] = addr << 1;           // Write the command code address first and data for that command code.
+  temp_buffer[1] = command_code;
+  temp_buffer[2] = data;
+  IIC_Start(CAT5140_IIC);
+  if (result) result &= IIC_Write_Nbytes(CAT5140_IIC, temp_buffer, sizeof(temp_buffer));
+  IIC_Stop(LTC4015_IIC);
+
+}
+
+void CAT5140_Optional_Handle()
+{
+  uint8_t value = 0;
+  //MakeCAT5140Permanent();
+  CAT5140_Write_Handle(CAT5140Addr, CAT5140Register0, value);
+  //MakeCAT5140Volatile();
+
+}
+uint8_t Get_CAT5140_ID(void)
+{
+
+  uint8_t dev_id =0;
+  
+  CAT5140_Read_Handle(CAT5140Addr, CAT5140Register1, &dev_id);
+  
+  return dev_id;
+
+}
+
+void MakeCAT5140Permanent(void)
+{
+  CAT5140_Write_Handle(CAT5140Addr, CAT5140Register8, SetCAT5140Permanent);
+}
+void MakeCAT5140Volatile(void)
+{
+  CAT5140_Write_Handle(CAT5140Addr, CAT5140Register8, SetCAT5140Volatile);
+}
+
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Local Functions
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

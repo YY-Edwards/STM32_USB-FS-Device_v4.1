@@ -43,22 +43,211 @@
 #include "usb_pwr.h"
 #include "delay.h"
 #include "SMBus.h"
+#include "sys.h"
+#include "stdbool.h"
 
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #define SYSTEM_CLOCK 72000000
+#define DR_ADDRESS                  ((uint32_t)0x4001244C) //ADC1 DR寄存器基地址
+#define TP1_OUT_PIN                  PAout(2)   
+#define TP2_IN_PIN                   PAin(3)  
+#define SMBALERT_IN_PIN              PAin(4)
+#define U5NWP_OUT_PIN                PAout(5) 
+#define NEQ_OUT_PIN                  PAout(6) 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+bool ltc4015_powered = false;
+uint8_t Send_Buffer[64];
+uint32_t packet_sent=1;
+uint32_t packet_receive=1;
+__IO uint16_t ADCConvertedValue;     // ADC为12位模数转换器，只有ADCConvertedValue的低12位有效
 /* Extern variables ----------------------------------------------------------*/
 extern __IO uint8_t Receive_Buffer[64];
 extern __IO  uint32_t Receive_length ;
 extern __IO  uint32_t length ;
-uint8_t Send_Buffer[64];
-uint32_t packet_sent=1;
-uint32_t packet_receive=1;
 /* Private function prototypes -----------------------------------------------*/
+void DC2039A_Config_Init(void);
+void DC2039A_Run(void);
+void DC2039A_Interface_Init(void);
+void ADC_GPIO_Configuration(void);
+uint16_t STM32_ADC_Read(void);
+
 /* Private functions ---------------------------------------------------------*/
+uint16_t STM32_ADC_Read(void)
+{
+  u16 ADCConvertedValueLocal, Precent = 0, Voltage = 0;
+  
+  ADCConvertedValueLocal = ADCConvertedValue;
+  Precent = (ADCConvertedValueLocal*100/0x1000);	//算出百分比
+  Voltage = Precent*33;				        // 3.3V的电平，计算等效电平
+
+  return Voltage;
+}
+
+void DC2039A_Interface_Init(void)
+{
+    GPIO_InitTypeDef  GPIO_InitStructure;  
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIO_TEST_TP, ENABLE);
+
+    /********************************************/
+    /*  Configure TP1、TP2、nSMBALLERT、CAT5140_NWP、*/
+    /********************************************/
+
+    GPIO_InitStructure.GPIO_Pin = TEST_TP1_PIN | CAT5140_NWP_PIN | NEQ_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_Init(TEST_TP, &GPIO_InitStructure);
+    
+    GPIO_InitStructure.GPIO_Pin = nSMBALLERT_PIN | TEST_TP2_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_Init(TEST_TP, &GPIO_InitStructure);
+    
+    NEQ_OUT_PIN = 0;//EQ SET：0
+    
+    U5NWP_OUT_PIN = 1;//close write protect
+    
+    ADC_GPIO_Configuration();//EQ_ADC接口配置  
+    
+    SMBus_Init();//新增SMBus接口，与IIC相比，ACK,NACK的机制要求更强
+    
+    uint8_t cat5140_id = Get_CAT5140_ID();
+  
+}
+void ADC_GPIO_Configuration(void)
+{
+   /* Config ADC-PC0 connect LTC4015-INT_VCC */
+    
+      /*!< At this stage the microcontroller clock setting is already configured, 
+       this is done through SystemInit() function which is called from startup
+       file (startup_stm32f10x_xx.s) before to branch to application main.
+       To reconfigure the default setting of SystemInit() function, refer to
+       system_stm32f10x.c file
+     */     
+    
+    GPIO_InitTypeDef GPIO_InitStructure;
+    DMA_InitTypeDef DMA_InitStructure;        //DMA初始化结构体声明
+    ADC_InitTypeDef ADC_InitStructure;        //ADC初始化结构体声明
+
+    /* Configure PC.00 (ADC Channel10) as analog input -------------------------*/
+    //PC0 作为模拟通道10输入引脚                         
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;     //管脚1
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;//输入模式
+    GPIO_Init(GPIOC, &GPIO_InitStructure);     //GPIO组
+      
+    
+    /* Enable DMA1 clock */
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);		 //使能DMA时钟
+    
+    /* DMA1 channel1 configuration ----------------------------------------------*/
+    DMA_DeInit(DMA1_Channel1);		  //开启DMA1的第一通道
+    DMA_InitStructure.DMA_PeripheralBaseAddr = DR_ADDRESS;		  //DMA对应的外设基地址
+    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&ADCConvertedValue;   //内存存储基地址
+    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;	//DMA的转换模式为SRC模式，由外设搬移到内存
+    DMA_InitStructure.DMA_BufferSize = 1;		   //DMA缓存大小，1个
+    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;	//接收一次数据后，设备地址禁止后移
+    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Disable;	//关闭接收一次数据后，目标内存地址后移
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;  //定义外设数据宽度为16位
+    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;  //DMA搬移数据尺寸，HalfWord就是为16位
+    DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;   //转换模式，循环缓存模式。
+    DMA_InitStructure.DMA_Priority = DMA_Priority_High;	//DMA优先级高
+    DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;		  //M2M模式禁用
+    DMA_Init(DMA1_Channel1, &DMA_InitStructure);          
+    /* Enable DMA1 channel1 */
+    DMA_Cmd(DMA1_Channel1, ENABLE);
+    
+    /* Enable ADC1 and GPIOC clock */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOC, ENABLE);	  //使能ADC和GPIOC时钟
+    /* ADC1 configuration ------------------------------------------------------*/
+    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;		//独立的转换模式
+    ADC_InitStructure.ADC_ScanConvMode = ENABLE;		  //开启扫描模式
+    ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;   //开启连续转换模式
+    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;	//ADC外部开关，关闭状态
+    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;   //对齐方式,ADC为12位中，右对齐方式
+    ADC_InitStructure.ADC_NbrOfChannel = 1;	 //开启通道数，1个
+    ADC_Init(ADC1, &ADC_InitStructure);
+    /* ADC1 regular channel10 configuration */ 
+    //PC0
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_55Cycles5);
+                            //ADC通道组， 第10个通道 采样顺序1，转换时间 
+    /* Enable ADC1 DMA */
+    ADC_DMACmd(ADC1, ENABLE);	  //ADC命令，使能
+    /* Enable ADC1 */
+    ADC_Cmd(ADC1, ENABLE);  //开启ADC1
+    
+    /* Enable ADC1 reset calibaration register */   
+    ADC_ResetCalibration(ADC1);	  //重新校准
+    /* Check the end of ADC1 reset calibration register */
+    while(ADC_GetResetCalibrationStatus(ADC1));  //等待重新校准完成
+    /* Start ADC1 calibaration */
+    ADC_StartCalibration(ADC1);		//开始校准
+    /* Check the end of ADC1 calibration */
+    while(ADC_GetCalibrationStatus(ADC1));	   //等待校准完成
+    /* Start ADC1 Software Conversion */ 
+    ADC_SoftwareStartConvCmd(ADC1, ENABLE);	//连续转换开始，ADC通过DMA方式不断的更新RAM区。
+      
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Local Functions
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void DC2039A_Config_Init(void)
+{   
+    uint16_t value;
+    LTC4015_write_register(chip, LTC4015_IIN_LIMIT_SETTING, LTC4015_IINLIM(8.0)); // 8.0A, Initialize IIN Limit to 1.5A
+    LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(10)); // Initialize VIN Lo Limit to 10V
+    LTC4015_write_register(chip, LTC4015_EN_VIN_LO_ALERT_BF, 1); // Initialize VIN Lo Limit Alert to On
+    return;
+}
+
+void DC2039A_Run(void)
+{
+    uint16_t value;
+    bool ltc4015_powered_last = ltc4015_powered;
+
+//    // Read the INTVCC A/D value to know if part cycled power
+//    PIC16F_ADC_Read(INTVCC_ADC_CHANNEL, &value);
+    value = STM32_ADC_Read();
+    ltc4015_powered = (value > 1700);//v？>1.7v
+    
+    // If power is cycled re-init.
+    if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Init();
+
+    // Show example of polling an alert and setting TP1 to reflect alert.
+    LTC4015_read_register(chip, LTC4015_EN_BAT_MISSING_FAULT_ALERT_BF, &value);
+    
+    TP1_OUT_PIN = value;
+    
+    // Show example of using SMBALert to detect alert when active.
+    // Do not clear until TP2 is pulled low.
+    if(!TP2_IN_PIN && !SMBALERT_IN_PIN)
+    {
+        int8_t read_limit = 100;
+        do
+        {
+            uint8_t ara_address;       
+            int result;
+            
+            // Clear the SMBAlert and get the address responding to the ARA.
+            result = SMBus_ARA_Read(&ara_address, 0);
+            
+            // Read what caused the alerts and clear if LTC4015
+            // so that it will be re-enabled.
+            if((ara_address == LTC4015_ADDR_68) && (result == 0));
+            {
+                LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
+                LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, 0);  // Clear the Alert (this code only enabled one).
+            }
+            read_limit--; // Don't allow to read forever.
+
+        } while(!SMBALERT_IN_PIN && !read_limit);       
+    }       
+    
+    return;
+}
+
+
+
 /*******************************************************************************
 * Function Name  : main.
 * Description    : Main routine.
@@ -70,22 +259,23 @@ int main(void)
 {
   delay_init(72);//延时功能初始化
   //SysTick_Config(SYSTEM_CLOCK / 500);//2ms
+  
   STM_EVAL_LEDInit(LED2);//根据原理图，修改函数里的LED宏定义即可
   STM_EVAL_LEDInit(LED3);
   
   STM_EVAL_LEDOn(LED2);//高电平，点亮
   STM_EVAL_LEDOn(LED3);
   
+  DC2039A_Interface_Init();
+  
   Set_System();
   Set_USBClock();// 配置 USB 时钟，也就是从 72M 的主频得到 48M 的 USB 时钟（1.5 分频）
   USB_Interrupts_Config();// USB 唤醒中断和USB 低优先级数据处理中断
   USB_Init();//用于初始化 USB，;
   
-  TIM2_Int_Init(20, 7199);//2ms
+  //TIM2_Int_Init(20, 7199);//2ms
   TIM3_Int_Init(999,7199); //10Khz 的计数频率，计数到 1000 为 100ms
                         //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
-  
-  SMBus_Init();
   
   unsigned int run_counts = 0;
   unsigned char timer3_run_flag = 0;
@@ -111,6 +301,7 @@ int main(void)
       {
         STM_EVAL_LEDToggle(LED2);
         run_counts = 0;
+        //DC2039A_Run();//测试
       }
     }
     else

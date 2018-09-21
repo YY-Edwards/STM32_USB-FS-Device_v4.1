@@ -52,6 +52,7 @@ extern __IO uint32_t bDeviceState;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+//int timer3_counter_value =0;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 /******************************************************************************/
@@ -280,6 +281,7 @@ void TIM3_IRQHandler(void)
 
   if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
   {
+    //timer3_counter_value++;
     if(bDeviceState == CONFIGURED)
     {
       if (packet_sent == 1)

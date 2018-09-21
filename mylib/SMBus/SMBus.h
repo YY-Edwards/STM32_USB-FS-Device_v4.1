@@ -41,6 +41,17 @@
 #ifndef __SMBUS_H__
 #define __SMBUS_H__
 
+// Direct590 LTC4015 specific defines
+// todo - need to handle the ePot.
+#define CAT5140Register0       0x00                       // CAT5140ZI-xx-GT3 volatile register address
+#define CAT5140Register8       0x08                       // CAT5140ZI-xx-GT3 volatility control register address
+#define CAT5140Register1       0x01
+#define SetCAT5140Permanent    0x00                       // CAT5140ZI-xx-GT3 'permanent' command
+#define SetCAT5140Volatile     0x80                       // CAT5140ZI-xx-GT3 'volatile' command
+#define CAT5140Addr            0x28
+#define WriteCAT5140Addr       0x50                       // CAT5140ZI-xx-GT3 I2C write address
+#define ReadCAT5140Addr        0x51                       // CAT5140ZI-xx-GT3 I2C read address
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Includes
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -80,6 +91,13 @@ int SMBus_Reg16_Read(uint8_t addr,                             //!< IC's Registe
 int SMBus_ARA_Read(uint8_t *addr,                            //!< Memory location for IC's Register address returned by ARA.
                    port_configuration_t *port_configuration  //!< Any necessary communication interface configuration information, such as a file descriptor or control register location.
                    );
+
+void MakeCAT5140Permanent(void);
+void MakeCAT5140Volatile(void);
+uint8_t Get_CAT5140_ID(void);
+void CAT5140_Optional_Handle();
+void CAT5140_Write_Handle(uint8_t addr,  uint8_t command_code,  uint8_t data);
+void CAT5140_Read_Handle(uint8_t addr,  uint8_t command_code,  uint8_t *data);
 
 #endif
 

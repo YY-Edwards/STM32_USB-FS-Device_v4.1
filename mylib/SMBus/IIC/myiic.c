@@ -253,7 +253,7 @@ u8 IIC_Read_Byte(unsigned char IIC_Addr, unsigned char ack)
 
 bool IIC_Write_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
 {
-  bool res =false;
+  bool res =true;
   u8 t;
   for(t=0; t<num_bytes; t++)
   {
@@ -261,7 +261,7 @@ bool IIC_Write_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
     
     if(IIC_Wait_Ack(IIC_NUMB) == 0)
     {
-      res = true;
+      res &= true;
     }
   
     data_ptr++;
@@ -271,7 +271,7 @@ bool IIC_Write_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
 }
 bool IIC_Read_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
 {
-  bool res =false;
+  bool res =true;
   u8 t;
   for(t=0; t<num_bytes; t++)
   {
@@ -279,7 +279,7 @@ bool IIC_Read_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
     
     if(IIC_Wait_Ack(IIC_NUMB) == 0)
     {
-      res = true;
+      res &= true;
     }
   
   }

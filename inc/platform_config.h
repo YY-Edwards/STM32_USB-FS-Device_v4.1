@@ -110,6 +110,16 @@
   #define USB_DISCONNECT                      GPIOG  
   #define USB_DISCONNECT_PIN                  GPIO_Pin_11
   #define RCC_APB2Periph_GPIO_DISCONNECT      RCC_APB2Periph_GPIOG
+
+  #define TEST_TP                             GPIOA  
+  #define TEST_TP1_PIN                        GPIO_Pin_2
+  #define TEST_TP2_PIN                        GPIO_Pin_3
+  #define nSMBALLERT_PIN                      GPIO_Pin_4
+  #define CAT5140_NWP_PIN                     GPIO_Pin_5
+  #define NEQ_PIN                             GPIO_Pin_6
+
+  #define RCC_APB2Periph_GPIO_TEST_TP         RCC_APB2Periph_GPIOA
+
   #define RCC_APB2Periph_ALLGPIO              (RCC_APB2Periph_GPIOA \
                                                | RCC_APB2Periph_GPIOB \
                                                | RCC_APB2Periph_GPIOC \
