@@ -129,16 +129,21 @@ void ADC_GPIO_Configuration(void)
     GPIO_InitTypeDef GPIO_InitStructure;
     DMA_InitTypeDef DMA_InitStructure;        //DMA初始化结构体声明
     ADC_InitTypeDef ADC_InitStructure;        //ADC初始化结构体声明
-
+      
+    
+    /* Enable DMA1 clock */
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);		 //使能DMA时钟
+      /* Enable ADC1 and GPIOC clock */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOC, ENABLE);	  //使能ADC和GPIOC时钟
+    RCC_ADCCLKConfig(RCC_PCLK2_Div6);//设置ADC分频因子6
+                                    //72M/6=12,ADC最大时间不能超过14M
+    
     /* Configure PC.00 (ADC Channel10) as analog input -------------------------*/
     //PC0 作为模拟通道10输入引脚                         
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;     //管脚1
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;//输入模式
     GPIO_Init(GPIOC, &GPIO_InitStructure);     //GPIO组
-      
-    
-    /* Enable DMA1 clock */
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);		 //使能DMA时钟
+   
     
     /* DMA1 channel1 configuration ----------------------------------------------*/
     DMA_DeInit(DMA1_Channel1);		  //开启DMA1的第一通道
@@ -157,8 +162,7 @@ void ADC_GPIO_Configuration(void)
     /* Enable DMA1 channel1 */
     DMA_Cmd(DMA1_Channel1, ENABLE);
     
-    /* Enable ADC1 and GPIOC clock */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOC, ENABLE);	  //使能ADC和GPIOC时钟
+    
     /* ADC1 configuration ------------------------------------------------------*/
     ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;		//独立的转换模式
     ADC_InitStructure.ADC_ScanConvMode = ENABLE;		  //开启扫描模式
@@ -171,6 +175,8 @@ void ADC_GPIO_Configuration(void)
     //PC0
     ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_55Cycles5);
                             //ADC通道组， 第10个通道 采样顺序1，转换时间 
+    
+    
     /* Enable ADC1 DMA */
     ADC_DMACmd(ADC1, ENABLE);	  //ADC命令，使能
     /* Enable ADC1 */
@@ -212,7 +218,18 @@ void DC2039A_Run(void)
     
     // If power is cycled re-init.
     if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Init();
-
+    
+    
+     uint8_t t_ara_address;       
+    int t_result;
+    
+    // Clear the SMBAlert and get the address responding to the ARA.
+    t_result = SMBus_ARA_Read(&t_ara_address, 0);
+    
+    LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
+    //Read VIN
+    LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
+    
     // Show example of polling an alert and setting TP1 to reflect alert.
     LTC4015_read_register(chip, LTC4015_EN_BAT_MISSING_FAULT_ALERT_BF, &value);
     
@@ -301,7 +318,7 @@ int main(void)
       {
         STM_EVAL_LEDToggle(LED2);
         run_counts = 0;
-        //DC2039A_Run();//测试
+        DC2039A_Run();//测试
       }
     }
     else

@@ -263,6 +263,10 @@ bool IIC_Write_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
     {
       res &= true;
     }
+    else
+    {
+      res = false;
+    }
   
     data_ptr++;
   }
@@ -272,6 +276,7 @@ bool IIC_Write_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
 bool IIC_Read_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
 {
   bool res =true;
+  bool test_r= true;
   u8 t;
   for(t=0; t<num_bytes; t++)
   {
@@ -281,7 +286,11 @@ bool IIC_Read_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
     {
       res &= true;
     }
-  
+    else
+    {
+      test_r = false;
+      //res = false;
+    }
   }
   
   return res;

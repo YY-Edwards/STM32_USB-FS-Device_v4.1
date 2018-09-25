@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=1326495308
+Checksum=-237097887
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -43,12 +43,11 @@ Stop=1
 [Simulator]
 Freq=10000000
 MultiCoreRunAll=1
-[Disassemble mode]
-mode=0
-[Breakpoints2]
-Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\stm32_it.c}.176.1" 0 0 1 "" 0 "" 0
-Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.269.3" 0 0 1 "" 0 "" 0
-Count=2
+[struct_types]
+Fmt0=LTC4015_chip_cfg_t-addr	4	0
+[array_types]
+Fmt0=uint8_t[1]	4	0
+Fmt1=uint8_t[2]	4	0
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -56,9 +55,6 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
-[Aliases]
-Count=0
-SuppressDialog=0
 [CallStackLog]
 Enabled=0
 [DriverProfiling]
@@ -67,3 +63,17 @@ Mode=0
 Graph=0
 Symbiont=0
 Exclusions=
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\stm32_it.c}.176.1" 0 0 1 "" 0 "" 0
+Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.280.3" 0 0 1 "" 0 "" 0
+Bp2=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.115.26" 0 0 1 "" 0 "" 0
+Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\SMBus\SMBus.c}.211.3" 0 0 1 "" 0 "" 0
+Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.217.5" 0 0 1 "" 0 "" 0
+Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.227.5" 0 0 1 "" 0 "" 0
+Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.227.5" 0 0 1 "" 0 "" 0
+Count=7
+[Aliases]
+Count=0
+SuppressDialog=0
