@@ -81,7 +81,7 @@ u8 IIC_Wait_Ack(unsigned char IIC_Addr)
 		ucErrTime++;
 		if(ucErrTime>250)
 		{
-                    IIC_Stop(LTC4015_IIC);
+                    //IIC_Stop(LTC4015_IIC);
                     return 1;
 		}
 	}
@@ -99,7 +99,7 @@ u8 IIC_Wait_Ack(unsigned char IIC_Addr)
 		ucErrTime++;
 		if(ucErrTime>250)
 		{
-                    IIC_Stop(CAT5140_IIC);
+                    //IIC_Stop(CAT5140_IIC);
                     return 1;
 		}
 	}
@@ -280,7 +280,14 @@ bool IIC_Read_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
   u8 t;
   for(t=0; t<num_bytes; t++)
   {
-    *data_ptr++ = IIC_Read_Byte(IIC_NUMB, 0);
+    if(t != (num_bytes -1))
+    {
+      *data_ptr++ = IIC_Read_Byte(IIC_NUMB, 1);//SEND ACK
+    }
+    else//最后一个
+    {
+      *data_ptr++ = IIC_Read_Byte(IIC_NUMB, 0);//SEND NACK
+    }
     
     if(IIC_Wait_Ack(IIC_NUMB) == 0)
     {
