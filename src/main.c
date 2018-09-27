@@ -113,6 +113,8 @@ void DC2039A_Interface_Init(void)
     SMBus_Init();//新增SMBus接口，与IIC相比，ACK,NACK的机制要求更强
     
     uint8_t cat5140_id = Get_CAT5140_ID();
+    
+    CAT5140_Optional_Handle();
   
 }
 void ADC_GPIO_Configuration(void)
@@ -230,6 +232,13 @@ void DC2039A_Run(void)
     
     //Read charger state
     LTC4015_read_register(chip, LTC4015_EQUALIZE_CHARGE_BF, &value);
+    
+    //Read charge state
+    LTC4015_read_register(chip, LTC4015_CONSTANT_CURRENT_BF, &value);
+    
+      
+    //Read system status
+    LTC4015_read_register(chip, LTC4015_CHARGER_ENABLED_BF, &value);
     
     
     //Read VBAT
