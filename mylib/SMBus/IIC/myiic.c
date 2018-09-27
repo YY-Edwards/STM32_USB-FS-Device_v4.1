@@ -232,9 +232,9 @@ u8 IIC_Read_Byte(unsigned char IIC_Addr, unsigned char ack)
       
       IIC_1_SCL=1;//主机开始读
       
+      receive<<=1;
       if(READ_1_SDA)receive++; 
       
-      receive<<=1;
       delay_us(1); 
     }					 
     if (!ack)
@@ -252,9 +252,9 @@ u8 IIC_Read_Byte(unsigned char IIC_Addr, unsigned char ack)
       delay_us(2);
       IIC_2_SCL=1;
 
+      receive<<=1;
       if(READ_2_SDA)receive++; 
       
-      receive<<=1;
       delay_us(1); 
     }					 
     if (!ack)
@@ -300,12 +300,14 @@ bool IIC_Read_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
   {
     if(t != (num_bytes -1))
     {
-      *data_ptr++ = IIC_Read_Byte(IIC_NUMB, 1);//SEND ACK
+      *data_ptr = IIC_Read_Byte(IIC_NUMB, 1);//SEND ACK
     }
     else//最后一个
     {
-      *data_ptr++ = IIC_Read_Byte(IIC_NUMB, 0);//SEND NACK
+      *data_ptr = IIC_Read_Byte(IIC_NUMB, 0);//SEND NACK
     }
+    
+    data_ptr++;//地址递增
     
 //    if(IIC_Wait_Ack(IIC_NUMB) == 0)
 //    {

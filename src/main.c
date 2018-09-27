@@ -209,6 +209,11 @@ void DC2039A_Config_Init(void)
 void DC2039A_Run(void)
 {
     uint16_t value;
+    uint8_t t_ara_address;       
+    int t_result;
+    float input_power_vcc = 0.0;
+    float input_bat_vcc = 0.0;
+    
     bool ltc4015_powered_last = ltc4015_powered;
 
 //    // Read the INTVCC A/D value to know if part cycled power
@@ -220,15 +225,20 @@ void DC2039A_Run(void)
     if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Init();
     
     
-     uint8_t t_ara_address;       
-    int t_result;
-    
     // Clear the SMBAlert and get the address responding to the ARA.
-    t_result = SMBus_ARA_Read(&t_ara_address, 0);
+    //t_result = SMBus_ARA_Read(&t_ara_address, 0);
     
+    //Read charger state
+    LTC4015_read_register(chip, LTC4015_EQUALIZE_CHARGE_BF, &value);
+    
+    
+    //Read VBAT
     LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
+    input_bat_vcc = ((float)value*192.264/1000000);
+    
     //Read VIN
     LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
+    input_power_vcc = ((float)value)*1.648/1000;//v
     
     // Show example of polling an alert and setting TP1 to reflect alert.
     LTC4015_read_register(chip, LTC4015_EN_BAT_MISSING_FAULT_ALERT_BF, &value);
