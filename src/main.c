@@ -69,7 +69,7 @@ int main(void)
 {
   delay_init(72);//延时功能初始化
   //SysTick_Config(SYSTEM_CLOCK / 500);//2ms
-  STM_EVAL_LEDInit(LED2);//根据原理图，修改函数里的LED宏定义即可
+  STM_EVAL_LEDInit(LED2);//根据原理图，修改评估板接口里的LED宏定义即可
   STM_EVAL_LEDInit(LED1);
   
   STM_EVAL_LEDOn(LED2);//高电平，点亮
