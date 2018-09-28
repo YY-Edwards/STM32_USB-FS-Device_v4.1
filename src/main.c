@@ -201,8 +201,32 @@ void ADC_GPIO_Configuration(void)
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void DC2039A_Config_Init(void)
 {   
-    uint16_t value;
-    LTC4015_write_register(chip, LTC4015_IIN_LIMIT_SETTING, LTC4015_IINLIM(8.0)); // 8.0A, Initialize IIN Limit to 1.5A
+    uint16_t value =0;
+    
+    //Set min UVCL function
+    LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(13)); // Initialize UVCL Lo Limit to 13V
+    
+    //Set max VCHARGE_SETTING 
+    LTC4015_write_register(chip, LTC4015_VCHARGE_SETTING_BF, LTC4015_VCHARGE_LIION(4.2)); //4.2v/cell
+    
+    
+    //Set max ICHARGE_TARGE 
+    LTC4015_write_register(chip, LTC4015_ICHARGE_TARGET_BF, LTC4015_ICHARGE(1.5));//1.5A
+    
+     //set max input current   
+    LTC4015_write_register(chip, LTC4015_IIN_LIMIT_SETTING_BF, LTC4015_IINLIM(3.0)); // 5.0A, Initialize IIN Limit to 5A
+   
+    
+    //Enables C/x charge termination
+    LTC4015_write_register(chip, LTC4015_EN_C_OVER_X_TERM_BF, 1);
+    
+    //Enable QCount
+    LTC4015_write_register(chip, LTC4015_EN_QCOUNT_BF, 1);
+
+    
+    //
+    //LTC4015_read_register(chip, LTC4015_VIN_UVCL_SETTING_BF, &value); 
+ 
     LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(10)); // Initialize VIN Lo Limit to 10V
     LTC4015_write_register(chip, LTC4015_EN_VIN_LO_ALERT_BF, 1); // Initialize VIN Lo Limit Alert to On
     return;
@@ -214,7 +238,9 @@ void DC2039A_Run(void)
     uint8_t t_ara_address;       
     int t_result;
     float input_power_vcc = 0.0;
-    float input_bat_vcc = 0.0;
+    float input_power_current = 0.0;
+    float bat_charge_current = 0.0;
+    float bat_chargr_vcc = 0.0;
     
     bool ltc4015_powered_last = ltc4015_powered;
 
@@ -240,14 +266,27 @@ void DC2039A_Run(void)
     //Read system status
     LTC4015_read_register(chip, LTC4015_CHARGER_ENABLED_BF, &value);
     
-    
-    //Read VBAT
-    LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
-    input_bat_vcc = ((float)value*192.264/1000000);
-    
     //Read VIN
     LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
     input_power_vcc = ((float)value)*1.648/1000;//v
+    
+     //Read IIN
+    LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
+    input_power_current = ((float)value)*((1.46487/3)*0.001);//v
+    
+    //Read VBATSENSE/cellcount
+    LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
+    bat_chargr_vcc = ((float)value*192.264/1000000);
+      
+    //Read Bat charge current
+    LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
+    bat_charge_current = ((float)value)*((1.46487/4)*0.001);//A
+    
+    
+    
+    //Read actual charge current,v;
+    
+    
     
     // Show example of polling an alert and setting TP1 to reflect alert.
     LTC4015_read_register(chip, LTC4015_EN_BAT_MISSING_FAULT_ALERT_BF, &value);
