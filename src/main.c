@@ -203,31 +203,38 @@ void DC2039A_Config_Init(void)
 {   
     uint16_t value =0;
     
-    //Set min UVCL function
+    //Set min UVCL ;输入电压至少13V，才能开启充电功能
     LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(13)); // Initialize UVCL Lo Limit to 13V
     
-    //Set max VCHARGE_SETTING 
+    //Set max VCHARGE_SETTING ；设置单节电池的满电电压值
     LTC4015_write_register(chip, LTC4015_VCHARGE_SETTING_BF, LTC4015_VCHARGE_LIION(4.2)); //4.2v/cell
     
     
-    //Set max ICHARGE_TARGE 
+    //Set max ICHARGE_TARGE ；设置充电电流的目标值
     LTC4015_write_register(chip, LTC4015_ICHARGE_TARGET_BF, LTC4015_ICHARGE(1.5));//1.5A
     
-     //set max input current   
-    LTC4015_write_register(chip, LTC4015_IIN_LIMIT_SETTING_BF, LTC4015_IINLIM(3.0)); // 5.0A, Initialize IIN Limit to 5A
+     //set max input current  ；设置输入电流的最大值 
+    LTC4015_write_register(chip, LTC4015_IIN_LIMIT_SETTING_BF, LTC4015_IINLIM(5.0)); // 5.0A, Initialize IIN Limit to 5A
    
     
-    //Enables C/x charge termination
+    //Enables C/x charge termination；使能
     LTC4015_write_register(chip, LTC4015_EN_C_OVER_X_TERM_BF, 1);
     
-    //Enable QCount
+    //Enable QCount；使能库伦计数
     LTC4015_write_register(chip, LTC4015_EN_QCOUNT_BF, 1);
 
+//    //系统有12ms的预热时间，当测量结果有效时，会有提示，通过nSMBALERT   
+//    //Enable measurement valid alert；使能测量有效提示
+//    LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, 1);
+//    
+//    //Enable measurement on；强制打开测量功能
+//    LTC4015_write_register(chip, LTC4015_FORCE_MEAS_SYS_ON_BF, 1);
     
     //
     //LTC4015_read_register(chip, LTC4015_VIN_UVCL_SETTING_BF, &value); 
- 
+    //设置输入电压门限；10v
     LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(10)); // Initialize VIN Lo Limit to 10V
+    //开启输入电压门限低告警功能
     LTC4015_write_register(chip, LTC4015_EN_VIN_LO_ALERT_BF, 1); // Initialize VIN Lo Limit Alert to On
     return;
 }
@@ -235,34 +242,67 @@ void DC2039A_Config_Init(void)
 void DC2039A_Run(void)
 {
     uint16_t value;
-    uint8_t t_ara_address;       
-    int t_result;
+    uint8_t ara_address;       
+    int result;
     float input_power_vcc = 0.0;
     float input_power_current = 0.0;
     float bat_charge_current = 0.0;
+    float actual_charge_current = 0.0;
     float bat_chargr_vcc = 0.0;
+    float die_temp = 0.0;
     
     bool ltc4015_powered_last = ltc4015_powered;
 
-//    // Read the INTVCC A/D value to know if part cycled power
-//    PIC16F_ADC_Read(INTVCC_ADC_CHANNEL, &value);
+    // Read the INTVCC A/D value to know if part cycled power
     value = STM32_ADC_Read();
     ltc4015_powered = (value > 1700);//v？>1.7v
     
     // If power is cycled re-init.
     if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Init();
     
-    
-    // Clear the SMBAlert and get the address responding to the ARA.
-    //t_result = SMBus_ARA_Read(&t_ara_address, 0);
-    
-    //Read charger state
-    LTC4015_read_register(chip, LTC4015_EQUALIZE_CHARGE_BF, &value);
+    //Read charger state(此处只读：输入电源检测)
+    LTC4015_read_register(chip, LTC4015_CHARGER_SUSPENDED_BF, &value);
+    if(value == 1)//no vin
+    {
+      //系统有12ms的预热时间，当测量结果有效时，会有提示，通过nSMBALERT   
+      //Enable measurement valid alert；使能测量有效提示
+      LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, 1);
+      
+      //Enable measurement on；强制打开测量功能
+      LTC4015_write_register(chip, LTC4015_FORCE_MEAS_SYS_ON_BF, 1);
+      
+      int ms_delay_count =0;
+      do
+      {
+        delay_ms(20);
+        ms_delay_count++;
+      }
+      while(SMBALERT_IN_PIN | (ms_delay_count>3));
+      if(!SMBALERT_IN_PIN)
+      {
+        // Clear the SMBAlert and get the address responding to the ARA.
+            result = SMBus_ARA_Read(&ara_address, 0);
+            
+            // Read what caused the alerts and clear if LTC4015
+            // so that it will be re-enabled.
+            if((ara_address == LTC4015_ADDR_68) && (result == 0));
+            {
+                LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
+                if((LTC4015_MEAS_SYS_VALID_ALERT_BF_MASK & value) !=0)//verify 
+                {
+                   //LTC4015_write_register(chip, LTC4015_MEAS_SYS_VALID_ALERT_BF, 0);  // Clear the Alert (this code only enabled one).
+                  //close alert
+                  //close meas
+                  LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, 0); 
+                  LTC4015_write_register(chip, LTC4015_FORCE_MEAS_SYS_ON_BF, 0);
+                }
+            }        
+        }
+    }
     
     //Read charge state
     LTC4015_read_register(chip, LTC4015_CONSTANT_CURRENT_BF, &value);
-    
-      
+          
     //Read system status
     LTC4015_read_register(chip, LTC4015_CHARGER_ENABLED_BF, &value);
     
@@ -284,40 +324,48 @@ void DC2039A_Run(void)
     
     
     
+    
     //Read actual charge current,v;
+    LTC4015_read_register(chip, LTC4015_ICHARGE_DAC_BF, &value);
+    actual_charge_current = (value+1)/4;//A
     
+    //read die temperature
+    LTC4015_read_register(chip, LTC4015_DIE_TEMP_BF, &value);
+    die_temp = (float)(value-12010)/45.6;//℃
+
     
-    
+    //读电池检测通知
     // Show example of polling an alert and setting TP1 to reflect alert.
-    LTC4015_read_register(chip, LTC4015_EN_BAT_MISSING_FAULT_ALERT_BF, &value);
-    
-    TP1_OUT_PIN = value;
+//    LTC4015_read_register(chip, LTC4015_EN_BAT_MISSING_FAULT_ALERT_BF, &value);
+//    
+//    TP1_OUT_PIN = value;
     
     // Show example of using SMBALert to detect alert when active.
     // Do not clear until TP2 is pulled low.
-    if(!TP2_IN_PIN && !SMBALERT_IN_PIN)
-    {
-        int8_t read_limit = 100;
-        do
-        {
-            uint8_t ara_address;       
-            int result;
-            
-            // Clear the SMBAlert and get the address responding to the ARA.
-            result = SMBus_ARA_Read(&ara_address, 0);
-            
-            // Read what caused the alerts and clear if LTC4015
-            // so that it will be re-enabled.
-            if((ara_address == LTC4015_ADDR_68) && (result == 0));
-            {
-                LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
-                LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, 0);  // Clear the Alert (this code only enabled one).
-            }
-            read_limit--; // Don't allow to read forever.
-
-        } while(!SMBALERT_IN_PIN && !read_limit);       
-    }       
-    
+    //if(!TP2_IN_PIN && !SMBALERT_IN_PIN)
+//    if(!SMBALERT_IN_PIN)
+//    {
+//        int8_t read_limit = 100;
+//        do
+//        {
+//            uint8_t ara_address;       
+//            int result;
+//            
+//            // Clear the SMBAlert and get the address responding to the ARA.
+//            result = SMBus_ARA_Read(&ara_address, 0);
+//            
+//            // Read what caused the alerts and clear if LTC4015
+//            // so that it will be re-enabled.
+//            if((ara_address == LTC4015_ADDR_68) && (result == 0));
+//            {
+//                LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
+//                LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, 0);  // Clear the Alert (this code only enabled one).
+//            }
+//            read_limit--; // Don't allow to read forever.
+//
+//        } while(!SMBALERT_IN_PIN && !read_limit);       
+//    }       
+//    
     return;
 }
 

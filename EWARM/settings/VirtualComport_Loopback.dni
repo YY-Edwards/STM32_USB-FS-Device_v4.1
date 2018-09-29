@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1384411141
+Checksum=-142144905
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -55,11 +55,14 @@ Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\stm32_it.c}.176.1" 0 0 1 "" 0 "" 0
 Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.113.5" 0 0 1 "" 0 "" 0
 Bp2=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.117.5" 0 0 1 "" 0 "" 0
 Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.207.5" 0 0 1 "" 0 "" 0
-Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.270.5" 0 0 1 "" 0 "" 0
-Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.298.5" 0 0 1 "" 0 "" 0
+Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.272.7" 0 0 1 "" 0 "" 0
+Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.304.5" 0 0 1 "" 0 "" 0
 Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.214.5" 0 0 1 "" 0 "" 0
-Bp7=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.260.5" 0 0 1 "" 0 "" 0
-Count=8
+Bp7=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.264.5" 0 0 1 "" 0 "" 0
+Bp8=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.369.5" 0 0 1 "" 0 "" 0
+Bp9=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.261.5" 0 0 1 "" 0 "" 0
+Bp10=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.257.13" 0 0 1 "" 0 "" 0
+Count=11
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
