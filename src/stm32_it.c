@@ -44,6 +44,7 @@
 #include "usb_istr.h"
 #include "usb_pwr.h"
 #include <string.h>
+#include "delay.h"
 static int check_count = 0;  
 static unsigned char PTT_Sta = 1;//默认高电平
 extern __IO uint32_t packet_sent;  
@@ -280,9 +281,10 @@ void TIM3_IRQHandler(void)
 
   if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
   {
-    if(bDeviceState == CONFIGURED)
+    if(bDeviceState == CONFIGURED)//连接成功后
     {
-      if (packet_sent == 1)
+      //if (packet_sent == 1)//屏蔽发送成功标志，则可修复重启PC后，设备因为无法收到主机的输入令牌，导致设备不能发送数据的bug.
+                            //这个标志判断是否是必须的待测试研究。
       {
           unsigned char temp_send = PTT_Sta;
           FootPtt_Pro_t send_pro;
@@ -294,6 +296,16 @@ void TIM3_IRQHandler(void)
           send_pro.checksum     = (send_pro.opcode + send_pro.length + send_pro.payload);
           send_pro.end          = PRO_END;           
           CDC_Send_DATA ((unsigned char*)&send_pro,sizeof(FootPtt_Pro_t));
+          STM_EVAL_LEDToggle(LED2);
+//          STM_EVAL_LEDOn(LED2);//成功发送数据，LED2闪一次。
+//          delay_ms(80); 
+//          STM_EVAL_LEDOff(LED2);
+      }
+      //else
+      {
+        //发送失败,无任何动作
+//        STM_EVAL_LEDOff(LED2);
+//        STM_EVAL_LEDOff(LED1);
       }
     
     }

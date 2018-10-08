@@ -72,11 +72,12 @@ int main(void)
   STM_EVAL_LEDInit(LED2);//根据原理图，修改评估板接口里的LED宏定义即可
   STM_EVAL_LEDInit(LED1);
   
-  STM_EVAL_LEDOn(LED2);//高电平，点亮
-  STM_EVAL_LEDOn(LED1);
+  STM_EVAL_LEDOff(LED2);//低电平，熄灭
+  STM_EVAL_LEDOff(LED1);
   
   Set_System();
   Set_USBClock();// 配置 USB 时钟，也就是从 72M 的主频得到 48M 的 USB 时钟（1.5 分频）
+  //PowerOff();//软件手段关闭USB：没什么用
   USB_Interrupts_Config();// USB 唤醒中断和USB 低优先级数据处理中断
   USB_Init();//用于初始化 USB，;
   
@@ -92,6 +93,15 @@ int main(void)
       run_counts++;
       if(timer3_run_flag == 0)
       {
+        STM_EVAL_LEDOff(LED2);
+        STM_EVAL_LEDOff(LED1);
+        delay_ms(500); 
+        STM_EVAL_LEDOn(LED1);
+        STM_EVAL_LEDOn(LED2);//成功识别后，LED1.LED2双闪一次。
+        delay_ms(500); 
+        STM_EVAL_LEDOff(LED2);
+        STM_EVAL_LEDOff(LED1);
+        
         TIM_Cmd(TIM3, ENABLE);//启动定时器3
         timer3_run_flag = 1;
       }
@@ -101,21 +111,38 @@ int main(void)
       {
 //        if (packet_sent == 1)
 //          CDC_Send_DATA ((unsigned char*)Receive_Buffer,Receive_length);
-       Receive_length = 0;
+         Receive_length = 0;
+         STM_EVAL_LEDOff(LED2);
+         STM_EVAL_LEDOn(LED1);//如果接收到数据，则LED2熄灭，LED1闪烁两次
+         delay_ms(50); 
+         STM_EVAL_LEDOff(LED1);
+         delay_ms(50); 
+         STM_EVAL_LEDOn(LED1);
+         delay_ms(50);
+         STM_EVAL_LEDOff(LED1);
+         delay_ms(50);
       }
-      if(run_counts == 60000)
+      if(run_counts == 600000)//空闲状态指示，LED1,LED2交替闪烁
       {
-        STM_EVAL_LEDToggle(LED2);
-        run_counts = 0;
+          //STM_EVAL_LEDToggle(LED2);
+          run_counts = 0; 
+          STM_EVAL_LEDOn(LED1);
+          STM_EVAL_LEDOff(LED2);
+          delay_ms(1500); 
+          STM_EVAL_LEDOff(LED1);
+          STM_EVAL_LEDOn(LED2);
+          delay_ms(1500); 
       }
     }
     else
     {
-      STM_EVAL_LEDToggle(LED1);   
-      delay_ms(100); 
+      STM_EVAL_LEDOff(LED2);
+      STM_EVAL_LEDToggle(LED1);//未连接成功时，LED1常闪烁   
+      delay_ms(80); 
     }
-  }
-} 
+ 
+  } 
+}
 
 #ifdef USE_FULL_ASSERT
 /*******************************************************************************
