@@ -41,6 +41,7 @@
 #include "usb_prop.h"
 #include "usb_pwr.h"
 #include "usb_istr.h"
+#include "delay.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -246,7 +247,12 @@ void CTR_Callback(void)
   //STM_EVAL_LEDToggle(LED1);  
   //STM_EVAL_LEDToggle(LED1);
 }
+extern __IO uint32_t packet_sent;
+void RESET_Callback(void)
+{
+   packet_sent=1;//重置发送标志
 
+}
 
 
 

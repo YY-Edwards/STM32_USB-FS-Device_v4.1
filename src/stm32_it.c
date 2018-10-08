@@ -283,8 +283,9 @@ void TIM3_IRQHandler(void)
   {
     if(bDeviceState == CONFIGURED)//连接成功后
     {
-      //if (packet_sent == 1)//屏蔽发送成功标志，则可修复重启PC后，设备因为无法收到主机的输入令牌，导致设备不能发送数据的bug.
+      if (packet_sent == 1)//屏蔽发送成功标志，则可修复重启PC后，设备因为无法收到主机的输入令牌，导致设备不能发送数据的bug.
                             //这个标志判断是否是必须的待测试研究。
+                            //主机向设备复位时，重置可发送标志，也可修复此bug.
       {
           unsigned char temp_send = PTT_Sta;
           FootPtt_Pro_t send_pro;
