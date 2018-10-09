@@ -91,6 +91,7 @@ extern "C" {
 #include "LTC4015_formats.h"
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 
 // Type declarations
   /*! Hardware port information. Modify as needed for local hardware
@@ -120,6 +121,53 @@ extern "C" {
     smbus_write_register write_register; //!< Pointer to a user supplied smbus_write_register function
     port_configuration_t *port_configuration; //!< Pointer to a user supplied port_configuration struct
   } LTC4015_chip_cfg_t;
+  
+   typedef struct
+  { 
+    unsigned short intvcc_gt_2p8v            :1;//0
+    unsigned short intvcc_gt_4p3v            :1;//1
+    unsigned short vin_gt_vbat               :1;//2
+    unsigned short vin_ovlo                  :1;//3
+    unsigned short thermal_shutdown          :1;//4
+    unsigned short no_rt                     :1;//5
+    unsigned short ok_to_charge              :1;//6
+    unsigned short reserved_1                :1;//7
+    unsigned short cell_count_error          :1;//8
+    unsigned short drvcc_good                :1;//9
+    unsigned short equalize_req              :1;//10
+    unsigned short mppt_en_pin               :1;//11
+    unsigned short reserved_2                :1;//12
+    unsigned short charger_enabled           :1;//13
+    unsigned short reserved_3                :2;
+  } LTC4015_system_status_t;
+
+  typedef struct
+  {
+    unsigned short constant_voltage              :1;//0
+    unsigned short constant_current              :1;//1
+    unsigned short iin_limit_active              :1;//2
+    unsigned short vin_uvcl_active               :1;//3
+    unsigned short reserved                      :12;
+  } LTC4015_charge_status_t;
+  
+  typedef struct
+  {
+    unsigned short bat_short_fault              :1;//0
+    unsigned short bat_missing_fault            :1;//1
+    unsigned short max_charge_time_fault        :1;//2
+    unsigned short c_over_x_term                :1;//3
+    unsigned short timer_term                   :1;//4
+    unsigned short ntc_pause                    :1;//5
+    unsigned short cc_cv_charge                 :1;//6
+    unsigned short precharge                    :1;//7
+    unsigned short charger_suspended            :1;//8
+    unsigned short absorb_charge                :1;//9
+    unsigned short equalize_charge              :1;//10
+    unsigned short reserved                     :5;
+    
+  } LTC4015_charger_state_t;
+  
+  
 
   // function declarations
   /*! Returns a pointer to a LTC4015 structure used by LTC4015_write_register and LTC4015_read_register */
@@ -143,6 +191,23 @@ extern "C" {
     by  defining  LTC4015_USE_MALLOC.  The  default  is  to not use malloc and
     statically allocate one LTC4015.
   */
+  
+  int LTC4015_read_system_status(LTC4015 chip_handle, //!< Struct returned by LTC4015_init
+                          uint16_t registerinfo, //!< Register name from LTC4015_regdefs.h
+                          LTC4015_system_status_t *system_status
+                          //uint16_t *data //!< Pointer to the data destination
+                         );
+  int LTC4015_read_charge_status(LTC4015 chip_handle, //!< Struct returned by LTC4015_init
+                      uint16_t registerinfo, //!< Register name from LTC4015_regdefs.h
+                      LTC4015_charge_status_t *charge_status
+                      //uint16_t *data //!< Pointer to the data destination
+                     );
+  int LTC4015_read_charger_state(LTC4015 chip_handle, //!< Struct returned by LTC4015_init
+                      uint16_t registerinfo, //!< Register name from LTC4015_regdefs.h
+                      LTC4015_charger_state_t *charger_state
+                      //uint16_t *data //!< Pointer to the data destination
+                     );
+
 #ifndef MAX_NUM_LTC4015_INSTANCES
 #define MAX_NUM_LTC4015_INSTANCES 1
 #endif

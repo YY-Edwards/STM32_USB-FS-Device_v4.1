@@ -183,3 +183,68 @@ int LTC4015_read_register(LTC4015 chip_handle, uint16_t registerinfo, uint16_t *
   *data = *data >> offset;
   return result;
 }
+
+
+ int LTC4015_read_system_status(LTC4015 chip_handle, //!< Struct returned by LTC4015_init
+                          uint16_t registerinfo, //!< Register name from LTC4015_regdefs.h
+                          LTC4015_system_status_t *system_status)
+  {
+      LTC4015_chip_cfg_t *chip = (LTC4015_chip_cfg_t *) chip_handle;
+      int result;
+      uint16_t data = 0;
+      uint8_t command_code = get_subaddr(registerinfo);
+//      uint8_t offset = get_offset(registerinfo);
+//      uint16_t mask = get_mask(registerinfo);
+      result = chip->read_register(chip->addr, command_code, &data, chip->port_configuration);
+      memcpy((void *)system_status, (void *)&data, sizeof(LTC4015_system_status_t));
+      //*system_status = data;
+//      *data &= mask;
+//      *data = *data >> offset;
+      return result;
+    
+  }
+
+int LTC4015_read_charge_status(LTC4015 chip_handle, //!< Struct returned by LTC4015_init
+                      uint16_t registerinfo, //!< Register name from LTC4015_regdefs.h
+                      LTC4015_charge_status_t *charge_status
+                      //uint16_t *data //!< Pointer to the data destination
+                     )
+{
+
+    LTC4015_chip_cfg_t *chip = (LTC4015_chip_cfg_t *) chip_handle;
+    int result;
+    uint16_t data = 0;
+    uint8_t command_code = get_subaddr(registerinfo);
+//      uint8_t offset = get_offset(registerinfo);
+//      uint16_t mask = get_mask(registerinfo);
+    result = chip->read_register(chip->addr, command_code, &data, chip->port_configuration);
+    memcpy((void *)charge_status, (void *)&data, sizeof(LTC4015_charge_status_t));
+    //*system_status = data;
+//      *data &= mask;
+//      *data = *data >> offset;
+    return result;
+
+
+
+}
+
+
+   int LTC4015_read_charger_state(LTC4015 chip_handle, //!< Struct returned by LTC4015_init
+                      uint16_t registerinfo, //!< Register name from LTC4015_regdefs.h
+                      LTC4015_charger_state_t *charger_state
+                      //uint16_t *data //!< Pointer to the data destination
+                     )
+  {
+      LTC4015_chip_cfg_t *chip = (LTC4015_chip_cfg_t *) chip_handle;
+      int result;
+      uint16_t data = 0;
+      uint8_t command_code = get_subaddr(registerinfo);
+      result = chip->read_register(chip->addr, command_code, &data, chip->port_configuration);
+      memcpy((void *)charger_state, (void *)&data, sizeof(LTC4015_charger_state_t));
+
+      return result;
+    
+  }
+
+
+

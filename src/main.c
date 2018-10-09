@@ -59,10 +59,14 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 bool ltc4015_powered = false;
+bool No_VIN_Flag = false;
 uint8_t Send_Buffer[64];
 uint32_t packet_sent=1;
 uint32_t packet_receive=1;
 __IO uint16_t ADCConvertedValue;     // ADC为12位模数转换器，只有ADCConvertedValue的低12位有效
+LTC4015_charger_state_t charger_state;
+LTC4015_charge_status_t charge_status;
+LTC4015_system_status_t system_status;
 /* Extern variables ----------------------------------------------------------*/
 extern __IO uint8_t Receive_Buffer[64];
 extern __IO  uint32_t Receive_length ;
@@ -203,6 +207,10 @@ void DC2039A_Config_Init(void)
 {   
     uint16_t value =0;
     
+    memset(&charger_state, 0x00, sizeof(LTC4015_charger_state_t));
+    memset(&charge_status, 0x00, sizeof(LTC4015_charge_status_t));
+    memset(&system_status, 0x00, sizeof(LTC4015_system_status_t));
+    
     //Set min UVCL ;输入电压至少13V，才能开启充电功能
     LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(13)); // Initialize UVCL Lo Limit to 13V
     
@@ -216,22 +224,15 @@ void DC2039A_Config_Init(void)
      //set max input current  ；设置输入电流的最大值 
     LTC4015_write_register(chip, LTC4015_IIN_LIMIT_SETTING_BF, LTC4015_IINLIM(5.0)); // 5.0A, Initialize IIN Limit to 5A
    
-    
+//For Li-Ion batteries, if en_c_over_x_term=1 (0 by default), C/x charge termination occurs after the battery reaches the
+//charge voltage level and IBAT drops below C_OVER_X_THRESHOLD. See the section C/x Termination.
+//    
     //Enables C/x charge termination；使能
     LTC4015_write_register(chip, LTC4015_EN_C_OVER_X_TERM_BF, 1);
     
     //Enable QCount；使能库伦计数
     LTC4015_write_register(chip, LTC4015_EN_QCOUNT_BF, 1);
 
-//    //系统有12ms的预热时间，当测量结果有效时，会有提示，通过nSMBALERT   
-//    //Enable measurement valid alert；使能测量有效提示
-//    LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, 1);
-//    
-//    //Enable measurement on；强制打开测量功能
-//    LTC4015_write_register(chip, LTC4015_FORCE_MEAS_SYS_ON_BF, 1);
-    
-    //
-    //LTC4015_read_register(chip, LTC4015_VIN_UVCL_SETTING_BF, &value); 
     //设置输入电压门限；10v
     LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(10)); // Initialize VIN Lo Limit to 10V
     //开启输入电压门限低告警功能
@@ -241,15 +242,18 @@ void DC2039A_Config_Init(void)
 
 void DC2039A_Run(void)
 {
-    uint16_t value;
-    uint8_t ara_address;       
-    int result;
+    uint16_t value = 0;
+    uint8_t ara_address = 0;       
+    int result = 0;
     float input_power_vcc = 0.0;
+    float vsys_vcc = 0.0;
     float input_power_current = 0.0;
     float bat_charge_current = 0.0;
     float actual_charge_current = 0.0;
-    float bat_chargr_vcc = 0.0;
+    float batsens_cellcount_vcc = 0.0;
+    float bat_filt_vcc = 0.0;
     float die_temp = 0.0;
+    float Rntc_value = 0.0;
     
     bool ltc4015_powered_last = ltc4015_powered;
 
@@ -260,10 +264,25 @@ void DC2039A_Run(void)
     // If power is cycled re-init.
     if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Init();
     
+        
     //Read charger state(此处只读：输入电源检测)
+    LTC4015_read_charger_state(chip, LTC4015_CHARGER_STATE_SUBADDR, &charger_state);
+    
+    //Read charge status
+    LTC4015_read_charge_status(chip, LTC4015_CHARGE_STATUS_SUBADDR, &charge_status);
+          
+    //Read system status
+    LTC4015_read_system_status(chip, LTC4015_SYSTEM_STATUS_SUBADDR, &system_status);
+    
+     //Read NTC_RATIO
+    LTC4015_read_register(chip, LTC4015_NTC_RATIO_BF, &value);
+    Rntc_value = ((float)(10000*value))/(21845.0-value);
+    
     LTC4015_read_register(chip, LTC4015_CHARGER_SUSPENDED_BF, &value);
     if(value == 1)//no vin
     {
+      
+      No_VIN_Flag = true;
       //系统有12ms的预热时间，当测量结果有效时，会有提示，通过nSMBALERT   
       //Enable measurement valid alert；使能测量有效提示
       LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, 1);
@@ -299,32 +318,55 @@ void DC2039A_Run(void)
             }        
         }
     }
+    else
+    {
+        No_VIN_Flag = false;
+    }  
     
-    //Read charge state
-    LTC4015_read_register(chip, LTC4015_CONSTANT_CURRENT_BF, &value);
-          
-    //Read system status
-    LTC4015_read_register(chip, LTC4015_CHARGER_ENABLED_BF, &value);
-    
-    //Read VIN
-    LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
-    input_power_vcc = ((float)value)*1.648/1000;//v
-    
-     //Read IIN
-    LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
-    input_power_current = ((float)value)*((1.46487/3)*0.001);//v
-    
-    //Read VBATSENSE/cellcount
-    LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
-    bat_chargr_vcc = ((float)value*192.264/1000000);
+    if(No_VIN_Flag == false)
+    {
+      //Read VIN
+      LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
+      input_power_vcc = ((float)value)*1.648/1000;//v
       
+       //Read IIN
+      LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
+      input_power_current = ((float)value)*((1.46487/3)*0.001);//v
+      
+//      //Read Bat charge current
+//      LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
+//      bat_charge_current = ((float)value)*((1.46487/4)*0.001);//A
+    }
+    
+    //Read VSYS
+    LTC4015_read_register(chip, LTC4015_VSYS_BF, &value);
+    vsys_vcc = ((float)value)*1.648/1000;//v
+    
+    
+  //When a Li-Ion battery charge cycle begins, the LTC4015
+  //first determines if the battery is deeply discharged. If
+  //the battery voltage is below 2.85V per cell (VBAT_FILT
+  //below 14822) and BATSENS pin is above 2.6V then the
+  //LTC4015 begins charging by applying a preconditioning
+  //charge equal to ICHARGE_TARGET/10 (rounded down
+  //to the next LSB), and reporting precharge = 1. When the
+  //battery voltage exceeds 2.9V per cell (VBAT_FILT above
+  //15082), the LTC4015 proceeds to the constant-current/
+  //constant-voltage charging phase (cc_cv_charge = 1).
+    
+    //Read VBATSENSE/cellcount：特指batsens pin
+    LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
+    batsens_cellcount_vcc = ((float)value*192.264/1000000);
+    
+    //Read battery voltage of filtered(per cell)
+    LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
+    bat_filt_vcc = ((float)value*192.264/1000000);
+    
     //Read Bat charge current
     LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
     bat_charge_current = ((float)value)*((1.46487/4)*0.001);//A
     
-    
-    
-    
+      
     //Read actual charge current,v;
     LTC4015_read_register(chip, LTC4015_ICHARGE_DAC_BF, &value);
     actual_charge_current = (value+1)/4;//A
