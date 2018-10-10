@@ -347,7 +347,7 @@ void DC2039A_Run(void)
         delay_ms(200);
         ms_delay_count++;
       }
-      while(ms_delay_count<9);
+      while(ms_delay_count<5);
       if(!SMBALERT_IN_PIN)
       {
         // Clear the SMBAlert and get the address responding to the ARA.
@@ -365,6 +365,19 @@ void DC2039A_Run(void)
                   //close meas
                   LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, false); 
                   LTC4015_write_register(chip, LTC4015_FORCE_MEAS_SYS_ON_BF, false);
+                }
+                if((LTC4015_QCOUNT_LO_ALERT_BF_MASK & value) !=0)//库伦低告警
+                {
+                                      
+                   //关闭库伦低告警功能
+                  LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
+                   //使能库伦高告警功能
+                  LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+                  
+                  //allow the battery to charge again.
+                  LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
+                  LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
+                                      
                 }
             }        
         }
@@ -394,7 +407,7 @@ void DC2039A_Run(void)
                       LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state);
                       
                        //设置库伦低的告警门限值：49152*0.95 = 46694.
-                      LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, (uint16_t)(49152*0.95));
+                      LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, 48000);
                       
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, false); 
      
@@ -402,7 +415,7 @@ void DC2039A_Run(void)
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, true);  
                         
                     }
-                    else if((LTC4015_QCOUNT_LO_ALERT_BF_MASK & value) !=0)//库伦低告警
+                    if((LTC4015_QCOUNT_LO_ALERT_BF_MASK & value) !=0)//库伦低告警
                     {
                                           
                        //关闭库伦低告警功能
@@ -415,7 +428,7 @@ void DC2039A_Run(void)
                       LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
                                           
                     }
-                    else if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
+                    if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
                     {
                       LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).
                     }
