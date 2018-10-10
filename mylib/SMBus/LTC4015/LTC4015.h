@@ -191,22 +191,8 @@ extern "C" {
     by  defining  LTC4015_USE_MALLOC.  The  default  is  to not use malloc and
     statically allocate one LTC4015.
   */
-  
-  int LTC4015_read_system_status(LTC4015 chip_handle, //!< Struct returned by LTC4015_init
-                          uint16_t registerinfo, //!< Register name from LTC4015_regdefs.h
-                          LTC4015_system_status_t *system_status
-                          //uint16_t *data //!< Pointer to the data destination
-                         );
-  int LTC4015_read_charge_status(LTC4015 chip_handle, //!< Struct returned by LTC4015_init
-                      uint16_t registerinfo, //!< Register name from LTC4015_regdefs.h
-                      LTC4015_charge_status_t *charge_status
-                      //uint16_t *data //!< Pointer to the data destination
-                     );
-  int LTC4015_read_charger_state(LTC4015 chip_handle, //!< Struct returned by LTC4015_init
-                      uint16_t registerinfo, //!< Register name from LTC4015_regdefs.h
-                      LTC4015_charger_state_t *charger_state
-                      //uint16_t *data //!< Pointer to the data destination
-                     );
+    
+
 
 #ifndef MAX_NUM_LTC4015_INSTANCES
 #define MAX_NUM_LTC4015_INSTANCES 1
