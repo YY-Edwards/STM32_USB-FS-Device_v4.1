@@ -44,6 +44,7 @@
 #include "usb_istr.h"
 #include "usb_pwr.h"
 #include <string.h>
+#include "stdbool.h"
 static int check_count = 0;  
 static unsigned char PTT_Sta = 1;//默认高电平
 extern __IO uint32_t packet_sent;  
@@ -278,25 +279,60 @@ void TIM2_IRQHandler(void)
   */
 void TIM3_IRQHandler(void)
 {
-
+  bool ret = false;
+  static unsigned char msg[256] ={0};
+  static int remain_len =0;
+  static int send_count =0 ;
+  int msg_len = 0;
   if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
   {
     //timer3_counter_value++;
-    if(bDeviceState == CONFIGURED)
+    if(bDeviceState == CONFIGURED)//主机成功识别并以配置完成
     {
-      if (packet_sent == 1)
+      if (packet_sent == 1)//允许发送
       {
-          unsigned char temp_send = PTT_Sta;
-          FootPtt_Pro_t send_pro;
-          memset((void*)&send_pro, 0x00, sizeof(FootPtt_Pro_t));
-          send_pro.header       = PRO_HEADER;
-          send_pro.opcode       = PRO_OPCODE_PTT;
-          send_pro.length       = 0x01;
-          send_pro.payload      = temp_send;
-          send_pro.checksum     = (send_pro.opcode + send_pro.length + send_pro.payload);
-          send_pro.end          = PRO_END;           
-          CDC_Send_DATA ((unsigned char*)&send_pro,sizeof(FootPtt_Pro_t));
+        if(remain_len !=0)//发送剩余数据
+        {
+          if(remain_len >64)
+          {
+             CDC_Send_DATA (&msg[64*send_count], 64);
+             remain_len -= 64;
+             send_count++;
+          }
+          else
+          {
+            CDC_Send_DATA (&msg[64*send_count], remain_len);
+            remain_len = 0;
+            send_count = 0;
+            //memset(msg, 0x00, sizeof(msg));此处可能会导致发送未完成，而提前清空缓冲包数据。
+          }
+      
+        }
+        else//从队列中读出新的日志数据,等待下一次发送
+        {
+          memset(msg, 0x00, sizeof(msg));
+          ret = logger_output_msg(msg, &msg_len);
+          if(ret == true)//读取数据成功
+          {
+            if(msg_len >256)msg_len =256;
+            remain_len = msg_len;
+          }
+        }  
       }
+   
+//      if(packet_sent == 1)
+//      {
+////          unsigned char temp_send = PTT_Sta;
+////          FootPtt_Pro_t send_pro;
+////          memset((void*)&send_pro, 0x00, sizeof(FootPtt_Pro_t));
+////          send_pro.header       = PRO_HEADER;
+////          send_pro.opcode       = PRO_OPCODE_PTT;
+////          send_pro.length       = 0x01;
+////          send_pro.payload      = temp_send;
+////          send_pro.checksum     = (send_pro.opcode + send_pro.length + send_pro.payload);
+////          send_pro.end          = PRO_END;           
+////          CDC_Send_DATA ((unsigned char*)&send_pro,sizeof(FootPtt_Pro_t));
+//      }
     
     }
     TIM_ClearITPendingBit(TIM3, TIM_IT_Update);

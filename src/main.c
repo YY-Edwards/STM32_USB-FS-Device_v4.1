@@ -45,6 +45,7 @@
 #include "SMBus.h"
 #include "sys.h"
 #include "stdbool.h"
+#include "logger.h"
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -241,19 +242,24 @@ void DC2039A_Config_Init(void)
     //Qlsb=QCOUNT_PRESCALE_FACTOR/(Kqc*Rsnsb);Kqc=8333.33hz/v;Rsnsb=0.004Ω;
     //QCOUNT_PRESCALE_FACTOR = 0.30762*8333.33*0.004 = 10.254;
     //double QCOUNT_PRESCALE_FACTOR = QCOUNT_PRESCALE_FACTOR*2=20.5≈21；
-     LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 36044);//60%
+     //LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 36044);//60%
     
      //设置库伦的放大因子
     //set QCOUNT_PRESCALE_FACTOR
      LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 21);
      
-     //设置库伦高的告警门限值：49150
-     LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49150);
+     //设置库伦高的告警门限值：49149
+     LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49149);
      
      //使能库伦高告警功能
      LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
      
-
+    //设置最大的恒压充电时间为10分钟：600sec
+     LTC4015_write_register(chip, LTC4015_MAX_CV_TIME_BF, LTC4015_MAX_CV_TIME_BF_PRESET__30MINS);
+     
+     //设置最大充电时间为2小时：7200sec
+     LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, LTC4015_MAX_CHARGE_TIME_BF_PRESET__2HOURS);
+     
     //设置输入电压门限；10v
     LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(10)); // Initialize VIN Lo Limit to 10V
     //开启输入电压门限低告警功能
@@ -266,9 +272,10 @@ void DC2039A_Config_Init(void)
 
 void DC2039A_Run(void)
 {
-    uint16_t value = 0;
-    uint8_t ara_address = 0;       
-    int result = 0;
+    uint16_t   value = 0;
+    uint8_t    ara_address = 0; 
+    uint8_t    read_limit = 100;
+    int        result = 0;
     float input_power_vcc = 0.0;
     float vsys_vcc = 0.0;
     float input_power_current = 0.0;
@@ -279,6 +286,7 @@ void DC2039A_Run(void)
     float die_temp = 0.0;
     float Rntc_value = 0.0;
     float current_battery_capacity = 0.0;
+    int   charging_times= 0;//sec
     
     static bool first_termination_flag= false;
     bool ltc4015_powered_last = ltc4015_powered;
@@ -291,7 +299,7 @@ void DC2039A_Run(void)
     if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Init();
     
         
-    //Read charger state(此处只读：输入电源检测)
+    //Read charger state
     LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state);
     
     //Read charge status
@@ -300,39 +308,9 @@ void DC2039A_Run(void)
     //Read system status
     LTC4015_read_register(chip, LTC4015_SYSTEM_STATUS, (uint16_t *)&system_status);
       
-    //Read Qcount
-    LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-    current_battery_capacity = ((float)(value-16384)/32768.0)*100;//%
-    
-    if(((charger_state.c_over_x_term == true) || (charger_state.timer_term == true)) 
-       &&(first_termination_flag == false))//第一次充满
-    {
-      LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
-      LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-      first_termination_flag =true;
-//      LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, true);
-//      delay_ms(20);
-//      LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false);
-//      //设置库伦的放大因子
-//      //set QCOUNT_PRESCALE_FACTOR
-//       LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 21);
-//       
-//       //设置库伦高的告警门限值：49152
-//       LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49150);
-//       
-//       //使能库伦高告警功能
-//       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
-//        //LTC4015_write_register(chip, LTC4015_EN_C_OVER_X_TERM_BF, false);
-    }
-      
-     //Read NTC_RATIO
-    //This algorithm is suitable for NTCS0402E3103FLT
-    LTC4015_read_register(chip, LTC4015_NTC_RATIO_BF, &value);
-    Rntc_value = ((float)(10000*value))/(21845.0-value);
-
     if(system_status.vin_gt_vbat == false)//no vin
     {
-      
+      log_warning("No Input Power!");
       No_VIN_Flag = true;
       //系统有12ms的预热时间，当测量结果有效时，会有提示，通过nSMBALERT   
       //Enable measurement valid alert；使能测量有效提示
@@ -350,9 +328,10 @@ void DC2039A_Run(void)
       while(ms_delay_count<5);
       if(!SMBALERT_IN_PIN)
       {
-        // Clear the SMBAlert and get the address responding to the ARA.
-            result = SMBus_ARA_Read(&ara_address, 0);
-            
+        do
+        {
+            // Clear the SMBAlert and get the address responding to the ARA.
+            result = SMBus_ARA_Read(&ara_address, 0);           
             // Read what caused the alerts and clear if LTC4015
             // so that it will be re-enabled.
             if((ara_address == LTC4015_ADDR_68) && (result == 0));
@@ -367,8 +346,8 @@ void DC2039A_Run(void)
                   LTC4015_write_register(chip, LTC4015_FORCE_MEAS_SYS_ON_BF, false);
                 }
                 if((LTC4015_QCOUNT_LO_ALERT_BF_MASK & value) !=0)//库伦低告警
-                {
-                                      
+                {  
+                  log_warning("QCOUNT_LO_ALERT(no vin): true! reset charge and allow the battery to charge again."); 
                    //关闭库伦低告警功能
                   LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
                    //使能库伦高告警功能
@@ -376,18 +355,50 @@ void DC2039A_Run(void)
                   
                   //allow the battery to charge again.
                   LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
-                  LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
-                                      
+                                                      
                 }
-            }        
-        }
+                if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
+                {
+                  LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).
+                }
+              }
+            
+             read_limit--;// Don't allow to read forever,100 times at most.
+             
+          } while(!SMBALERT_IN_PIN && !read_limit);    
+       }
     }
     else//有输入电源
     {
+      
         No_VIN_Flag = false;
+        
+        if(((charger_state.c_over_x_term == true) || (charger_state.timer_term == true)) 
+           &&(first_termination_flag == false))//第一次充满
+        {
+          LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
+          LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
+          first_termination_flag =true;
+          log_info("first_termination_flag: true, reset qcount to 49152.");
+        }
+        
+        if(charger_state.max_charge_time_fault == 1)
+        {
+          log_warning("max_charge_time_fault: true.");
+          //clear fault
+          LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, false);
+          //reset max_charge_time
+          LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, LTC4015_MAX_CHARGE_TIME_BF_PRESET__2HOURS);
+        }
+        
+         //Read charge time
+        LTC4015_read_register(chip, LTC4015_MAX_CHARGE_TIMER_BF, &value);
+        charging_times = value;//sec
+        log_info("charging_times: %d sec.", charging_times);
+        
         if(!SMBALERT_IN_PIN)//有告警
         {
-            int8_t read_limit = 100;
+            read_limit = 100;
             do
             {              
                 // Clear the SMBAlert and get the address responding to the ARA.
@@ -400,24 +411,26 @@ void DC2039A_Run(void)
                     LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
                     if((LTC4015_QCOUNT_HI_ALERT_BF_MASK & value) !=0)//verify库伦高告警 
                     {
-                      
+                      log_warning("QCOUNT_HI_ALERT: true! suspend charge.");
                       LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state);
                       //suspend charger.
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, true); 
-                      LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state);
                       
-                       //设置库伦低的告警门限值：49152*0.95 = 46694.
-                      LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, 48000);
+                       //设置库伦低的告警门限值：16384+32768*0.99 = 48824.
+                      LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, 48824);
                       
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, false); 
      
                       //使能库伦低告警功能
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, true);  
+                      
+                      log_info("EN_QCOUNT_LOW_ALERT:    true. ");
+                      log_info("EN_QCOUNT_HIGH_ALERT:   fasle. ");
                         
                     }
                     if((LTC4015_QCOUNT_LO_ALERT_BF_MASK & value) !=0)//库伦低告警
                     {
-                                          
+                      log_warning("QCOUNT_LO_ALERT: true! reset charge and allow the battery to charge again.");                    
                        //关闭库伦低告警功能
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
                        //使能库伦高告警功能
@@ -425,17 +438,16 @@ void DC2039A_Run(void)
                       
                       //allow the battery to charge again.
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
-                      LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
                                           
                     }
                     if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
                     {
                       LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).
                     }
-                    else
-                    {
-                      //need to clear the Alert                   
-                    }
+                    //else
+//                    {
+//                      //need to clear the Alert                   
+//                    }
                 }
                 read_limit--; // Don't allow to read forever,100 times at most.
 
@@ -444,24 +456,41 @@ void DC2039A_Run(void)
         
     }  
     
+    //Read Qcount
+    LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
+    current_battery_capacity = ((float)(value-16384)/32768.0)*100;//%
+    log_info("current_battery_capacity: %f %%. ", current_battery_capacity);
+    
+      
+     //Read NTC_RATIO
+    //This algorithm is suitable for NTCS0402E3103FLT
+    LTC4015_read_register(chip, LTC4015_NTC_RATIO_BF, &value);
+    Rntc_value = ((float)(10000*value))/(21845.0-value);
+    log_info("Rntc_value: %f . ", Rntc_value);
+    
+    
     if(No_VIN_Flag == false)
     {
       //Read VIN
       LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
       input_power_vcc = ((float)value)*1.648/1000;//v
+      log_info("input_power_vcc: %f V . ", input_power_vcc);
       
        //Read IIN
       LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
       input_power_current = ((float)value)*((1.46487/3)*0.001);//v
+      log_info("input_power_current: %f A . ", input_power_current);
       
-//      //Read Bat charge current
-//      LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
-//      bat_charge_current = ((float)value)*((1.46487/4)*0.001);//A
+      //Read Bat charge current
+      LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
+      bat_charge_current = ((float)value)*((1.46487/4)*0.001);//A
+      log_info("bat_charge_current: %f A . ", bat_charge_current);
     }
     
     //Read VSYS
     LTC4015_read_register(chip, LTC4015_VSYS_BF, &value);
     vsys_vcc = ((float)value)*1.648/1000;//v
+    log_info("vsys_vcc: %f V . ", vsys_vcc);
     
     
   //When a Li-Ion battery charge cycle begins, the LTC4015
@@ -478,24 +507,37 @@ void DC2039A_Run(void)
     //Read VBATSENSE/cellcount：特指batsens pin
     LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
     batsens_cellcount_vcc = ((float)value*192.264/1000000);
+    log_info("batsens_vcc/cell: %f V . ", batsens_cellcount_vcc);
     
     //Read battery voltage of filtered(per cell)
     LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
     bat_filt_vcc = ((float)value*192.264/1000000);
+    log_info("bat_filt_vcc/cell: %f V . ", bat_filt_vcc);
     
-    //Read Bat charge current
-    LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
-    bat_charge_current = ((float)value)*((1.46487/4)*0.001);//A
-    
-      
-    //Read actual charge current,v;
+    //Read actual charge current
     LTC4015_read_register(chip, LTC4015_ICHARGE_DAC_BF, &value);
     actual_charge_current = (value+1)/4;//A
+    log_info("actual_charge_current: %f A . ", actual_charge_current);
     
     //read die temperature
     LTC4015_read_register(chip, LTC4015_DIE_TEMP_BF, &value);
     die_temp = (float)(value-12010)/45.6;//℃
+    log_info("die_temp: %f ℃ . ", die_temp);
 
+    LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
+    if(charger_state.cc_cv_charge = 1)
+    {
+      log_info("Charger is in cc-cv state.");
+    }
+    else if(charger_state.c_over_x_term = 1)
+    {
+      log_warning("Charger is in c_over_x_term state!");
+    }
+    else if(charger_state.charger_suspended = 1)
+    {
+        log_warning("Charger is in charger suspended state!");
+    }
+    
     return;
 }
 
@@ -511,6 +553,7 @@ void DC2039A_Run(void)
 int main(void)
 {
   delay_init(72);//延时功能初始化
+  logger_init();//logger 初始化
   //SysTick_Config(SYSTEM_CLOCK / 500);//2ms
   
   STM_EVAL_LEDInit(LED2);//根据原理图，修改函数里的LED宏定义即可
@@ -527,7 +570,7 @@ int main(void)
   USB_Init();//用于初始化 USB，;
   
   //TIM2_Int_Init(20, 7199);//2ms
-  TIM3_Int_Init(999,7199); //10Khz 的计数频率，计数到 1000 为 100ms
+  TIM3_Int_Init(99,7199); //10Khz 的计数频率，计数到 500 为 50ms
                         //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
   
   unsigned int run_counts = 0;
@@ -541,6 +584,7 @@ int main(void)
       {
         TIM_Cmd(TIM3, ENABLE);//启动定时器3
         timer3_run_flag = 1;
+        log_info("hello, LTC4105.");
       }
       CDC_Receive_DATA();
       /*Check to see if we have data yet */
@@ -550,11 +594,12 @@ int main(void)
 //          CDC_Send_DATA ((unsigned char*)Receive_Buffer,Receive_length);
        Receive_length = 0;
       }
-      if(run_counts == 60000)
+      if(run_counts == 35*60000)
       {
         STM_EVAL_LEDToggle(LED2);
         run_counts = 0;
-        DC2039A_Run();//测试
+        if(timer3_run_flag)
+          DC2039A_Run();//测试
       }
     }
     else

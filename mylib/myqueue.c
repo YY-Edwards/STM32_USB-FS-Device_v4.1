@@ -1,5 +1,92 @@
 #include "myqueue.h"
 
+
+void init_queue(RingQueue_t ring_queue)
+{
+  ring_queue->head = 0;
+  ring_queue->tail = 0;
+  for(int i =0; i < QUEUEDEEP; i++)
+  {
+    memset(&(ring_queue->queue_array[i].data), 0x00, DATADEEP);
+    ring_queue->queue_array[i].len=0;
+  }
+
+}
+
+bool take_from_queue(RingQueue_t ring_queue, void *buf, int *len, bool erase)
+{
+  bool ret =false;
+  int snap_head = ring_queue->head;
+  if(snap_head != ring_queue->tail)
+  {
+    memcpy(buf, ring_queue->queue_array[ring_queue->tail].data,  ring_queue->queue_array[ring_queue->tail].len);
+    *len = ring_queue->queue_array[ring_queue->tail].len;
+    if(true == erase)
+    {
+      ring_queue->tail= ring_queue->tail + 1;
+      if(ring_queue->tail == QUEUEDEEP)
+      {
+        ring_queue->tail = 0;
+      }
+    }
+    ret = true;//success
+  }
+  else
+  {
+    ret = false;//empty
+  }
+  
+  return ret;
+}
+bool push_to_queue(RingQueue_t ring_queue, void *buf, int len)
+{
+  mydata_t *p;
+  int next_index =0;
+  bool ret =false;
+  if((len > DATADEEP) | (len == 0))return false;
+  
+  p = (mydata_t *)(&(ring_queue->queue_array[ring_queue->head]));
+  memcpy(p->data, buf, len);
+  p->len = len;
+  
+  next_index = ring_queue->head +1;
+  if(next_index != ring_queue->tail)
+  {
+    if(next_index == QUEUEDEEP)
+    {
+      next_index =0 ;
+    }
+    ring_queue->head = next_index;
+    ret = true;
+    
+  }
+  else
+  {
+    ret = false;
+  }
+  
+  return ret;
+
+}
+void clear_queue(RingQueue_t ring_queue)
+{
+  ring_queue->head = ring_queue->tail;
+}
+bool queue_is_empty(RingQueue_t ring_queue)
+{
+  int mid_flag = ring_queue->head;
+  if(mid_flag != ring_queue->tail)
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+
+
 Queue_t QueueCreate(unsigned short deep, unsigned short elementsize )
 {    
     if(( 0 == deep) || ( 0 == elementsize ))
@@ -89,7 +176,7 @@ QueueSta_t QueuePush(Queue_t queue, void * element)
     {
        return queue_full;
        //queue->count = 0;
-      // printf("qxxxqqqqq\r\n");
+       //printf("qxxxqqqqq\r\n");
         //queue->count = 0;
     }
     

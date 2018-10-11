@@ -87,7 +87,7 @@
 /*#define ERR_CALLBACK*/
 /*#define WKUP_CALLBACK*/
 /*#define SUSP_CALLBACK*/
-/*#define RESET_CALLBACK*/
+#define RESET_CALLBACK
 /*#define SOF_CALLBACK*/
 /*#define ESOF_CALLBACK*/
 /* CTR service routines */

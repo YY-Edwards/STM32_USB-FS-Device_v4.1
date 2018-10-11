@@ -317,6 +317,7 @@
           <state>$PROJ_DIR$\..\mylib\SYS</state>
           <state>$PROJ_DIR$\..\mylib\SMBus</state>
           <state>$PROJ_DIR$\..\mylib\SMBus\LTC4015</state>
+          <state>$PROJ_DIR$\..\mylib\LOG</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -726,7 +727,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$TOOLKIT_DIR$\config\linker\ST\stm32f103xE.icf</state>
+          <state>$PROJ_DIR$\VirtualComport_Loopback.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -8858,6 +8859,21 @@
     <name>User</name>
     <group>
       <name>mylib</name>
+      <group>
+        <name>LOG</name>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\LOG\logger.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\LOG\logger.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\myqueue.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\myqueue.h</name>
+        </file>
+      </group>
       <group>
         <name>SMBus</name>
         <group>

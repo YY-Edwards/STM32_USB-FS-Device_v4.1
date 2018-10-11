@@ -86,4 +86,10 @@ void EP3_OUT_Callback(void)
   PMAToUserBufferCopy((unsigned char*)Receive_Buffer, ENDP3_RXADDR, Receive_length);
 }
 
+
+
+void RESET_Callback(void)
+{
+    packet_sent = 1;//发送成功的标志
+}
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
