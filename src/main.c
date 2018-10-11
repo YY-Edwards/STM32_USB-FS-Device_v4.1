@@ -525,17 +525,21 @@ void DC2039A_Run(void)
     log_info("die_temp: %f ¡æ . ", die_temp);
 
     LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
-    if(charger_state.cc_cv_charge = 1)
+    if(charger_state.cc_cv_charge == 1)
     {
       log_info("Charger is in cc-cv state.");
     }
-    else if(charger_state.c_over_x_term = 1)
+    else if(charger_state.c_over_x_term == 1)
     {
       log_warning("Charger is in c_over_x_term state!");
     }
-    else if(charger_state.charger_suspended = 1)
+    else if(charger_state.charger_suspended == 1)
     {
         log_warning("Charger is in charger suspended state!");
+    }
+    else if(charger_state.bat_missing_fault == 1 || charger_state.bat_short_fault == 1)
+    {
+      log_warning("Charger is in battery error state!");
     }
     
     return;
