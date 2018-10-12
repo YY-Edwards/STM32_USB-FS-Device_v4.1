@@ -302,6 +302,7 @@ void DC2039A_Run(void)
     if(ltc4015_powered == false)
     {
       log_warning("LTC4015 is poweroff!");
+      first_termination_flag = false;
       return;
     }
     
