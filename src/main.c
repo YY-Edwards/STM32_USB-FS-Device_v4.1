@@ -208,6 +208,7 @@ void DC2039A_Config_Init(void)
 {   
     uint16_t value =0;
     
+    log_info("init LTC4015 setting.");
     memset(&charger_state, 0x00, sizeof(LTC4015_charger_state_t));
     memset(&charge_status, 0x00, sizeof(LTC4015_charge_status_t));
     memset(&system_status, 0x00, sizeof(LTC4015_system_status_t));
@@ -288,7 +289,7 @@ void DC2039A_Run(void)
     float current_battery_capacity = 0.0;
     int   charging_times= 0;//sec
     
-    //static bool first_termination_flag= false;
+    static bool first_termination_flag= false;
     bool ltc4015_powered_last = ltc4015_powered;
 
     // Read the INTVCC A/D value to know if part cycled power
@@ -297,6 +298,12 @@ void DC2039A_Run(void)
     
     // If power is cycled re-init.
     if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Init();
+    
+    if(ltc4015_powered == false)
+    {
+      log_warning("LTC4015 is poweroff!");
+      return;
+    }
     
         
     //Read charger state
@@ -376,10 +383,17 @@ void DC2039A_Run(void)
         if((charger_state.c_over_x_term == true) || (charger_state.timer_term == true)) 
            //&&(first_termination_flag == false))//µÚÒ»´Î³äÂú
         {
-          LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
-          //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-          //first_termination_flag =true;
-          log_info("termination_flag: true, reset qcount to 49152.");
+          if(first_termination_flag == false)
+          {
+            LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
+            //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
+            first_termination_flag =true;
+            log_info("termination_flag: true, reset qcount to 49152.");
+          }
+          else
+          {
+            log_warning("termination_flag: true(again!).");
+          }
         }
         
         if(charger_state.max_charge_time_fault == 1)
@@ -537,6 +551,10 @@ void DC2039A_Run(void)
       {
         log_info("Charger is in cv state by cc-cv");
       }
+      else
+      {
+        log_warning("the IIN or VIN is controled by setting");
+      }
     }
     else if(charger_state.c_over_x_term == 1)
     {
@@ -549,6 +567,12 @@ void DC2039A_Run(void)
     else if(charger_state.bat_missing_fault == 1 || charger_state.bat_short_fault == 1)
     {
       log_warning("Charger is in battery error state!");
+    }
+    else
+    {
+      log_warning("Charger state  value_hex: 0x%4X", charger_state);
+      log_warning("Charge  status value_hex: 0x%4X", charge_status);
+      log_warning("System  status value_hex: 0x%4X", system_status);
     }
     
     return;
