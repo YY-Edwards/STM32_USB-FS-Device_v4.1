@@ -288,7 +288,7 @@ void DC2039A_Run(void)
     float current_battery_capacity = 0.0;
     int   charging_times= 0;//sec
     
-    static bool first_termination_flag= false;
+    //static bool first_termination_flag= false;
     bool ltc4015_powered_last = ltc4015_powered;
 
     // Read the INTVCC A/D value to know if part cycled power
@@ -373,13 +373,13 @@ void DC2039A_Run(void)
       
         No_VIN_Flag = false;
         
-        if(((charger_state.c_over_x_term == true) || (charger_state.timer_term == true)) 
-           &&(first_termination_flag == false))//第一次充满
+        if((charger_state.c_over_x_term == true) || (charger_state.timer_term == true)) 
+           //&&(first_termination_flag == false))//第一次充满
         {
           LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
-          LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-          first_termination_flag =true;
-          log_info("first_termination_flag: true, reset qcount to 49152.");
+          //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
+          //first_termination_flag =true;
+          log_info("termination_flag: true, reset qcount to 49152.");
         }
         
         if(charger_state.max_charge_time_fault == 1)
@@ -394,7 +394,7 @@ void DC2039A_Run(void)
          //Read charge time
         LTC4015_read_register(chip, LTC4015_MAX_CHARGE_TIMER_BF, &value);
         charging_times = value;//sec
-        log_info("charging_times: %d sec.", charging_times);
+        log_info("charging time: %d sec.", charging_times);
         
         if(!SMBALERT_IN_PIN)//有告警
         {
@@ -412,12 +412,12 @@ void DC2039A_Run(void)
                     if((LTC4015_QCOUNT_HI_ALERT_BF_MASK & value) !=0)//verify库伦高告警 
                     {
                       log_warning("QCOUNT_HI_ALERT: true! suspend charge.");
-                      LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state);
+                      //LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state);
                       //suspend charger.
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, true); 
                       
-                       //设置库伦低的告警门限值：16384+32768*0.99 = 48824.
-                      LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, 48824);
+                       //设置库伦低的告警门限值：16384+32768*0.9995 = 49127.232.
+                      LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, 49127);
                       
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, false); 
      
@@ -459,38 +459,45 @@ void DC2039A_Run(void)
     //Read Qcount
     LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
     current_battery_capacity = ((float)(value-16384)/32768.0)*100;//%
-    log_info("current_battery_capacity: %f %%. ", current_battery_capacity);
+    log_info("bat capacity: %f %%. ", current_battery_capacity);
     
       
      //Read NTC_RATIO
     //This algorithm is suitable for NTCS0402E3103FLT
     LTC4015_read_register(chip, LTC4015_NTC_RATIO_BF, &value);
     Rntc_value = ((float)(10000*value))/(21845.0-value);
-    log_info("Rntc_value: %f . ", Rntc_value);
+    log_info("Rntc: %f R. ", Rntc_value);
     
+    //Read actual charge current
+    LTC4015_read_register(chip, LTC4015_ICHARGE_DAC_BF, &value);
+    actual_charge_current = (value+1)/4;//A
+    log_info("max charge current: %f A . ", actual_charge_current);
     
     if(No_VIN_Flag == false)
     {
       //Read VIN
       LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
       input_power_vcc = ((float)value)*1.648/1000;//v
-      log_info("input_power_vcc: %f V . ", input_power_vcc);
+      log_info("VIN: %f V . ", input_power_vcc);
       
        //Read IIN
       LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
       input_power_current = ((float)value)*((1.46487/3)*0.001);//v
-      log_info("input_power_current: %f A . ", input_power_current);
+      log_info("IIN: %f A . ", input_power_current);
       
-      //Read Bat charge current
-      LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
-      bat_charge_current = ((float)value)*((1.46487/4)*0.001);//A
-      log_info("bat_charge_current: %f A . ", bat_charge_current);
+      if(actual_charge_current != 0)
+      {
+        //Read Bat charge current
+        LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
+        bat_charge_current = ((float)value)*((1.46487/4)*0.001);//A
+        log_info("IBAT: %f A . ", bat_charge_current);
+      }
     }
     
     //Read VSYS
     LTC4015_read_register(chip, LTC4015_VSYS_BF, &value);
     vsys_vcc = ((float)value)*1.648/1000;//v
-    log_info("vsys_vcc: %f V . ", vsys_vcc);
+    log_info("VSYS: %f V . ", vsys_vcc);
     
     
   //When a Li-Ion battery charge cycle begins, the LTC4015
@@ -507,27 +514,29 @@ void DC2039A_Run(void)
     //Read VBATSENSE/cellcount：特指batsens pin
     LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
     batsens_cellcount_vcc = ((float)value*192.264/1000000);
-    log_info("batsens_vcc/cell: %f V . ", batsens_cellcount_vcc);
+    log_info("VBAT/CELL: %f V . ", batsens_cellcount_vcc);
     
     //Read battery voltage of filtered(per cell)
     LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
     bat_filt_vcc = ((float)value*192.264/1000000);
-    log_info("bat_filt_vcc/cell: %f V . ", bat_filt_vcc);
-    
-    //Read actual charge current
-    LTC4015_read_register(chip, LTC4015_ICHARGE_DAC_BF, &value);
-    actual_charge_current = (value+1)/4;//A
-    log_info("actual_charge_current: %f A . ", actual_charge_current);
+    log_info("VBAT_FILT/CELL: %f V . ", bat_filt_vcc);
     
     //read die temperature
     LTC4015_read_register(chip, LTC4015_DIE_TEMP_BF, &value);
     die_temp = (float)(value-12010)/45.6;//℃
-    log_info("die_temp: %f ℃ . ", die_temp);
+    log_info("DIE_TEMP: %f T. ", die_temp);
 
     LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
     if(charger_state.cc_cv_charge == 1)
     {
-      log_info("Charger is in cc-cv state.");
+      if(charge_status.constant_current == 1)
+      {
+        log_info("Charger is in cc state by cc-cv");
+      }
+      else if(charge_status.constant_voltage == 1)
+      {
+        log_info("Charger is in cv state by cc-cv");
+      }
     }
     else if(charger_state.c_over_x_term == 1)
     {

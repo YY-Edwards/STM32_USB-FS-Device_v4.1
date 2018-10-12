@@ -5,7 +5,7 @@
 #include "string.h"
 
 #define QUEUEDEEP 20
-#define DATADEEP  256
+#define DATADEEP  128
 typedef enum
 {
     queue_ok,
