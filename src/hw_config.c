@@ -73,6 +73,35 @@ extern LINE_CODING linecoding;
 void Set_System(void)
 {
   GPIO_InitTypeDef  GPIO_InitStructure;  
+  
+#if defined(STM32L1XX_MD)
+  
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+  
+
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_USB);
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource12, GPIO_AF_USB);
+
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  
+  /* USB_DISCONNECT used as USB pull-up */
+  GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_PIN;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; /* Push-pull or open drain */
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz; /* 400 KHz, 2, 10 or 40MHz */
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  
+  STM32L15_USB_DISCONNECT;
+  //GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
+  
+#else
+  
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 
   /********************************************/
@@ -98,11 +127,14 @@ void Set_System(void)
   //一般来说，开漏是用来连接不同电平的器件，匹配电平用的，因为开漏引脚不连接外部的上拉电阻时，只能输出低电平，如果需要同时具备输出高电平的功能，则需要接上拉电阻，很好的一个优点是通过改变上拉电源的电压，便可以改变传输电平。
   //比如加上上拉电阻就可以提供TTL/CMOS电平输出等.
   //但自己的开发板得用推挽输出啊。通过软件控制PG11的高低电平输出，以让PC识别。
+ 
   GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
   
   GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);//先拉低，等初始化完成后再拉高，
                                                     //以便主机识别后再发送请求，
                                                     //这样MCU才可正常响应。
+#endif
+ 
   
   
 #ifdef USB_LOW_PWR_MGMT_SUPPORT
@@ -129,6 +161,23 @@ void Set_System(void)
 void Set_USBClock(void)
 {
 #if defined(STM32L1XX_MD) || defined(STM32L1XX_HD) || defined(STM32L1XX_MD_PLUS) 
+  
+    /* PLL_VCO = HSE_VALUE * PLL_MUL = 96 MHz */
+  /* USBCLK = PLL_VCO / 2= 48 MHz */
+  /* SYSCLK = PLL_VCO * PLL_DIV = 32 MHz */
+  RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMUL12 | RCC_CFGR_PLLDIV3);
+  /* Enable PLL */
+  RCC->CR |= RCC_CR_PLLON;
+  /* Wait till PLL is ready */
+  while((RCC->CR & RCC_CR_PLLRDY) == 0)
+  { }
+  /* Select PLL as system clock source */
+  RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
+  RCC->CFGR |= (uint32_t)RCC_CFGR_SW_PLL;
+  /* Wait till PLL is used as system clock source */
+  while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) != (uint32_t)RCC_CFGR_SWS_PLL)
+  { }
+  
   /* Enable USB clock */
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
   
@@ -178,6 +227,20 @@ void USB_Interrupts_Config(void)
   /* 2 bit for pre-emption priority, 2 bits for subpriority */
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
  
+#if defined(STM32L1XX_MD) || defined(STM32L1XX_HD)|| defined(STM32L1XX_MD_PLUS)
+  NVIC_InitStructure.NVIC_IRQChannel = USB_LP_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+  
+    /* Enable the USB Wake-up interrupt */
+  NVIC_InitStructure.NVIC_IRQChannel = USB_FS_WKUP_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+#else
+  
   /* Enable the USB interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
@@ -189,7 +252,7 @@ void USB_Interrupts_Config(void)
   NVIC_InitStructure.NVIC_IRQChannel = USBWakeUp_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
   NVIC_Init(&NVIC_InitStructure); 
- 
+#endif
 }
 
 

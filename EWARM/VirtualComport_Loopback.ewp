@@ -3569,11 +3569,11 @@
         </option>
         <option>
           <name>IlinkIcfOverride</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>lnk0t.icf</state>
+          <state>$PROJ_DIR$\VirtualComport_Loopback_STM32L151C8A.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -3633,7 +3633,7 @@
         </option>
         <option>
           <name>IlinkProgramEntryLabel</name>
-          <state></state>
+          <state>__iar_program_start</state>
         </option>
         <option>
           <name>DoFill</name>
@@ -8820,6 +8820,9 @@
         <name>$PROJ_DIR$\..\..\..\Libraries\STM32L1xx_StdPeriph_Driver\src\misc.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\..\..\Libraries\STM32L1xx_StdPeriph_Driver\src\stm32l1xx_adc.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\..\Libraries\STM32L1xx_StdPeriph_Driver\src\stm32l1xx_dma.c</name>
       </file>
       <file>
@@ -8848,6 +8851,9 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\..\Libraries\STM32L1xx_StdPeriph_Driver\src\stm32l1xx_syscfg.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\Libraries\STM32L1xx_StdPeriph_Driver\src\stm32l1xx_tim.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\..\Libraries\STM32L1xx_StdPeriph_Driver\src\stm32l1xx_usart.c</name>

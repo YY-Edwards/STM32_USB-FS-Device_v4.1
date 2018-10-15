@@ -151,20 +151,35 @@
  /* Uncomment the following define to use an external pull up instead of the 
     integrated STM32L15xx internal pull up. In this case make sure to set up
     correctly the external required hardware and the GPIO defines below.*/
-/* #define USB_USE_EXTERNAL_PULLUP */
+#define USB_USE_EXTERNAL_PULLUP
+
+#define TEST_TP                               GPIOB 
+  #define TEST_TP1_PIN                        //GPIO_Pin_2
+  #define TEST_TP2_PIN                        //GPIO_Pin_3
+  #define nSMBALLERT_PIN                      GPIO_Pin_14
+  #define CAT5140_NWP_PIN                     GPIO_Pin_8
+  #define NEQ_PIN                             //GPIO_Pin_6
+
+  #define RCC_AHBPeriph_GPIO_TEST_TP         RCC_AHBPeriph_GPIOB
+
+  #define RCC_AHBPeriph_ALLGPIO              (RCC_AHBPeriph_GPIOA \
+                                               | RCC_AHBPeriph_GPIOB \
+                                               | RCC_AHBPeriph_GPIOC \
+                                               | RCC_AHBPeriph_GPIOD)
+
 
  #if !defined(USB_USE_EXTERNAL_PULLUP)
   #define STM32L15_USB_CONNECT                SYSCFG_USBPuCmd(ENABLE)
   #define STM32L15_USB_DISCONNECT             SYSCFG_USBPuCmd(DISABLE)
 
- #elif defined(USB_USE_EXTERNAL_PULLUP)
-  /* PA0 is chosen just as illustrating example, you should modify the defines
+ #elif defined(USB_USE_EXTERNAL_PULLUP)//启用外部上拉
+  /* PA1 is chosen just as illustrating example, you should modify the defines
     below according to your hardware configuration. */ 
   #define USB_DISCONNECT                      GPIOA
-  #define USB_DISCONNECT_PIN                  GPIO_Pin_0
+  #define USB_DISCONNECT_PIN                  GPIO_Pin_1
   #define RCC_AHBPeriph_GPIO_DISCONNECT       RCC_AHBPeriph_GPIOA
-  #define STM32L15_USB_CONNECT                GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN)
-  #define STM32L15_USB_DISCONNECT             GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN)
+  #define STM32L15_USB_DISCONNECT             GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN)
+  #define STM32L15_USB_CONNECT                GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN)
  #endif /* USB_USE_EXTERNAL_PULLUP */
 
 #elif defined (USE_STM32373C_EVAL)

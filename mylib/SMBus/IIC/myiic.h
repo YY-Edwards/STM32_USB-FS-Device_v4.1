@@ -7,14 +7,31 @@
 #define LTC4015_IIC 1  //定义LTC4015的IIC接口使用MCU的IIC1
 #define CAT5140_IIC 2  //定义LTC4015的IIC接口使用MCU的IIC2
 
+#if defined (USE_STM32L152_EVAL)
 
+#define SDA_1_IN()  {GPIOB->MODER&=0X3FFFFFFF;GPIOB->MODER|=0<<30;}
+#define SDA_1_OUT() {GPIOB->MODER&=0X3FFFFFFF;GPIOB->MODER|=1<<30;GPIOB->OTYPER&=0X7FFF;GPIOB->OTYPER|=0<<15;}
+
+#define SDA_2_IN()  {GPIOB->MODER&=0XFFFF3FFF;GPIOB->MODER|=0<<14;}
+#define SDA_2_OUT() {GPIOB->MODER&=0XFFFF3FFF;GPIOB->MODER|=1<<14;GPIOB->OTYPER&=0XFF7F;GPIOB->OTYPER|=0<<7;}
+
+
+#define IIC_1_SCL       PBout(13) //SCL:1
+#define IIC_1_SDA       PBout(15) //SDA	:1
+#define READ_1_SDA      PBin(15)  //输入SDA:1
+
+#define IIC_2_SCL       PBout(6) //SCL:2
+#define IIC_2_SDA       PBout(7) //SDA	:2 
+#define READ_2_SDA      PBin(7)  //输入SDA:2 
+
+
+#else
 //IO方向设置
 #define SDA_1_IN()  {GPIOB->CRL&=0X0FFFFFFF;GPIOB->CRL|=8<<28;}
 #define SDA_1_OUT() {GPIOB->CRL&=0X0FFFFFFF;GPIOB->CRL|=3<<28;}
 
 #define SDA_2_IN()  {GPIOB->CRH&=0XFFFF0FFF;GPIOB->CRH|=8<<12;}
 #define SDA_2_OUT() {GPIOB->CRH&=0XFFFF0FFF;GPIOB->CRH|=3<<12;}
-
 
 //IO操作函数	
 #define IIC_1_SCL       PBout(6) //SCL:1
@@ -24,6 +41,9 @@
 #define IIC_2_SCL       PBout(10) //SCL:2
 #define IIC_2_SDA       PBout(11) //SDA	:2 
 #define READ_2_SDA      PBin(11)  //输入SDA:2 
+
+
+#endif
 
 //IIC所有操作函数
 void IIC_Init(void);                            //初始化IIC1,IIC2的IO口

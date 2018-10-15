@@ -6,6 +6,22 @@
 void IIC_Init(void)
 {					     
       GPIO_InitTypeDef GPIO_InitStructure;
+#if defined(STM32L1XX_MD)
+      
+      RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+      
+      GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_13|GPIO_Pin_15;
+      GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+      GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; /* Push-pull or open drain */
+      GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
+      GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz; /* 400 KHz, 2, 10 or 40MHz */
+      GPIO_Init(GPIOB, &GPIO_InitStructure);
+      
+      GPIO_SetBits(GPIOB,GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_13|GPIO_Pin_15); 	//PB6,PB7, PB10,PB11 输出高
+      
+
+#else      
+      
       RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE );	
          
       GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_10|GPIO_Pin_11;
@@ -13,6 +29,8 @@ void IIC_Init(void)
       GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
       GPIO_Init(GPIOB, &GPIO_InitStructure);
       GPIO_SetBits(GPIOB,GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_10|GPIO_Pin_11); 	//PB6,PB7, PB10,PB11 输出高
+      
+#endif
 }
 //产生IIC起始信号
 void IIC_Start(unsigned char IIC_Addr)

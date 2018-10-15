@@ -19,6 +19,28 @@
 #define BITBAND(addr, bitnum) ((addr & 0xF0000000)+0x2000000+((addr &0xFFFFF)<<5)+(bitnum<<2)) 
 #define MEM_ADDR(addr)  *((volatile unsigned long  *)(addr)) 
 #define BIT_ADDR(addr, bitnum)   MEM_ADDR(BITBAND(addr, bitnum)) 
+
+#if defined (USE_STM32L152_EVAL)
+
+#define GPIOA_ODR_Addr    (GPIOA_BASE+20) //0x40020014 
+#define GPIOB_ODR_Addr    (GPIOB_BASE+20)  
+#define GPIOC_ODR_Addr    (GPIOC_BASE+20) 
+#define GPIOD_ODR_Addr    (GPIOD_BASE+20) 
+#define GPIOE_ODR_Addr    (GPIOE_BASE+20) 
+#define GPIOF_ODR_Addr    (GPIOF_BASE+20)     
+#define GPIOG_ODR_Addr    (GPIOG_BASE+20)    
+
+#define GPIOA_IDR_Addr    (GPIOA_BASE+10) //0x4002000A
+#define GPIOB_IDR_Addr    (GPIOB_BASE+10) //0x4002040A 
+#define GPIOC_IDR_Addr    (GPIOC_BASE+10) 
+#define GPIOD_IDR_Addr    (GPIOD_BASE+10) 
+#define GPIOE_IDR_Addr    (GPIOE_BASE+10) 
+#define GPIOF_IDR_Addr    (GPIOF_BASE+10) 
+#define GPIOG_IDR_Addr    (GPIOG_BASE+10) 
+
+
+#else
+
 //IO口地址映射
 #define GPIOA_ODR_Addr    (GPIOA_BASE+12) //0x4001080C 
 #define GPIOB_ODR_Addr    (GPIOB_BASE+12) //0x40010C0C 
@@ -35,6 +57,8 @@
 #define GPIOE_IDR_Addr    (GPIOE_BASE+8) //0x40011808 
 #define GPIOF_IDR_Addr    (GPIOF_BASE+8) //0x40011A08 
 #define GPIOG_IDR_Addr    (GPIOG_BASE+8) //0x40011E08 
+
+#endif
  
 //IO口操作,只对单一的IO口!
 //确保n的值小于16!

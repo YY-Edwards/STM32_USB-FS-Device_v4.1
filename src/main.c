@@ -50,6 +50,13 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+#if defined(STM32L1XX_MD)
+
+#define SMBALERT_IN_PIN              PBin(14)
+#define U5NWP_OUT_PIN                PBout(8) 
+
+#else
+
 #define SYSTEM_CLOCK 72000000
 #define DR_ADDRESS                  ((uint32_t)0x4001244C) //ADC1 DR寄存器基地址
 #define TP1_OUT_PIN                  PAout(2)   
@@ -57,6 +64,8 @@
 #define SMBALERT_IN_PIN              PAin(4)
 #define U5NWP_OUT_PIN                PAout(5) 
 #define NEQ_OUT_PIN                  PAout(6) 
+
+#endif
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 bool ltc4015_powered = false;
@@ -94,6 +103,30 @@ uint16_t STM32_ADC_Read(void)
 void DC2039A_Interface_Init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;  
+    
+#if defined(STM32L1XX_MD)
+    
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+    /********************************************/
+    /*  Configure nSMBALLERT,CAT5140_NWP*/
+    /********************************************/
+    
+    GPIO_InitStructure.GPIO_Pin = CAT5140_NWP_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; /* Push-pull or open drain */
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz; /* 400 KHz, 2, 10 or 40MHz */
+    
+    GPIO_Init(TEST_TP, &GPIO_InitStructure);
+     
+    
+    GPIO_InitStructure.GPIO_Pin = nSMBALLERT_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
+    GPIO_Init(TEST_TP, &GPIO_InitStructure);
+    
+#else
+  
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIO_TEST_TP, ENABLE);
 
     /********************************************/
@@ -109,7 +142,10 @@ void DC2039A_Interface_Init(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
     GPIO_Init(TEST_TP, &GPIO_InitStructure);
     
-    NEQ_OUT_PIN = 0;//EQ SET：0
+#endif  
+    
+    
+    //NEQ_OUT_PIN = 0;//EQ SET：0
     
     U5NWP_OUT_PIN = 1;//close write protect
     
@@ -136,7 +172,76 @@ void ADC_GPIO_Configuration(void)
     GPIO_InitTypeDef GPIO_InitStructure;
     DMA_InitTypeDef DMA_InitStructure;        //DMA初始化结构体声明
     ADC_InitTypeDef ADC_InitStructure;        //ADC初始化结构体声明
-      
+    ADC_CommonInitTypeDef   ADC_CommonInitStructure;
+
+#if defined(STM32L1XX_MD)
+    
+     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);	  //GPIOA时钟
+    /* Configure PA4 (ADC Channel 4) as analog input -------------------------*/
+    //PA4 作为模拟通道4输入引脚                         
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;     //管脚4
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL; /* None, Pull-up or pull-down */
+    GPIO_Init(GPIOA, &GPIO_InitStructure);     //GPIO组
+    
+    
+    /* DMA1 channel1 configuration ----------------------------------------------*/
+    DMA_DeInit(DMA1_Channel1);		  //开启DMA1的第一通道
+    DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1->DR;//DR_ADDRESS;		  //DMA对应的外设基地址
+    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&ADCConvertedValue;   //内存存储基地址
+    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;	//DMA的转换模式为SRC模式，由外设搬移到内存
+    DMA_InitStructure.DMA_BufferSize = 1;		   //DMA缓存大小，1个
+    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;	//接收一次数据后，设备地址禁止后移
+    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Disable;	//关闭接收一次数据后，目标内存地址后移
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;  //定义外设数据宽度为16位
+    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;  //DMA搬移数据尺寸，HalfWord就是为16位
+    DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;   //转换模式，循环缓存模式。
+    DMA_InitStructure.DMA_Priority = DMA_Priority_High;	//DMA优先级高
+    DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;		  //M2M模式禁用
+    DMA_Init(DMA1_Channel1, &DMA_InitStructure);          
+    /* Enable DMA1 channel1 */
+    DMA_Cmd(DMA1_Channel1, ENABLE);
+    
+    
+    
+    /* Enable the HSI oscillator */
+    RCC_HSICmd(ENABLE);
+    /* Check that HSI oscillator is ready */
+    while(RCC_GetFlagStatus(RCC_FLAG_HSIRDY) == RESET)
+    {
+    }
+
+    /* Enable ADC1 clock */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+    /* Common configuration *****************************************************/
+    /* ADCCLK = HSI/1 */
+    ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div1;
+    ADC_CommonInit(&ADC_CommonInitStructure);
+    /* ADC1 configuration */
+    ADC_InitStructure.ADC_ScanConvMode = ENABLE;
+    ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
+    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConvEdge_None;
+    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+    ADC_InitStructure.ADC_NbrOfConversion = 1;
+    ADC_Init(ADC1, &ADC_InitStructure);
+    /* ADC1 regular channel 4 configuration */
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_4, 1, ADC_SampleTime_4Cycles);
+    /* Enable the request after last transfer for DMA Circular mode */
+    ADC_DMARequestAfterLastTransferCmd(ADC1, ENABLE);
+    /* Enable ADC1 DMA */
+    ADC_DMACmd(ADC1, ENABLE);
+    /* Enable ADC1 */
+    ADC_Cmd(ADC1, ENABLE);
+    /* Wait until the ADC1 is ready */
+    while(ADC_GetFlagStatus(ADC1, ADC_FLAG_ADONS) == RESET)
+    {
+    }
+    /* Start ADC1 Software Conversion */
+    ADC_SoftwareStartConv(ADC1);
+
+    
+
+#else    
     
     /* Enable DMA1 clock */
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);		 //使能DMA时钟
@@ -199,7 +304,7 @@ void ADC_GPIO_Configuration(void)
     while(ADC_GetCalibrationStatus(ADC1));	   //等待校准完成
     /* Start ADC1 Software Conversion */ 
     ADC_SoftwareStartConvCmd(ADC1, ENABLE);	//连续转换开始，ADC通过DMA方式不断的更新RAM区。
-      
+#endif    
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Local Functions
@@ -590,7 +695,11 @@ void DC2039A_Run(void)
 *******************************************************************************/
 int main(void)
 {
-  delay_init(72);//延时功能初始化
+#if defined(STM32L1XX_MD)
+   delay_init(32);
+#else
+   delay_init(72);//延时功能初始化
+#endif  
   logger_init();//logger 初始化
   //SysTick_Config(SYSTEM_CLOCK / 500);//2ms
   
