@@ -1,6 +1,11 @@
 #ifndef __SYS_H
 #define __SYS_H	
-#include "stm32f10x.h"
+#if defined (USE_STM32L152_EVAL)
+#include "stm32l1xx.h"
+#else
+#include <stm32f10x.h>
+#endif
+//#include "stm32f10x.h"
 
 
 //0,²»Ö§³Öucos

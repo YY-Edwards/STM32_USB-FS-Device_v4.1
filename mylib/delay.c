@@ -1,4 +1,8 @@
+#if defined (USE_STM32L152_EVAL)
+#include "stm32l1xx.h"
+#else
 #include <stm32f10x.h>
+#endif
 #include "delay.h"
 
 //使用SysTick的普通计数模式对延迟进行管理
@@ -7,16 +11,16 @@
 //2010/5/27
 
 	 
-static u8  fac_us=0;//us延时倍乘数
-static u16 fac_ms=0;//ms延时倍乘数
+static uint8_t  fac_us=0;//us延时倍乘数
+static uint16_t fac_ms=0;//ms延时倍乘数
 //初始化延迟函数
 //SYSTICK的时钟固定为HCLK时钟的1/8
 //SYSCLK:系统时钟
-void delay_init(u8 SYSCLK)
+void delay_init(uint8_t SYSCLK)
 {
 	SysTick->CTRL&=0xfffffffb;//bit2清空,选择外部时钟  HCLK/8
 	fac_us=SYSCLK/8;		    
-	fac_ms=(u16)fac_us*1000;
+	fac_ms=(uint16_t)fac_us*1000;
 }								    
 //延时nms
 //注意nms的范围
@@ -24,10 +28,10 @@ void delay_init(u8 SYSCLK)
 //nms<=0xffffff*8*1000/SYSCLK
 //SYSCLK单位为Hz,nms单位为ms
 //对72M条件下,nms<=1864 
-void delay_ms(u16 nms)
+void delay_ms(uint16_t nms)
 {	 		  	  
-	u32 temp;		   
-	SysTick->LOAD=(u32)nms*fac_ms;//时间加载(SysTick->LOAD为24bit)
+	uint32_t temp;		   
+	SysTick->LOAD=(uint32_t)nms*fac_ms;//时间加载(SysTick->LOAD为24bit)
 	SysTick->VAL =0x00;           //清空计数器
 	SysTick->CTRL=0x01 ;          //开始倒数  
 	do
@@ -40,9 +44,9 @@ void delay_ms(u16 nms)
 }   
 //延时nus
 //nus为要延时的us数.		    								   
-void delay_us(u32 nus)
+void delay_us(uint32_t nus)
 {		
-	u32 temp;	    	 
+	uint32_t temp;	    	 
 	SysTick->LOAD=nus*fac_us; //时间加载	  		 
 	SysTick->VAL=0x00;        //清空计数器
 	SysTick->CTRL=0x01 ;      //开始倒数 	 
@@ -55,7 +59,7 @@ void delay_us(u32 nus)
 	SysTick->VAL =0X00;       //清空计数器	 
 }
 #if 1
-void Delay(vu32 nCount)
+void Delay(uint32_t nCount)
 {
   for(; nCount != 0; nCount--);
 }

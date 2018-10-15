@@ -42,6 +42,17 @@
 /* Includes ------------------------------------------------------------------*/
 #if defined (USE_STM32L152_EVAL)
   #include "stm32l152_eval.h"
+  	// ¼æÈÝ²¿·Ö´úÂë
+  #ifdef __INT8_T_TYPE__
+          typedef __UINT8_T_TYPE__ 	u8;
+          typedef __UINT16_T_TYPE__ 	u16;
+          typedef __UINT32_T_TYPE__  u32;
+  #else
+      /* exact-width unsigned integer types */
+  typedef unsigned          char u8;
+  typedef unsigned short     int u16;
+  typedef unsigned           int u32;
+  #endif
 
 #elif defined (USE_STM32L152D_EVAL)
   #include "stm32l152d_eval.h"

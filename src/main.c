@@ -82,7 +82,7 @@ uint16_t STM32_ADC_Read(void);
 /* Private functions ---------------------------------------------------------*/
 uint16_t STM32_ADC_Read(void)
 {
-  u16 ADCConvertedValueLocal, Precent = 0, Voltage = 0;
+  uint16_t ADCConvertedValueLocal, Precent = 0, Voltage = 0;
   
   ADCConvertedValueLocal = ADCConvertedValue;
   Precent = (ADCConvertedValueLocal*100/0x1000);	//算出百分比

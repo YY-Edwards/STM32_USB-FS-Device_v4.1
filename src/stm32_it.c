@@ -182,7 +182,7 @@ void SysTick_Handler(void)
 //  if(check_count >= 8)
 //  {
 //    check_count =0;
-//    static u8 Keybuf1 = 0xff;
+//    static uint8_t Keybuf1 = 0xff;
 ////    
 ////    //PA8,调试用PA8
 ////    Keybuf1 = ( ( Keybuf1 << 1 ) | GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) );//缓存区左移1位，并将当前值移入最低位
@@ -247,7 +247,7 @@ void TIM2_IRQHandler(void)
      if(check_count >= 8)
     {
       check_count =0;
-      static u8 Keybuf1 = 0xff;
+      static uint8_t Keybuf1 = 0xff;
       
       //PA3
       Keybuf1 = ( ( Keybuf1 << 1 ) | GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) );//缓存区左移1位，并将当前值移入最低位

@@ -19,6 +19,26 @@ ShowArgs=0
 MixedMode=1
 [JLinkDriver]
 CStepIntDis=_ 0
+[struct_types]
+Fmt0=LTC4015_chip_cfg_t-addr	4	0
+[array_types]
+Fmt0=uint8_t[1]	4	0
+Fmt1=uint8_t[2]	4	0
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[CallStackLog]
+Enabled=0
+[DriverProfiling]
+Enabled=0
+Mode=0
+Graph=0
+Symbiont=0
+Exclusions=
 [InterruptLog]
 LogEnabled=0
 SumEnabled=0
@@ -32,6 +52,10 @@ SumEnabled=0
 GraphEnabled=0
 ShowTimeLog=1
 ShowTimeSum=1
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Count=0
 [Interrupts]
 Enabled=1
 [MemConfig]
@@ -40,34 +64,12 @@ Manual=0
 Ddf=1
 TypeViol=0
 Stop=1
-[Simulator]
-Freq=10000000
-MultiCoreRunAll=1
-[struct_types]
-Fmt0=LTC4015_chip_cfg_t-addr	4	0
-[array_types]
-Fmt0=uint8_t[1]	4	0
-Fmt1=uint8_t[2]	4	0
-[Disassemble mode]
-mode=0
-[Breakpoints2]
-Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.545.5" 0 0 1 "" 0 "" 0
-Count=1
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
+[Trace1]
+Enabled=0
+ShowSource=1
 [Aliases]
 Count=0
 SuppressDialog=0
-[CallStackLog]
-Enabled=0
-[DriverProfiling]
-Enabled=0
-Mode=0
-Graph=0
-Symbiont=0
-Exclusions=
+[Simulator]
+Freq=10000000
+MultiCoreRunAll=1

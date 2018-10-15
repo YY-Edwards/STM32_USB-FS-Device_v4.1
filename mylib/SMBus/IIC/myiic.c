@@ -68,9 +68,9 @@ void IIC_Stop(unsigned char IIC_Addr)
 //等待应答信号到来
 //返回值：1，接收应答失败
 //        0，接收应答成功
-u8 IIC_Wait_Ack(unsigned char IIC_Addr)
+uint8_t IIC_Wait_Ack(unsigned char IIC_Addr)
 {
-  u8 ucErrTime;
+  uint8_t ucErrTime;
   
    if(IIC_Addr == LTC4015_IIC)
   {
@@ -162,9 +162,9 @@ void IIC_NAck(unsigned char IIC_Addr)
 //返回从机有无应答
 //1，有应答
 //0，无应答			  
-void IIC_Send_Byte(unsigned char IIC_Addr, u8 txd)
+void IIC_Send_Byte(unsigned char IIC_Addr, uint8_t txd)
 {                        
-  u8 t;  
+  uint8_t t;  
  if(IIC_Addr == LTC4015_IIC)
   {
     SDA_1_OUT(); 	    
@@ -216,7 +216,7 @@ void IIC_Send_Byte(unsigned char IIC_Addr, u8 txd)
 } 	  
 
 //读1个字节，ack=1时，发送ACK，ack=0，发送nACK   
-u8 IIC_Read_Byte(unsigned char IIC_Addr, unsigned char ack)
+uint8_t IIC_Read_Byte(unsigned char IIC_Addr, unsigned char ack)
 {
   unsigned char i,receive=0;
     
@@ -269,10 +269,10 @@ u8 IIC_Read_Byte(unsigned char IIC_Addr, unsigned char ack)
 
 
 
-bool IIC_Write_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
+bool IIC_Write_Nbytes(unsigned char IIC_NUMB, uint8_t * data_ptr, uint8_t num_bytes)
 {
   bool res =true;
-  u8 t;
+  uint8_t t;
   for(t=0; t<num_bytes; t++)
   {
     IIC_Send_Byte(IIC_NUMB, *data_ptr);
@@ -291,11 +291,11 @@ bool IIC_Write_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
   
   return res;
 }
-bool IIC_Read_Nbytes(unsigned char IIC_NUMB, u8 * data_ptr, u8 num_bytes)
+bool IIC_Read_Nbytes(unsigned char IIC_NUMB, uint8_t * data_ptr, uint8_t num_bytes)
 {
   bool res =true;
   bool test_r= true;
-  u8 t;
+  uint8_t t;
   for(t=0; t<num_bytes; t++)
   {
     if(t != (num_bytes -1))
