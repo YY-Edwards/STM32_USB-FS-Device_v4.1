@@ -176,7 +176,7 @@
   /* PA1 is chosen just as illustrating example, you should modify the defines
     below according to your hardware configuration. */ 
   #define USB_DISCONNECT                      GPIOA
-  #define USB_DISCONNECT_PIN                  GPIO_Pin_1
+  #define USB_DISCONNECT_PIN                  GPIO_Pin_15//暂时用开发板的接口
   #define RCC_AHBPeriph_GPIO_DISCONNECT       RCC_AHBPeriph_GPIOA
   #define STM32L15_USB_DISCONNECT             GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN)
   #define STM32L15_USB_CONNECT                GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN)

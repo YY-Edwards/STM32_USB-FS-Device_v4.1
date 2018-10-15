@@ -696,6 +696,24 @@ void DC2039A_Run(void)
 int main(void)
 {
 #if defined(STM32L1XX_MD)
+  
+      /* PLL_VCO = HSE_VALUE * PLL_MUL = 96 MHz */
+  /* USBCLK = PLL_VCO / 2= 48 MHz */
+  /* SYSCLK = PLL_VCO * PLL_DIV = 32 MHz */
+  RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMUL12 | RCC_CFGR_PLLDIV3);
+  /* Enable PLL */
+  RCC->CR |= RCC_CR_PLLON;
+  /* Wait till PLL is ready */
+  while((RCC->CR & RCC_CR_PLLRDY) == 0)
+  { }
+  /* Select PLL as system clock source */
+  RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
+  RCC->CFGR |= (uint32_t)RCC_CFGR_SW_PLL;
+  /* Wait till PLL is used as system clock source */
+  while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) != (uint32_t)RCC_CFGR_SWS_PLL)
+  { }
+  
+  
    delay_init(32);
 #else
    delay_init(72);//延时功能初始化

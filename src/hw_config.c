@@ -161,23 +161,7 @@ void Set_System(void)
 void Set_USBClock(void)
 {
 #if defined(STM32L1XX_MD) || defined(STM32L1XX_HD) || defined(STM32L1XX_MD_PLUS) 
-  
-    /* PLL_VCO = HSE_VALUE * PLL_MUL = 96 MHz */
-  /* USBCLK = PLL_VCO / 2= 48 MHz */
-  /* SYSCLK = PLL_VCO * PLL_DIV = 32 MHz */
-  RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMUL12 | RCC_CFGR_PLLDIV3);
-  /* Enable PLL */
-  RCC->CR |= RCC_CR_PLLON;
-  /* Wait till PLL is ready */
-  while((RCC->CR & RCC_CR_PLLRDY) == 0)
-  { }
-  /* Select PLL as system clock source */
-  RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
-  RCC->CFGR |= (uint32_t)RCC_CFGR_SW_PLL;
-  /* Wait till PLL is used as system clock source */
-  while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) != (uint32_t)RCC_CFGR_SWS_PLL)
-  { }
-  
+   
   /* Enable USB clock */
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
   
@@ -282,7 +266,7 @@ void TIM3_Int_Init(uint16_t arr,uint16_t psc)
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
   NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
   
-  //TIM_Cmd(TIM3, ENABLE); //⑤使能 TIM3
+  TIM_Cmd(TIM3, DISABLE); //⑤使能 TIM3
   
 }
 

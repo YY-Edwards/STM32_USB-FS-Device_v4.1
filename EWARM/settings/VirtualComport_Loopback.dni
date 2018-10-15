@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1156934479
+Checksum=1020891798
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -19,26 +19,6 @@ ShowArgs=0
 MixedMode=1
 [JLinkDriver]
 CStepIntDis=_ 0
-[struct_types]
-Fmt0=LTC4015_chip_cfg_t-addr	4	0
-[array_types]
-Fmt0=uint8_t[1]	4	0
-Fmt1=uint8_t[2]	4	0
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
-[CallStackLog]
-Enabled=0
-[DriverProfiling]
-Enabled=0
-Mode=0
-Graph=0
-Symbiont=0
-Exclusions=
 [InterruptLog]
 LogEnabled=0
 SumEnabled=0
@@ -63,10 +43,36 @@ Stop=1
 [Simulator]
 Freq=10000000
 MultiCoreRunAll=1
+[struct_types]
+Fmt0=LTC4015_chip_cfg_t-addr	4	0
+[array_types]
+Fmt0=uint8_t[1]	4	0
+Fmt1=uint8_t[2]	4	0
 [Disassemble mode]
 mode=0
 [Breakpoints2]
-Count=0
+Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.730.3" 0 0 1 "" 0 "" 0
+Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\stm32_it.c}.220.3" 0 0 1 "" 0 "" 0
+Bp2=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.703.3" 0 0 1 "" 0 "" 0
+Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Libraries\STM32_USB-FS-Device_Driver\src\usb_core.c}.732.5" 0 0 1 "" 0 "" 0
+Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.750.9" 0 0 1 "" 0 "" 0
+Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\stm32_it.c}.290.5" 0 0 1 "" 0 "" 0
+Count=6
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
 [Aliases]
 Count=0
 SuppressDialog=0
+[CallStackLog]
+Enabled=0
+[DriverProfiling]
+Enabled=0
+Mode=0
+Graph=0
+Symbiont=0
+Exclusions=
