@@ -76,18 +76,31 @@ void Set_System(void)
   
 #if defined(STM32L1XX_MD)
   
+    /* Enable integrated STM32L15xx internal pull up 
+  Enable the SYSCFG module clock*/
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
   
+   /* Configure USB DM/DP pin. This is optional, and maintained only for user guidance.
+  For the STM32L products there is no need to configure the PA12/PA11 pins couple 
+  as Alternate Function */
+  
+//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
+//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+//  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+//  GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_USB);
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource12, GPIO_AF_USB);
-
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+//不需要配置？
+//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+//  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+//  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+//  GPIO_Init(GPIOA, &GPIO_InitStructure);
+//  
+//  GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_USB);
+//  GPIO_PinAFConfig(GPIOA, GPIO_PinSource12, GPIO_AF_USB);
   
   /* USB_DISCONNECT used as USB pull-up */
   GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_PIN;
@@ -96,7 +109,7 @@ void Set_System(void)
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz; /* 400 KHz, 2, 10 or 40MHz */
   GPIO_Init(GPIOA, &GPIO_InitStructure);
-  
+//  
   STM32L15_USB_DISCONNECT;
   //GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
   
@@ -266,7 +279,7 @@ void TIM3_Int_Init(uint16_t arr,uint16_t psc)
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
   NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
   
-  TIM_Cmd(TIM3, DISABLE); //⑤使能 TIM3
+  //TIM_Cmd(TIM3, DISABLE); //⑤使能 TIM3
   
 }
 

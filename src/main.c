@@ -38,6 +38,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "hw_config.h"
+#include "Typedefs.h"
 #include "usb_lib.h"
 #include "usb_desc.h"
 #include "usb_pwr.h"
@@ -184,7 +185,8 @@ void ADC_GPIO_Configuration(void)
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL; /* None, Pull-up or pull-down */
     GPIO_Init(GPIOA, &GPIO_InitStructure);     //GPIO组
     
-    
+      /* Enable DMA1 clock */
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);		 //使能DMA时钟
     /* DMA1 channel1 configuration ----------------------------------------------*/
     DMA_DeInit(DMA1_Channel1);		  //开启DMA1的第一通道
     DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1->DR;//DR_ADDRESS;		  //DMA对应的外设基地址
@@ -697,6 +699,16 @@ int main(void)
 {
 #if defined(STM32L1XX_MD)
   
+  
+do { 
+        __IO uint32_t tmpreg; 
+      SET_BIT(RCC->APB1ENR, RCC_APB1ENR_COMPEN);
+      /* Delay after an RCC peripheral clock enabling */
+      tmpreg = READ_BIT(RCC->APB1ENR, RCC_APB1ENR_COMPEN);
+      UNUSED(tmpreg); 
+      
+    } while(0);
+
       /* PLL_VCO = HSE_VALUE * PLL_MUL = 96 MHz */
   /* USBCLK = PLL_VCO / 2= 48 MHz */
   /* SYSCLK = PLL_VCO * PLL_DIV = 32 MHz */
@@ -761,6 +773,7 @@ int main(void)
       }
       if(run_counts == 35*60000)
       {
+        STM_EVAL_LEDOff(LED3);
         STM_EVAL_LEDToggle(LED2);
         run_counts = 0;
         if(timer3_run_flag)
