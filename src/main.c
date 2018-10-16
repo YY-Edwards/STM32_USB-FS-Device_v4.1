@@ -55,7 +55,7 @@
 
 #define SMBALERT_IN_PIN              PBin(14)
 #define U5NWP_OUT_PIN                PBout(8) 
-
+#define DVCC_OUT_PIN                 PBout(12) 
 #else
 
 #define SYSTEM_CLOCK 72000000
@@ -107,12 +107,12 @@ void DC2039A_Interface_Init(void)
     
 #if defined(STM32L1XX_MD)
     
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIO_TEST_TP, ENABLE);
     /********************************************/
     /*  Configure nSMBALLERT,CAT5140_NWP*/
     /********************************************/
     
-    GPIO_InitStructure.GPIO_Pin = CAT5140_NWP_PIN;
+    GPIO_InitStructure.GPIO_Pin = CAT5140_NWP_PIN | LTC4015_DVCC_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; /* Push-pull or open drain */
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
@@ -151,6 +151,8 @@ void DC2039A_Interface_Init(void)
     U5NWP_OUT_PIN = 1;//close write protect
     
     ADC_GPIO_Configuration();//EQ_ADC接口配置  
+    
+    DVCC_OUT_PIN = 1;//output ICC dvcc
     
     SMBus_Init();//新增SMBus接口，与IIC相比，ACK,NACK的机制要求更强
     
@@ -699,17 +701,7 @@ int main(void)
 {
 #if defined(STM32L1XX_MD)
   
-  
-do { 
-        __IO uint32_t tmpreg; 
-      SET_BIT(RCC->APB1ENR, RCC_APB1ENR_COMPEN);
-      /* Delay after an RCC peripheral clock enabling */
-      tmpreg = READ_BIT(RCC->APB1ENR, RCC_APB1ENR_COMPEN);
-      UNUSED(tmpreg); 
-      
-    } while(0);
-
-      /* PLL_VCO = HSE_VALUE * PLL_MUL = 96 MHz */
+   /* PLL_VCO = HSE_VALUE * PLL_MUL = 96 MHz */
   /* USBCLK = PLL_VCO / 2= 48 MHz */
   /* SYSCLK = PLL_VCO * PLL_DIV = 32 MHz */
   RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMUL12 | RCC_CFGR_PLLDIV3);
@@ -773,7 +765,6 @@ do {
       }
       if(run_counts == 35*60000)
       {
-        STM_EVAL_LEDOff(LED3);
         STM_EVAL_LEDToggle(LED2);
         run_counts = 0;
         if(timer3_run_flag)

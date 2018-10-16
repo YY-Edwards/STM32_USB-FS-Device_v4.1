@@ -9,20 +9,25 @@
 
 #if defined (USE_STM32L152_EVAL)
 
-#define SDA_1_IN()  {GPIOB->MODER&=0X3FFFFFFF;GPIOB->MODER|=0<<30;}
-#define SDA_1_OUT() {GPIOB->MODER&=0X3FFFFFFF;GPIOB->MODER|=1<<30;GPIOB->OTYPER&=0X7FFF;GPIOB->OTYPER|=0<<15;}
+#define SDA_1_IN()  {GPIOB->MODER&=0XFFFF3FFF;GPIOB->MODER|=0<<14;}
+#define SDA_1_OUT() {GPIOB->MODER&=0XFFFF3FFF;GPIOB->MODER|=1<<14;GPIOB->OTYPER&=0XFF7F;GPIOB->OTYPER|=1<<7;}
 
-#define SDA_2_IN()  {GPIOB->MODER&=0XFFFF3FFF;GPIOB->MODER|=0<<14;}
-#define SDA_2_OUT() {GPIOB->MODER&=0XFFFF3FFF;GPIOB->MODER|=1<<14;GPIOB->OTYPER&=0XFF7F;GPIOB->OTYPER|=0<<7;}
+//#define SDA_2_IN()  {GPIOB->MODER&=0XFF3FFFFF;GPIOB->MODER|=0<<22;}
+//#define SDA_2_OUT() {GPIOB->MODER&=0XFF3FFFFF;GPIOB->MODER|=1<<22;GPIOB->OTYPER&=0XF7FF;GPIOB->OTYPER|=1<<11;}
+#define SDA_2_IN()  {GPIOB->MODER&=0XFFFFFCFF;GPIOB->MODER|=0<<8;}
+#define SDA_2_OUT() {GPIOB->MODER&=0XFF3FFCFF;GPIOB->MODER|=1<<8;GPIOB->OTYPER&=0XFFEF;GPIOB->OTYPER|=1<<4;}
 
 
-#define IIC_1_SCL       PBout(13) //SCL:1
-#define IIC_1_SDA       PBout(15) //SDA	:1
-#define READ_1_SDA      PBin(15)  //输入SDA:1
+#define IIC_1_SCL       PBout(6) //SCL:1
+#define IIC_1_SDA       PBout(7) //SDA	:1
+#define READ_1_SDA      PBin(7)  //输入SDA:1
 
-#define IIC_2_SCL       PBout(6) //SCL:2
-#define IIC_2_SDA       PBout(7) //SDA	:2 
-#define READ_2_SDA      PBin(7)  //输入SDA:2 
+#define IIC_2_SCL       PBout(3) //SCL:2
+#define IIC_2_SDA       PBout(4) //SDA	:2 
+#define READ_2_SDA      PBin(4)  //输入SDA:2 
+//#define IIC_2_SCL       PBout(10) //SCL:2
+//#define IIC_2_SDA       PBout(11) //SDA	:2 
+//#define READ_2_SDA      PBin(11)  //输入SDA:2 
 
 
 #else

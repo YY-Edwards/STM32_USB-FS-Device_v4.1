@@ -158,6 +158,7 @@
   #define TEST_TP2_PIN                        //GPIO_Pin_3
   #define nSMBALLERT_PIN                      GPIO_Pin_14
   #define CAT5140_NWP_PIN                     GPIO_Pin_8
+  #define LTC4015_DVCC_PIN                    GPIO_Pin_12
   #define NEQ_PIN                             //GPIO_Pin_6
 
   #define RCC_AHBPeriph_GPIO_TEST_TP         RCC_AHBPeriph_GPIOB
