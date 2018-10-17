@@ -30,13 +30,13 @@
 #define GPIOF_ODR_Addr    (GPIOF_BASE+20)     
 #define GPIOG_ODR_Addr    (GPIOG_BASE+20)    
 
-#define GPIOA_IDR_Addr    (GPIOA_BASE+10) //0x4002000A
-#define GPIOB_IDR_Addr    (GPIOB_BASE+10) //0x4002040A 
-#define GPIOC_IDR_Addr    (GPIOC_BASE+10) 
-#define GPIOD_IDR_Addr    (GPIOD_BASE+10) 
-#define GPIOE_IDR_Addr    (GPIOE_BASE+10) 
-#define GPIOF_IDR_Addr    (GPIOF_BASE+10) 
-#define GPIOG_IDR_Addr    (GPIOG_BASE+10) 
+#define GPIOA_IDR_Addr    (GPIOA_BASE+16) //0x40020010
+#define GPIOB_IDR_Addr    (GPIOB_BASE+16) //0x40020410
+#define GPIOC_IDR_Addr    (GPIOC_BASE+16) 
+#define GPIOD_IDR_Addr    (GPIOD_BASE+16) 
+#define GPIOE_IDR_Addr    (GPIOE_BASE+16) 
+#define GPIOF_IDR_Addr    (GPIOF_BASE+16) 
+#define GPIOG_IDR_Addr    (GPIOG_BASE+16) 
 
 
 #else

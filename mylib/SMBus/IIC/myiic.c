@@ -10,28 +10,26 @@ void IIC_Init(void)
       
       RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
       
-//      GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_10|GPIO_Pin_11;
-      GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_3|GPIO_Pin_4;
+      GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_10|GPIO_Pin_11;
       GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-      GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;//GPIO_OType_PP; /* Push-pull or open drain */
-      GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
+      GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;//GPIO_OType_PP; /* Push-pull or open drain */
+      GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL; /* None, Pull-up or pull-down */
       GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz; /* 400 KHz, 2, 10 or 40MHz */
       GPIO_Init(GPIOB, &GPIO_InitStructure);
       
-      //GPIO_SetBits(GPIOB,GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_10|GPIO_Pin_11); 	//PB6,PB7, PB10,PB11 输出高
+      GPIO_SetBits(GPIOB,GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_10|GPIO_Pin_11); 	//PB6,PB7, PB10,PB11 输出高
        
-      GPIO_SetBits(GPIOB,GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_3|GPIO_Pin_4); 	//PB6,PB7, PB3,PB4 输出高
    
       
-      SDA_1_IN();
-      SDA_1_OUT();
-      SDA_1_IN();
-      SDA_1_OUT();
-
-      SDA_2_IN();
-      SDA_2_OUT();
-      SDA_2_IN();
-      SDA_2_OUT();
+//      SDA_1_IN();
+//      SDA_1_OUT();
+//      SDA_1_IN();
+//      SDA_1_OUT();
+//
+//      SDA_2_IN();
+//      SDA_2_OUT();
+//      SDA_2_IN();
+//      SDA_2_OUT();
 #else      
       
       RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE );	

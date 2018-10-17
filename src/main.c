@@ -65,6 +65,7 @@
 #define SMBALERT_IN_PIN              PAin(4)
 #define U5NWP_OUT_PIN                PAout(5) 
 #define NEQ_OUT_PIN                  PAout(6) 
+#define DVCC_OUT_PIN                 PAout(6) 
 
 #endif
 /* Private macro -------------------------------------------------------------*/
@@ -123,7 +124,7 @@ void DC2039A_Interface_Init(void)
     
     GPIO_InitStructure.GPIO_Pin = nSMBALLERT_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL; /* None, Pull-up or pull-down */
     GPIO_Init(TEST_TP, &GPIO_InitStructure);
     
 #else
@@ -147,6 +148,13 @@ void DC2039A_Interface_Init(void)
     
     
     //NEQ_OUT_PIN = 0;//EQ SET：0
+    
+//   while(SMBALERT_IN_PIN == 1)
+//   {
+//       delay_ms(100); 
+//   }             
+//   U5NWP_OUT_PIN   = 1;
+//   U5NWP_OUT_PIN   = 0;
     
     U5NWP_OUT_PIN = 1;//close write protect
     
@@ -175,11 +183,12 @@ void ADC_GPIO_Configuration(void)
     GPIO_InitTypeDef GPIO_InitStructure;
     DMA_InitTypeDef DMA_InitStructure;        //DMA初始化结构体声明
     ADC_InitTypeDef ADC_InitStructure;        //ADC初始化结构体声明
-    ADC_CommonInitTypeDef   ADC_CommonInitStructure;
+    
 
 #if defined(STM32L1XX_MD)
     
-     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);	  //GPIOA时钟
+    ADC_CommonInitTypeDef   ADC_CommonInitStructure;
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);	  //GPIOA时钟
     /* Configure PA4 (ADC Channel 4) as analog input -------------------------*/
     //PA4 作为模拟通道4输入引脚                         
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;     //管脚4
