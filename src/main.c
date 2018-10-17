@@ -56,6 +56,7 @@
 #define SMBALERT_IN_PIN              PBin(14)
 #define U5NWP_OUT_PIN                PBout(8) 
 #define DVCC_OUT_PIN                 PBout(12) 
+#define DR_ADDRESS                  ((uint32_t)0x40012458) //ADC1 DR寄存器基地址
 #else
 
 #define SYSTEM_CLOCK 72000000
@@ -192,7 +193,7 @@ void ADC_GPIO_Configuration(void)
     /* Configure PA4 (ADC Channel 4) as analog input -------------------------*/
     //PA4 作为模拟通道4输入引脚                         
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;     //管脚4
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL; /* None, Pull-up or pull-down */
     GPIO_Init(GPIOA, &GPIO_InitStructure);     //GPIO组
     
@@ -200,7 +201,7 @@ void ADC_GPIO_Configuration(void)
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);		 //使能DMA时钟
     /* DMA1 channel1 configuration ----------------------------------------------*/
     DMA_DeInit(DMA1_Channel1);		  //开启DMA1的第一通道
-    DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1->DR;//DR_ADDRESS;		  //DMA对应的外设基地址
+    DMA_InitStructure.DMA_PeripheralBaseAddr = DR_ADDRESS;		  //DMA对应的外设基地址
     DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&ADCConvertedValue;   //内存存储基地址
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;	//DMA的转换模式为SRC模式，由外设搬移到内存
     DMA_InitStructure.DMA_BufferSize = 1;		   //DMA缓存大小，1个
@@ -412,7 +413,7 @@ void DC2039A_Run(void)
 
     // Read the INTVCC A/D value to know if part cycled power
     value = STM32_ADC_Read();
-    ltc4015_powered = (value > 1700);//v？>1.7v
+    ltc4015_powered = (value > 2500);//v？>2.5v
     
     // If power is cycled re-init.
     if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Init();
