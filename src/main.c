@@ -368,11 +368,11 @@ void DC2039A_Config_Init(void)
     //set QCOUNT_PRESCALE_FACTOR
      LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 21);
      
-     //设置库伦高的告警门限值：49149
-     LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49149);
-     
-     //使能库伦高告警功能
-     LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+//     //设置库伦高的告警门限值：49149
+//     LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49149);
+//     
+//     //使能库伦高告警功能
+//     LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
      
     //设置最大的恒压充电时间为10分钟：600sec
      LTC4015_write_register(chip, LTC4015_MAX_CV_TIME_BF, LTC4015_MAX_CV_TIME_BF_PRESET__30MINS);
@@ -504,11 +504,16 @@ void DC2039A_Run(void)
            //&&(first_termination_flag == false))//第一次充满
         {
           if(first_termination_flag == false)
-          {
-            LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
-            //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-            first_termination_flag =true;
-            log_info("termination_flag: true, reset qcount to 49152.");
+            {
+               LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
+                //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
+               first_termination_flag =true;
+                           //49150
+               LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49150);
+               
+               //使能库伦高告警功能
+               LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+               log_info("termination_flag: true, reset qcount to 49152.");
           }
           else
           {
@@ -695,6 +700,7 @@ void DC2039A_Run(void)
       log_warning("System  status value_hex: 0x%4X", system_status);
     }
     
+    log_info("\r\n");
     return;
 }
 
