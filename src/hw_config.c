@@ -113,6 +113,8 @@ void Set_System(void)
   STM32L15_USB_DISCONNECT;
   //GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
   
+  delay_ms(100); 
+  
 #else
   
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);

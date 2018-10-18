@@ -374,7 +374,7 @@ void DC2039A_Config_Init(void)
 //     //使能库伦高告警功能
 //     LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
      
-    //设置最大的恒压充电时间为10分钟：600sec
+    //设置最大的恒压充电时间为30分钟：1800sec
      LTC4015_write_register(chip, LTC4015_MAX_CV_TIME_BF, LTC4015_MAX_CV_TIME_BF_PRESET__30MINS);
      
      //设置最大充电时间为2小时：7200sec
@@ -421,7 +421,7 @@ void DC2039A_Run(void)
     if(ltc4015_powered == false)
     {
       log_warning("LTC4015 is poweroff!");
-      first_termination_flag = false;
+      //first_termination_flag = false;
       return;
     }
     
@@ -474,7 +474,7 @@ void DC2039A_Run(void)
                 }
                 if((LTC4015_QCOUNT_LO_ALERT_BF_MASK & value) !=0)//库伦低告警
                 {  
-                  log_warning("QCOUNT_LO_ALERT(no vin): true! reset charge and allow the battery to charge again."); 
+                  log_warning("QCOUNT_LO_ALERT(no vin): true! reset charge and  charging again."); 
                    //关闭库伦低告警功能
                   LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
                    //使能库伦高告警功能
@@ -503,22 +503,23 @@ void DC2039A_Run(void)
         if((charger_state.c_over_x_term == true) || (charger_state.timer_term == true)) 
            //&&(first_termination_flag == false))//第一次充满
         {
-          if(first_termination_flag == false)
+          //if(first_termination_flag == false)
             {
-               LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
-                //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-               first_termination_flag =true;
-                           //49150
-               LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49150);
-               
-               //使能库伦高告警功能
-               LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
-               log_info("termination_flag: true, reset qcount to 49152.");
+                 //49152
+                 LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49152);
+                 
+                 //使能库伦高告警功能
+                 LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+                 
+                 LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
+                  //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
+                 first_termination_flag =true;
+                 log_warning("termination_flag: true, reset qcount to 49152.");
           }
-          else
-          {
-            log_warning("termination_flag: true(again!).");
-          }
+//          else
+//          {
+//            log_warning("termination_flag: true(again!).");
+//          }
         }
         
         if(charger_state.max_charge_time_fault == 1)
@@ -598,7 +599,7 @@ void DC2039A_Run(void)
     //Read Qcount
     LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
     current_battery_capacity = ((float)(value-16384)/32768.0)*100;//%
-    log_info("bat capacity: %f %%. ", current_battery_capacity);
+    log_info("bat capacity: %d, %f %%. ", value, current_battery_capacity);
     
       
      //Read NTC_RATIO
@@ -749,14 +750,14 @@ int main(void)
   
   DC2039A_Interface_Init();
   
+    //TIM2_Int_Init(20, 7199);//2ms
+  TIM3_Int_Init(99,7199); //10Khz 的计数频率，计数到 500 为 50ms
+                        //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
+  
   Set_System();
   Set_USBClock();// 配置 USB 时钟，也就是从 72M 的主频得到 48M 的 USB 时钟（1.5 分频）
   USB_Interrupts_Config();// USB 唤醒中断和USB 低优先级数据处理中断
   USB_Init();//用于初始化 USB，;
-  
-  //TIM2_Int_Init(20, 7199);//2ms
-  TIM3_Int_Init(99,7199); //10Khz 的计数频率，计数到 500 为 50ms
-                        //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
   
   unsigned int run_counts = 0;
   unsigned char timer3_run_flag = 0;

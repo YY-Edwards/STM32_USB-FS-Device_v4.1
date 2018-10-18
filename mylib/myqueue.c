@@ -43,7 +43,10 @@ bool push_to_queue(RingQueue_t ring_queue, void *buf, int len)
   mydata_t *p;
   int next_index =0;
   bool ret =false;
-  if((len > DATADEEP) | (len == 0))return false;
+  if(len == 0)return false;
+  
+  if(len > DATADEEP)
+     len = DATADEEP;
   
   p = (mydata_t *)(&(ring_queue->queue_array[ring_queue->head]));
   memcpy(p->data, buf, len);

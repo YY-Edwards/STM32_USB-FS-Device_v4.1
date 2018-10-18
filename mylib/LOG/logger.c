@@ -65,7 +65,10 @@ void logger_add_msg_to_queue(const char* psz_level,
 	{
             if(logger_msg_queue_ptr !=NULL)
             {
-              push_to_queue(logger_msg_queue_ptr, content, (strlen(content)+1));
+              bool ret =false;
+              ret = push_to_queue(logger_msg_queue_ptr, content, (strlen(content)+1));
+              if(ret !=true)
+                log_warning("push log err!");
             }
 	
 	}
