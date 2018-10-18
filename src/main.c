@@ -505,16 +505,17 @@ void DC2039A_Run(void)
         {
           //if(first_termination_flag == false)
             {
-                 //49152
+                     
+                 LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49153);//overwritten to 49152:100%
+                  //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
+                 first_termination_flag =true;
+                 
+                           //49152
                  LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49152);
                  
                  //使能库伦高告警功能
                  LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
-                 
-                 LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49152);//overwritten to 49152:100%
-                  //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-                 first_termination_flag =true;
-                 log_warning("termination_flag: true, reset qcount to 49152.");
+                 log_warning("termination_flag: true, reset qcount to 49153.");
           }
 //          else
 //          {
@@ -551,7 +552,7 @@ void DC2039A_Run(void)
                     LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
                     if((LTC4015_QCOUNT_HI_ALERT_BF_MASK & value) !=0)//verify库伦高告警 
                     {
-                      log_warning("QCOUNT_HI_ALERT: true! suspend charge.");
+                      log_warning("QCOUNT_HI_ALERT(49152): true! suspend charge.");
                       //LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state);
                       //suspend charger.
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, true); 
@@ -564,7 +565,7 @@ void DC2039A_Run(void)
                       //使能库伦低告警功能
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, true);  
                       
-                      log_info("EN_QCOUNT_LOW_ALERT:    true. ");
+                      log_info("EN_QCOUNT_LOW_ALERT(49127):    true. ");
                       log_info("EN_QCOUNT_HIGH_ALERT:   fasle. ");
                         
                     }
