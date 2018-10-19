@@ -366,7 +366,7 @@ void DC2039A_Config_Init(void)
     
      //设置库伦的放大因子
     //set QCOUNT_PRESCALE_FACTOR
-     LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 21);
+     LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 18);
      
 //     //设置库伦高的告警门限值：49149
 //     LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49149);
@@ -557,15 +557,15 @@ void DC2039A_Run(void)
                       //suspend charger.
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, true); 
                       
-                       //设置库伦低的告警门限值：16384+32768*0.9995 = 49127.232.
-                      LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, 49127);
+                       //设置库伦低的告警门限值：16384+32768*0.9995 = 49135.232.
+                      LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, 49135);
                       
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, false); 
      
                       //使能库伦低告警功能
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, true);  
                       
-                      log_info("EN_QCOUNT_LOW_ALERT(49127):    true. ");
+                      log_info("EN_QCOUNT_LOW_ALERT(49135):    true. ");
                       log_info("EN_QCOUNT_HIGH_ALERT:   fasle. ");
                         
                     }
