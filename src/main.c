@@ -76,6 +76,7 @@ int main(void)
   STM_EVAL_LEDOff(LED1);
   
   Set_System();
+  delay_ms(200); //确保先断开，再识别
   Set_USBClock();// 配置 USB 时钟，也就是从 72M 的主频得到 48M 的 USB 时钟（1.5 分频）
   //PowerOff();//软件手段关闭USB：没什么用
   USB_Interrupts_Config();// USB 唤醒中断和USB 低优先级数据处理中断

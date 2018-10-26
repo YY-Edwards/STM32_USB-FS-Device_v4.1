@@ -107,7 +107,6 @@ void Set_System(void)
   
   GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
   
-  
 #ifdef USB_LOW_PWR_MGMT_SUPPORT
   
   /**********************************************************************/
