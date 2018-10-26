@@ -351,6 +351,8 @@ void DC2039A_Config_Init(void)
     //Enables C/x charge termination；使能.充满则挂起充电器
     LTC4015_write_register(chip, LTC4015_EN_C_OVER_X_TERM_BF, true);
     
+    
+    
     //Enable QCount；使能库伦计数
     LTC4015_write_register(chip, LTC4015_EN_QCOUNT_BF, true);
     
@@ -366,7 +368,17 @@ void DC2039A_Config_Init(void)
     
      //设置库伦的放大因子
     //set QCOUNT_PRESCALE_FACTOR
-     LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 18);
+     LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 19);
+     
+         
+    float vcc_per_bat = 0.0;
+    LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
+    vcc_per_bat = ((float)value*192.264/1000000);
+    unsigned short acount_value_temp = 0 ;
+    LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &acount_value_temp);
+    
+    if((vcc_per_bat < 2.5) && (acount_value_temp == 0x8000))  
+     LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 16384);//overwritten to 16384:0%
      
 //     //设置库伦高的告警门限值：49149
 //     LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49149);
@@ -478,7 +490,7 @@ void DC2039A_Run(void)
                    //关闭库伦低告警功能
                   LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
                    //使能库伦高告警功能
-                  LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+                  //LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
                   
                   //allow the battery to charge again.
                   LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
@@ -575,7 +587,7 @@ void DC2039A_Run(void)
                        //关闭库伦低告警功能
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
                        //使能库伦高告警功能
-                      LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+                      //LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
                       
                       //allow the battery to charge again.
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
