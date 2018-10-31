@@ -366,9 +366,15 @@ void DC2039A_Config_Init(void)
     //double QCOUNT_PRESCALE_FACTOR = QCOUNT_PRESCALE_FACTOR*2=20.5≈21；
      //LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 36044);//60%
     
+    //16.8*3600 = 60480 C;
+    //Qlsb=60480/65535 = 0.92287 C;
+    //Qlsb=QCOUNT_PRESCALE_FACTOR/(Kqc*Rsnsb);Kqc=8333.33hz/v;Rsnsb=0.004Ω;
+    //QCOUNT_PRESCALE_FACTOR = 0.92287*8333.33*0.004 = 30.762;
+    //double QCOUNT_PRESCALE_FACTOR = QCOUNT_PRESCALE_FACTOR*2=61.524≈62；
+    
      //设置库伦的放大因子
     //set QCOUNT_PRESCALE_FACTOR
-     LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 19);
+     LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 60);
      
          
     float vcc_per_bat = 0.0;
@@ -387,10 +393,10 @@ void DC2039A_Config_Init(void)
 //     LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
      
     //设置最大的恒压充电时间为30分钟：1800sec
-     LTC4015_write_register(chip, LTC4015_MAX_CV_TIME_BF, LTC4015_MAX_CV_TIME_BF_PRESET__30MINS);
+     LTC4015_write_register(chip, LTC4015_MAX_CV_TIME_BF, LTC4015_MAX_CV_TIME_BF_PRESET__1HOUR);
      
      //设置最大充电时间为2小时：7200sec
-     LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, LTC4015_MAX_CHARGE_TIME_BF_PRESET__2HOURS);
+     LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, LTC4015_MAX_CHARGE_TIME_BF_PRESET__4HOURS);//大容量的充电时间更长
      
     //设置输入电压门限；10v
     LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(10)); // Initialize VIN Lo Limit to 10V
@@ -541,7 +547,7 @@ void DC2039A_Run(void)
           //clear fault
           LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, false);
           //reset max_charge_time
-          LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, LTC4015_MAX_CHARGE_TIME_BF_PRESET__2HOURS);
+          LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, LTC4015_MAX_CHARGE_TIME_BF_PRESET__4HOURS);
         }
         
          //Read charge time
