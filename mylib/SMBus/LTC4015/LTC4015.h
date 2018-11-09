@@ -143,29 +143,61 @@ extern "C" {
 
   typedef struct
   {
-    unsigned short constant_voltage              :1;//0
-    unsigned short constant_current              :1;//1
-    unsigned short iin_limit_active              :1;//2
-    unsigned short vin_uvcl_active               :1;//3
+    unsigned short constant_voltage              :1;//0，恒压充电
+    unsigned short constant_current              :1;//1，恒流充电
+    unsigned short iin_limit_active              :1;//2，控制输入电流 
+    unsigned short vin_uvcl_active               :1;//3，控制输入电压
     unsigned short reserved                      :12;
   } LTC4015_charge_status_t;
   
   typedef struct
   {
-    unsigned short bat_short_fault              :1;//0
-    unsigned short bat_missing_fault            :1;//1
-    unsigned short max_charge_time_fault        :1;//2
-    unsigned short c_over_x_term                :1;//3
-    unsigned short timer_term                   :1;//4
-    unsigned short ntc_pause                    :1;//5
-    unsigned short cc_cv_charge                 :1;//6
-    unsigned short precharge                    :1;//7
-    unsigned short charger_suspended            :1;//8
+    unsigned short bat_short_fault              :1;//0, 充电器电池短路
+    unsigned short bat_missing_fault            :1;//1，充电器没有接电池
+    unsigned short max_charge_time_fault        :1;//2，充电器超过设定的最大充电时间
+    unsigned short c_over_x_term                :1;//3，充电器库伦值满标志
+    unsigned short timer_term                   :1;//4，充电器超过设定的最大恒压充电时间
+    unsigned short ntc_pause                    :1;//5，充电器电池温度过高故障状态
+    unsigned short cc_cv_charge                 :1;//6，充电器恒流恒压充电状态
+    unsigned short precharge                    :1;//7，充电器预充状态
+    unsigned short charger_suspended            :1;//8，充电器挂起状态
     unsigned short absorb_charge                :1;//9
     unsigned short equalize_charge              :1;//10
     unsigned short reserved                     :5;
     
   } LTC4015_charger_state_t;
+  
+  
+  typedef struct
+  {
+    unsigned int                VIN;//输入电压，单位mv
+    unsigned int                IIN;//输入电流，单位ma
+    unsigned int                VBAT;//单节电池电压，单位mv
+    unsigned int                IBAT;//充电电流，单位ma
+    unsigned int                VSYS;//负载端电压，单位mv
+    unsigned int                ISYS;//负载输出电流（评估值），单位ma
+    unsigned char               chemisty_type;//电池化学成分：参考如下所示
+                                /*   
+                                0x0:Li-lon Programmable
+                                0x1:Li-lon Fixed 4.2V/cell
+                                0x2:Li-lon Fixed 4.1V/cell
+                                0x3:Li-lon Fixed 4.0V/cell
+                                0x4:LiFePO4 Programmable
+                                0x5:LiFePO4 Fixed Fast Charge
+                                0x6:LiFePO4 Fixed 3.6V/cell
+                                0x7:Lead-Acid Fixed
+                                0x8:Lead-Acid Programmable
+                              */
+ 
+    unsigned char               cell_count;//电池节数
+    unsigned short              qcount_percent;//库伦百分比数值（0~100）
+    signed short                NTC;//电池温度，单位℃
+    signed short                DIE;//模具(主控芯片)温度，单位℃
+    LTC4015_charge_status_t     charge_status;//充电状态
+    LTC4015_charger_state_t     charger_state;//实时的充电器形态（彼此独立）
+    //LTC4015_system_status_t     system_status;//系统状态
+    
+  } LTC4015_detail_info_t;
   
   
 
