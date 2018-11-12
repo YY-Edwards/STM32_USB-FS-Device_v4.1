@@ -8913,6 +8913,12 @@
         </group>
         <group>
           <name>LTC4015</name>
+          <group>
+            <name>BCMP</name>
+            <file>
+              <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\BCMP\BNP.h</name>
+            </file>
+          </group>
           <file>
             <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\LTC4015.c</name>
           </file>
