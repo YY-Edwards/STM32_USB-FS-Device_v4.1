@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include <stdarg.h>
 
+#define log_debug(...)	logger_add_msg_to_queue("DEBUG", __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define log_info(...)	logger_add_msg_to_queue("INFO", __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define log_warning(...) logger_add_msg_to_queue("WARNING", __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 

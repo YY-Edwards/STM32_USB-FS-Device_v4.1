@@ -43,17 +43,12 @@ Payload is Battery information
   
     typedef struct
   {
-  
+    unsigned char unused[3];
+    
   } bcmp_battery_info_req_t;
   
-  typedef struct
-  {
-    unsigned char                       result;
-    bcmp_battery_info_brdcast_t         detailed_info;        
   
-  } bcmp_battery_info_reply_t;
-  
-   typedef struct
+    typedef struct
   {
     signed short              VIN;//输入电压，单位mv
     signed short              IIN;//输入电流，单位ma
@@ -72,7 +67,13 @@ Payload is Battery information
     
   } bcmp_battery_info_brdcast_t;
   
+  typedef struct
+  {
+    unsigned char                       result;
+    bcmp_battery_info_brdcast_t         detailed_info;        
   
+  } bcmp_battery_info_reply_t;
+   
   
   
   /*
@@ -148,6 +149,8 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
   
    #define ALERT_INFO 0x003
   
+   #define ALERT_INFO_RESULT_NOTHING 0x00
+   #define ALERT_INFO_RESULT_HAPPEND 0x01
   
   typedef enum
   {
@@ -175,7 +178,7 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
   
     typedef struct
   {
-  
+    unsigned char                       unused;
   } bcmp_alert_info_req_t;
   
   typedef struct
@@ -187,10 +190,28 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
   } bcmp_alert_info_reply_t;
   
   
+
   
+typedef struct
+{
+  /*request function*/
+  void (* bcmp_rx_req_and_response_func)(bcmp_fragment_t *);
+  
+//  /*reply function*/
+//  void (* bcmp_rx_reply)(void *);
+//  
+//  /*board cast function*/
+//  void (* bcmp_rx_brdcst)(void *);
+  
+}BCMP_process_list_t;  
+  
+  
+void bcmp_init(void);
+
+void bcmp_opcode_not_support_reply(void);
   
     
-#endif
+
 #ifdef __cplusplus
 }
 #endif

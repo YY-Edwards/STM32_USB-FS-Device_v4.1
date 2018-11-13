@@ -45,6 +45,7 @@
 #include "usb_pwr.h"
 #include <string.h>
 #include "stdbool.h"
+#include "logger.h"
 static int check_count = 0;  
 static unsigned char PTT_Sta = 1;//默认高电平
 extern __IO uint32_t packet_sent;  
@@ -283,7 +284,7 @@ void TIM3_IRQHandler(void)
   static unsigned char msg[256] ={0};
   static int remain_len =0;
   static int send_count =0 ;
-  int msg_len = 0;
+  unsigned short msg_len = 0;
   if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
   {
     //timer3_counter_value++;

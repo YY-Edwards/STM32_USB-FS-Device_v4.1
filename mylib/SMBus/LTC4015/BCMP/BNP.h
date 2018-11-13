@@ -6,13 +6,16 @@ extern "C" {
 #endif
 
 #include "LTC4015.h"
+#include "logger.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
   
 #define BNP_HEADER_FLAG             (char)0x7E    
 #define BNP_END_FLAG                (char)0x3E
+#define DEFAULT_VALUE	            0x0000  
   
+   
   
     typedef enum
   {
@@ -29,7 +32,7 @@ extern "C" {
   {
     unsigned char       start_flag;        
     unsigned char       opcode;          
-    unsigned short      tx_number;  //server:0x0000~0x8fff. client:0x9000~0xffff
+    unsigned short      tx_number;  //server:0x0001~0x8fff. client:0x9000~0xffff
     unsigned short      length;//length of bnp_data.
   } bnp_header_t;
   
@@ -44,7 +47,7 @@ extern "C" {
     BNP_C_S_DISCONNECT_REPLY                    = 0XB3,
     BNP_DATA_MSG_REQUEST                        = 0X04,
     BNP_DATA_MSG_ACK                            = 0XB4,
-    BNP_CLIENT_NOSUPPORT_ACK                    = 0XE1,
+    BNP_CLIENT_REQEUST_NOSUPPORT_ACK            = 0XE1,
           
   }bnp_opcode_enum;
   
@@ -52,37 +55,37 @@ extern "C" {
    typedef struct
   {
     unsigned char       unused[10]; 
-  } bnp_content_device_heart_req_t;
+  } bnp_content_client_heart_req_t;
   
    typedef struct
   {
     unsigned char       result; 
     unsigned char       unused[9]; 
-  } bnp_content_device_heart_reply_t;
+  } bnp_content_client_heart_reply_t;
   
     //connect
    typedef struct
   {
     unsigned char       unused[10]; 
-  } bnp_content_device_conn_req_t;
+  } bnp_content_client_conn_req_t;
   
    typedef struct
   {
     unsigned char       result; 
     unsigned char       unused[9]; 
-  } bnp_content_device_conn_reply_t;
+  } bnp_content_client_conn_reply_t;
   
    //disconnect
    typedef struct
   {
     unsigned char       unused[10]; 
-  } bnp_content_device_disconn_req_t;
+  } bnp_content_client_disconn_req_t;
   
    typedef struct
   {
     unsigned char       result; 
     unsigned char       unused[9]; 
-  } bnp_content_device_disconn_reply_t;
+  } bnp_content_client_disconn_reply_t;
   
   
      //nosupport
@@ -113,15 +116,16 @@ extern "C" {
 /*DATA*/
 typedef union {
 
-        bnp_content_device_heart_req_t		                bnp_content_device_heart_req;
-	bnp_content_device_heart_reply_t		        bnp_content_device_heart_reply;	
-	bnp_content_device_conn_req_t		                bnp_content_device_conn_req;
-	bnp_content_device_conn_reply_t		                bnp_content_device_conn_reply;	
-        bnp_content_device_disconn_req_t		        bnp_content_device_disconn_req;//server<->client
-	bnp_content_device_disconn_reply_t		        bnp_content_device_disconn_reply;	
+        bnp_content_client_heart_req_t		                bnp_content_client_heart_req;
+	bnp_content_client_heart_reply_t		        bnp_content_client_heart_reply;	
+	bnp_content_client_conn_req_t		                bnp_content_client_conn_req;
+	bnp_content_client_conn_reply_t		                bnp_content_client_conn_reply;	
+        bnp_content_client_disconn_req_t		        bnp_content_client_disconn_req;//server<->client
+	bnp_content_client_disconn_reply_t		        bnp_content_client_disconn_reply;	
 	bnp_content_data_msg_t					bnp_content_data_msg;
 	bnp_content_data_msg_ack_t				bnp_content_data_msg_ack;
         bnp_content_nosupport_ack_t				bnp_content_nosupport_ack;
+        unsigned char                                           u8[122];
         
 } bnp_data_t;
   
@@ -143,13 +147,56 @@ typedef union {
     
   
   
+  typedef struct
+{	
+    /*BNP status*/
+    volatile bool is_connected;	
+            
+    /*Transaction ID*/
+    volatile unsigned short transaction_id;
+    
+}bnp_information_t;
+  
+
+  typedef struct
+{
+	/*request function*/
+	void (* bnp_rx_req)(bnp_fragment_t *);
+	
+	/*reply function*/
+	void (* bnp_rx_reply)(bnp_fragment_t *);
+	
+}BNP_process_list_t;
+  
+
+#define MIN_RESEND_TIMES	3
+  
+void bnp_client_heart_beat_req_func(bnp_fragment_t *);           /*-0x1-BNP_CLIENT_HEART*/
+void bnp_client_conn_req_func(bnp_fragment_t *);		/*-0x2-BNP_CLIENT_CONN*/
+void bnp_c_s_disconn_req_func(bnp_fragment_t *);		/*-0x3-BNP_C_S_DISCONN*/
+void bnp_c_s_disconn_reply_func(bnp_fragment_t *);		/*-0x3-BNP_C_S_DISCONN*/
+void bnp_data_msg_func(bnp_fragment_t *);	                /*-0x4-BNP_DATA_MSG*/
+void bnp_data_msg_ack_func(bnp_fragment_t *);	                /*-0x4-BNP_DATA_MSG*/
+
+void bnp_nosupport_opcode_req_func(bnp_fragment_t *);		/*-0xE1-BNP_NOSUPPORT*/
+
+void bnp_send_disconn_req_func();
+  
+/*register the bcmp analyse function(callback function) in bnp*/
+void bnp_set_bcmp_analyse_callback( void ( *func)(const bnp_content_data_msg_t));
+ 
+void bnp_init();
+void bnp_tx(bnp_fragment_t * bnp_tx_p);
   
   
-#endif
+
 #ifdef __cplusplus
 }
 #endif
 #endif /* BNP_H_ */
+
+
+
 
 
 
