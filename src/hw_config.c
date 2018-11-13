@@ -273,6 +273,12 @@ void TIM3_Int_Init(uint16_t arr,uint16_t psc)
   
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; //TIM 向上计数
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure); //②初始化 TIM3
+  
+  //这样后可以修正：
+  //在用到STM32定时器的更新中断时，发现有些情形下只要开启定时器就立即进入一次中断。
+  //准确说，只要使能更新中断允许位就立即响应一次更新中断【当然前提是相关NVIC也已经配置好】
+  TIM_ClearITPendingBit(TIM3,TIM_IT_Update);
+  
   TIM_ITConfig(TIM3,TIM_IT_Update,ENABLE ); //③允许更新中断
   //中断优先级 NVIC 设置
   NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn; //TIM3 中断

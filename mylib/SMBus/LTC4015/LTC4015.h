@@ -168,41 +168,41 @@ extern "C" {
   } LTC4015_charger_state_t;
   
   
-  typedef struct
-  {
-    signed short              VIN;//输入电压，单位mv
-    signed short              IIN;//输入电流，单位ma
-    signed short              VBAT;//单节电池电压，单位mv
-    signed short              IBAT;//充电电流，单位ma
-    signed short              VSYS;//负载端电压，单位mv
-    signed short              ISYS;//负载输出电流（评估值），单位ma
-//    unsigned char               chemistry_type;//电池化学成分：参考如下所示
-//                                /*   
-//                                0x0:Li-lon Programmable
-//                                0x1:Li-lon Fixed 4.2V/cell
-//                                0x2:Li-lon Fixed 4.1V/cell
-//                                0x3:Li-lon Fixed 4.0V/cell
-//                                0x4:LiFePO4 Programmable
-//                                0x5:LiFePO4 Fixed Fast Charge
-//                                0x6:LiFePO4 Fixed 3.6V/cell
-//                                0x7:Lead-Acid Fixed
-//                                0x8:Lead-Acid Programmable
-//                              */
-// 
-//    unsigned char               cell_count;//电池节数
-    unsigned int                bat_total_capcity;
-    unsigned int                bat_currently_capacity;
-    //unsigned char               qcount_percent;//库伦百分比数值（0~100）
-    signed short                NTC;//电池温度，单位℃
-    signed short                DIE;//模具(主控芯片)温度，单位℃
-    unsigned char               battery_state;
-    unsigned char               alert_identifier;
-    
-//    LTC4015_charge_status_t     charge_status;//充电状态
-//    LTC4015_charger_state_t     charger_state;//实时的充电器形态（彼此独立）
-    //LTC4015_system_status_t     system_status;//系统状态
-    
-  } LTC4015_detail_info_t;
+//  typedef struct
+//  {
+//    signed short              VIN;//输入电压，单位mv
+//    signed short              IIN;//输入电流，单位ma
+//    signed short              VBAT;//单节电池电压，单位mv
+//    signed short              IBAT;//充电电流，单位ma
+//    signed short              VSYS;//负载端电压，单位mv
+//    signed short              ISYS;//负载输出电流（评估值），单位ma
+////    unsigned char               chemistry_type;//电池化学成分：参考如下所示
+////                                /*   
+////                                0x0:Li-lon Programmable
+////                                0x1:Li-lon Fixed 4.2V/cell
+////                                0x2:Li-lon Fixed 4.1V/cell
+////                                0x3:Li-lon Fixed 4.0V/cell
+////                                0x4:LiFePO4 Programmable
+////                                0x5:LiFePO4 Fixed Fast Charge
+////                                0x6:LiFePO4 Fixed 3.6V/cell
+////                                0x7:Lead-Acid Fixed
+////                                0x8:Lead-Acid Programmable
+////                              */
+//// 
+////    unsigned char               cell_count;//电池节数
+//    unsigned int                bat_total_capcity;
+//    unsigned int                bat_currently_capacity;
+//    //unsigned char               qcount_percent;//库伦百分比数值（0~100）
+//    signed short                NTC;//电池温度，单位℃
+//    signed short                DIE;//模具(主控芯片)温度，单位℃
+//    unsigned char               battery_state;
+//    unsigned char               alert_identifier;
+//    
+////    LTC4015_charge_status_t     charge_status;//充电状态
+////    LTC4015_charger_state_t     charger_state;//实时的充电器形态（彼此独立）
+//    //LTC4015_system_status_t     system_status;//系统状态
+//    
+//  } LTC4015_detail_info_t;
   
   
 
