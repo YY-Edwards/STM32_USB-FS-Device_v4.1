@@ -77,7 +77,7 @@ void bnp_client_heart_beat_req_func(bnp_fragment_t *bnp_p)           /*-0x1-BNP_
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
    if(bnp_information.is_connected)
-    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = SUCCESS;
+    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = SUCCESS_NO_PROBLEM;
    else
     bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = UNCONNECTED;
    
@@ -102,7 +102,7 @@ void bnp_client_conn_req_func(bnp_fragment_t *bnp_p)		/*-0x2-BNP_CLIENT_CONN*/
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
  
-   bnp_tx_frame.bnp_data.bnp_content_client_conn_reply.result = SUCCESS;
+   bnp_tx_frame.bnp_data.bnp_content_client_conn_reply.result = SUCCESS_NO_PROBLEM;
    
    if(bnp_information.is_connected == false)
      bnp_information.is_connected =true;
@@ -153,7 +153,7 @@ void bnp_c_s_disconn_req_func(bnp_fragment_t *bnp_p)		/*-0x3-BNP_C_S_DISCONN*/
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
  
-   bnp_tx_frame.bnp_data.bnp_content_client_disconn_reply.result = SUCCESS;
+   bnp_tx_frame.bnp_data.bnp_content_client_disconn_reply.result = SUCCESS_NO_PROBLEM;
    
    bnp_tx_frame.bnp_header.length = 1;
    
@@ -214,7 +214,7 @@ void bnp_data_msg_func(bnp_fragment_t *bnp_p)		/*-0x4-BNP_DATA_MSG*/
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
    if(bnp_information.is_connected)
-    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = SUCCESS;
+    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = SUCCESS_NO_PROBLEM;
    else
     bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = UNCONNECTED;
    

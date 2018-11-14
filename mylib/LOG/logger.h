@@ -1,6 +1,7 @@
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 #include "myqueue.h"
+#include "platform_config.h"
 #include "stdio.h"
 #include <stdarg.h>
 
@@ -15,5 +16,6 @@ void logger_add_msg_to_queue(const char* psz_level,
                                 const char* psz_funcsig,
                                 char *psz_fmt, ...);
 extern bool logger_output_msg(void *buf, unsigned short *buf_len);
+extern void my_dma_config_and_enabled(void *p, uint16_t p_len);
 
 #endif

@@ -62,6 +62,7 @@ static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
 
 extern LINE_CODING linecoding;
 
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 /*******************************************************************************
@@ -224,7 +225,7 @@ void USB_Interrupts_Config(void)
   NVIC_InitTypeDef NVIC_InitStructure;
 
   /* 2 bit for pre-emption priority, 2 bits for subpriority */
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+  //NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
  
 #if defined(STM32L1XX_MD) || defined(STM32L1XX_HD)|| defined(STM32L1XX_MD_PLUS)
   NVIC_InitStructure.NVIC_IRQChannel = USB_LP_IRQn;
@@ -257,7 +258,12 @@ void USB_Interrupts_Config(void)
 
 
 //通用定时器 3 中断初始化
-//这里时钟选择为 APB1 的 2 倍，而 APB1 为 36M
+
+//这里时钟选择为 APB1 的 2 倍，而 APB1 为 36M(当SYSCLK==72M时，SYSCLK2分频得到36M的APB1)
+//#if defined(STM32L1XX_MD)
+//这里时钟选择为 APB1，而 APB1 为 32M(当SYSCLK==32M时，1分频得到32M的APB1)
+//#endif
+
 //arr：自动重装值。
 //psc：时钟预分频数
 //这里使用的是定时器 3!
@@ -282,7 +288,7 @@ void TIM3_Int_Init(uint16_t arr,uint16_t psc)
   TIM_ITConfig(TIM3,TIM_IT_Update,ENABLE ); //③允许更新中断
   //中断优先级 NVIC 设置
   NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn; //TIM3 中断
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0; //先占优先级 0 级
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3//0; //先占优先级 0 级
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1; //从优先级 1级
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
   NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
@@ -443,5 +449,25 @@ uint32_t CDC_Receive_DATA(void)
   SetEPRxValid(ENDP3); //重新设置端点接收状态有效，因为当接收数据后，端点就会被关闭.
   return 1 ;
 }
+
+
+static void NVIC_Configuration(void)
+{
+
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	//设置NVIC中断分组2:2位抢占优先级，2位响应优先级
+
+}
+
+
+
+void hardware_init()
+{
+  NVIC_Configuration();//设置中断优先级分组
+  
+
+
+}
+
+
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

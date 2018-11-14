@@ -83,6 +83,8 @@ void TIM3_Int_Init(uint16_t arr,uint16_t psc);
 void TIM2_Int_Init(uint16_t arr,uint16_t psc);
 uint32_t CDC_Send_DATA (uint8_t *ptrBuffer, uint8_t Send_length);
 uint32_t CDC_Receive_DATA(void);
+
+void hardware_init();
 /* External variables --------------------------------------------------------*/
 
 #endif  /*__HW_CONFIG_H*/

@@ -54,7 +54,7 @@ static void bcmp_battery_info_req_response(bcmp_fragment_t *bcmp_rx_frame_p)
   //Ç¿ÖÆ×ª»»
   bcmp_battery_info_reply_t *ptr =  (bcmp_battery_info_reply_t *)(bcmp_frame.u8);
   
-  ptr->result = SUCCESS;
+  ptr->result = SUCCESS_NO_PROBLEM;
   //ptr->detailed_info;
   
   bcmp_tx(&bcmp_frame, sizeof(bcmp_battery_info_reply_t));

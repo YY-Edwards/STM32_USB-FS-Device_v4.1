@@ -3017,6 +3017,7 @@
           <state>USE_STDPERIPH_DRIVER</state>
           <state>STM32L1XX_MD</state>
           <state>USE_STM32L152_EVAL</state>
+          <state>USE_USART_LOGGER</state>
         </option>
         <option>
           <name>CCPreprocFile</name>

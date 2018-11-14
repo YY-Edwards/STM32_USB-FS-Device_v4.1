@@ -50,6 +50,10 @@ static int check_count = 0;
 static unsigned char PTT_Sta = 1;//默认高电平
 extern __IO uint32_t packet_sent;  
 extern __IO uint32_t bDeviceState; 
+
+extern volatile unsigned char usart_send_buffer;
+
+static volatile bool DMA_ALLOW_SEND_FLAG  = false;
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -280,11 +284,44 @@ void TIM2_IRQHandler(void)
   */
 void TIM3_IRQHandler(void)
 {
+ 
+    unsigned short msg_len = 0;
+    
+#if define (USE_USART_LOGGER) 
+  
+  
+    if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
+  {
+    if(DMA_ALLOW_SEND_FLAG == true)
+    {
+      
+        ret = logger_output_msg(usart_send_buffer, &msg_len);
+        if(ret == true)//读取数据成功
+        {
+          if(msg_len >256)msg_len =256;
+          
+          DMA_ALLOW_SEND_FLAG = false;
+          
+          my_dma_config_and_enabled(NULL, msg_len);//启动DMA传输
+                    
+        }
+        else//logger缓冲区无数据，则不作任何处理。
+        {
+          
+        }  
+    }
+      
+    TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+  }
+  
+  
+  
+#elif defined (USE_CDC_LOGGER)
+
   bool ret = false;
   static unsigned char msg[256] ={0};
   static int remain_len =0;
   static int send_count =0 ;
-  unsigned short msg_len = 0;
   if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
   {
     //timer3_counter_value++;
@@ -320,26 +357,39 @@ void TIM3_IRQHandler(void)
           }
         }  
       }
-   
-//      if(packet_sent == 1)
-//      {
-////          unsigned char temp_send = PTT_Sta;
-////          FootPtt_Pro_t send_pro;
-////          memset((void*)&send_pro, 0x00, sizeof(FootPtt_Pro_t));
-////          send_pro.header       = PRO_HEADER;
-////          send_pro.opcode       = PRO_OPCODE_PTT;
-////          send_pro.length       = 0x01;
-////          send_pro.payload      = temp_send;
-////          send_pro.checksum     = (send_pro.opcode + send_pro.length + send_pro.payload);
-////          send_pro.end          = PRO_END;           
-////          CDC_Send_DATA ((unsigned char*)&send_pro,sizeof(FootPtt_Pro_t));
-//      }
-    
     }
     TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
   }
+  
+#endif
 
 }
+
+
+
+void DMA1_Channel4_IRQHandler(void)
+{
+
+   if (DMA_GetITStatus(DMA1_IT_TC4) != RESET)
+  {
+    //清除标志位  	
+    DMA_ClearFlag(DMA1_FLAG_TC4);	
+    
+    //DMA_ClearITPendingBit(DMA1_FLAG_TC4);  	
+    //DMA1->IFCR |= DMA1_FLAG_TC4;	
+    //关闭DMA	
+    DMA_Cmd(DMA1_Channel4, DISABLE); 
+    
+    //DMA1_Channel4->CCR &= ~(1<<0); 
+    
+    //允许再次发送	
+    DMA_ALLOW_SEND_FLAG = true
+    //Flag_Uart_Send = 0;
+  }
+
+}
+
+
 
 /******************************************************************************/
 /*                 STM32 Peripherals Interrupt Handlers                   */

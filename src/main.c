@@ -87,7 +87,7 @@ extern __IO  uint32_t length ;
 /* Private function prototypes -----------------------------------------------*/
 void DC2039A_Config_Init(void);
 void DC2039A_Run(void);
-void DC2039A_Interface_Init(void);
+void DC2039A_Init(void);
 void ADC_GPIO_Configuration(void);
 uint16_t STM32_ADC_Read(void);
 
@@ -103,7 +103,7 @@ uint16_t STM32_ADC_Read(void)
   return Voltage;
 }
 
-void DC2039A_Interface_Init(void)
+void DC2039A_Init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;  
     
@@ -767,11 +767,21 @@ int main(void)
   STM_EVAL_LEDOn(LED2);//高电平，点亮
   STM_EVAL_LEDOn(LED3);
   
-  DC2039A_Interface_Init();
+  DC2039A_Init();
   
     //TIM2_Int_Init(20, 7199);//2ms
-  TIM3_Int_Init(99,7199); //10Khz 的计数频率，计数到 500 为 50ms
-                        //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
+  #if defined(STM32L1XX_MD)
+  
+    TIM3_Int_Init(99,3199); 
+    
+    //Tout= ((arr+1)*( psc+1))/Tclk=(99+1)*( 3199+1))/32=10ms
+    
+  #else
+  
+    TIM3_Int_Init(99,7199); //10Khz 的计数频率，计数到 500 为 50ms
+                          //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
+  #endif 
+                        
   
   Set_System();
   Set_USBClock();// 配置 USB 时钟，也就是从 72M 的主频得到 48M 的 USB 时钟（1.5 分频）

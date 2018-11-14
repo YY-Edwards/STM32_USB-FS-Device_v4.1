@@ -19,11 +19,11 @@ extern "C" {
   
     typedef enum
   {
-    SUCCESS,
-    FAILURE,
-    UNCONNECTED,
-    INVALID_PARAM,
-    UNSUPPORT_OPCODE,
+    SUCCESS_NO_PROBLEM  =0x00,
+    FAILURE             =0x01,
+    UNCONNECTED         =0x02,
+    INVALID_PARAM       =0x03,
+    UNSUPPORT_OPCODE    =0x04,
           
   }bnp_result_t;
   
