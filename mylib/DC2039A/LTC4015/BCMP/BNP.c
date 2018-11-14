@@ -1,6 +1,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "BNP.h"
+#include "BCMP.h"
 
 static volatile bnp_information_t bnp_information;
 static volatile unsigned short server_transaction_id = 1;
@@ -79,7 +80,7 @@ void bnp_client_heart_beat_req_func(bnp_fragment_t *bnp_p)           /*-0x1-BNP_
    if(bnp_information.is_connected)
     bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = SUCCESS_NO_PROBLEM;
    else
-    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = UNCONNECTED;
+    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = PRO_UNCONNECTED;
    
    bnp_tx_frame.bnp_header.length = 1;
    
@@ -216,7 +217,7 @@ void bnp_data_msg_func(bnp_fragment_t *bnp_p)		/*-0x4-BNP_DATA_MSG*/
    if(bnp_information.is_connected)
     bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = SUCCESS_NO_PROBLEM;
    else
-    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = UNCONNECTED;
+    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = PRO_UNCONNECTED;
    
    bnp_tx_frame.bnp_header.length = 1;
    
@@ -273,3 +274,23 @@ static const volatile BNP_process_list_t bnp_process_list[]=
  
 };
 
+
+
+void bnp_init()
+{
+  
+  bnp_information.is_connected = false;
+  bnp_information.transaction_id = NULL;
+  
+  bnp_set_bcmp_analyse_callback(bcmp_parse_func);
+}
+
+void protocol_init()
+{
+  bnp_init();
+  
+  bcmp_init();
+  
+  log_debug("protocol init has already been completed.");
+
+}

@@ -3160,11 +3160,14 @@
           <state>$PROJ_DIR$\..\..\..\Utilities\STM32_EVAL\Common</state>
           <state>$PROJ_DIR$\..\..\..\Utilities\STM32_EVAL\STM32L152_EVAL</state>
           <state>$PROJ_DIR$\..\mylib</state>
-          <state>$PROJ_DIR$\..\mylib\SMBus\IIC</state>
+          <state>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\BCMP</state>
           <state>$PROJ_DIR$\..\mylib\SYS</state>
-          <state>$PROJ_DIR$\..\mylib\SMBus</state>
-          <state>$PROJ_DIR$\..\mylib\SMBus\LTC4015</state>
+          <state>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\PHY_Slip</state>
+          <state>$PROJ_DIR$\..\mylib\DC2039A\SMBus\IIC</state>
           <state>$PROJ_DIR$\..\mylib\LOG</state>
+          <state>$PROJ_DIR$\..\mylib\DC2039A\SMBus</state>
+          <state>$PROJ_DIR$\..\mylib\DC2039A\LTC4015</state>
+          <state>$PROJ_DIR$\..\mylib\DC2039A</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -8887,6 +8890,72 @@
     <group>
       <name>mylib</name>
       <group>
+        <name>DC2039A</name>
+        <group>
+          <name>LTC4015</name>
+          <group>
+            <name>BCMP</name>
+            <file>
+              <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\BCMP\BCMP.c</name>
+            </file>
+            <file>
+              <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\BCMP\BCMP.h</name>
+            </file>
+            <file>
+              <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\BCMP\BNP.c</name>
+            </file>
+            <file>
+              <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\BCMP\BNP.h</name>
+            </file>
+          </group>
+          <group>
+            <name>PHY_Slip</name>
+            <file>
+              <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\PHY_Slip\PHY_Slip.h</name>
+            </file>
+          </group>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\LTC4015.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\LTC4015.h</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\LTC4015_formats.h</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\LTC4015_reg_defs.h</name>
+          </file>
+        </group>
+        <group>
+          <name>SMBus</name>
+          <group>
+            <name>IIC</name>
+            <file>
+              <name>$PROJ_DIR$\..\mylib\DC2039A\SMBus\IIC\myiic.c</name>
+            </file>
+            <file>
+              <name>$PROJ_DIR$\..\mylib\DC2039A\SMBus\IIC\myiic.h</name>
+            </file>
+          </group>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\DC2039A\SMBus\SMBus.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\DC2039A\SMBus\SMBus.h</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\mylib\DC2039A\SMBus\Typedefs.h</name>
+          </file>
+        </group>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\DC2039A\DC2039A.C</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\DC2039A\DC2039A.h</name>
+        </file>
+      </group>
+      <group>
         <name>LOG</name>
         <file>
           <name>$PROJ_DIR$\..\mylib\LOG\logger.c</name>
@@ -8899,63 +8968,6 @@
         </file>
         <file>
           <name>$PROJ_DIR$\..\mylib\myqueue.h</name>
-        </file>
-      </group>
-      <group>
-        <name>SMBus</name>
-        <group>
-          <name>IIC</name>
-          <file>
-            <name>$PROJ_DIR$\..\mylib\SMBus\IIC\myiic.c</name>
-          </file>
-          <file>
-            <name>$PROJ_DIR$\..\mylib\SMBus\IIC\myiic.h</name>
-          </file>
-        </group>
-        <group>
-          <name>LTC4015</name>
-          <group>
-            <name>BCMP</name>
-            <file>
-              <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\BCMP\BCMP.c</name>
-            </file>
-            <file>
-              <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\BCMP\BCMP.h</name>
-            </file>
-            <file>
-              <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\BCMP\BNP.c</name>
-            </file>
-            <file>
-              <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\BCMP\BNP.h</name>
-            </file>
-          </group>
-          <group>
-            <name>PHY_Slip</name>
-            <file>
-              <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\PHY_Slip\PHY_Slip.h</name>
-            </file>
-          </group>
-          <file>
-            <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\LTC4015.c</name>
-          </file>
-          <file>
-            <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\LTC4015.h</name>
-          </file>
-          <file>
-            <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\LTC4015_formats.h</name>
-          </file>
-          <file>
-            <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\LTC4015_reg_defs.h</name>
-          </file>
-        </group>
-        <file>
-          <name>$PROJ_DIR$\..\mylib\SMBus\SMBus.c</name>
-        </file>
-        <file>
-          <name>$PROJ_DIR$\..\mylib\SMBus\SMBus.h</name>
-        </file>
-        <file>
-          <name>$PROJ_DIR$\..\mylib\SMBus\Typedefs.h</name>
         </file>
       </group>
       <group>

@@ -51,7 +51,7 @@ static unsigned char PTT_Sta = 1;//默认高电平
 extern __IO uint32_t packet_sent;  
 extern __IO uint32_t bDeviceState; 
 
-extern volatile unsigned char usart_send_buffer;
+extern volatile unsigned char usart_send_buffer[256];
 
 static volatile bool DMA_ALLOW_SEND_FLAG  = false;
 /* Private typedef -----------------------------------------------------------*/
@@ -286,8 +286,9 @@ void TIM3_IRQHandler(void)
 {
  
     unsigned short msg_len = 0;
+    bool ret = false;
     
-#if define (USE_USART_LOGGER) 
+#if defined (USE_USART_LOGGER) 
   
   
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
@@ -295,7 +296,7 @@ void TIM3_IRQHandler(void)
     if(DMA_ALLOW_SEND_FLAG == true)
     {
       
-        ret = logger_output_msg(usart_send_buffer, &msg_len);
+        ret = logger_output_msg((void*)usart_send_buffer, &msg_len);
         if(ret == true)//读取数据成功
         {
           if(msg_len >256)msg_len =256;
@@ -318,7 +319,6 @@ void TIM3_IRQHandler(void)
   
 #elif defined (USE_CDC_LOGGER)
 
-  bool ret = false;
   static unsigned char msg[256] ={0};
   static int remain_len =0;
   static int send_count =0 ;
@@ -383,7 +383,7 @@ void DMA1_Channel4_IRQHandler(void)
     //DMA1_Channel4->CCR &= ~(1<<0); 
     
     //允许再次发送	
-    DMA_ALLOW_SEND_FLAG = true
+    DMA_ALLOW_SEND_FLAG = true;
     //Flag_Uart_Send = 0;
   }
 

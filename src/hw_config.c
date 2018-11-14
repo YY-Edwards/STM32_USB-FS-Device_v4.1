@@ -38,11 +38,15 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "stm32_it.h"
+
 #include "usb_lib.h"
 #include "usb_prop.h"
 #include "usb_desc.h"
 #include "hw_config.h"
 #include "usb_pwr.h"
+
+#include "DC2039A.h"
+#include "logger.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -50,13 +54,14 @@
 /* Private variables ---------------------------------------------------------*/
 ErrorStatus HSEStartUpStatus;
 EXTI_InitTypeDef EXTI_InitStructure;
-extern __IO uint32_t packet_sent;
-extern __IO uint8_t Send_Buffer[VIRTUAL_COM_PORT_DATA_SIZE] ;
-extern __IO  uint32_t packet_receive;
-extern __IO uint8_t Receive_length;
 
+__IO uint32_t packet_sent;
+//__IO uint8_t Send_Buffer[VIRTUAL_COM_PORT_DATA_SIZE] ;
+__IO  uint32_t packet_receive;
 uint8_t Receive_Buffer[64];
 uint32_t Send_length;
+
+
 static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
 /* Extern variables ----------------------------------------------------------*/
 
@@ -65,13 +70,8 @@ extern LINE_CODING linecoding;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-/*******************************************************************************
-* Function Name  : Set_System
-* Description    : Configures Main system clocks & power
-* Input          : None.
-* Return         : None.
-*******************************************************************************/
-void Set_System(void)
+
+void Set_USB_GPIO_Config(void)
 {
   GPIO_InitTypeDef  GPIO_InitStructure;  
   
@@ -288,12 +288,12 @@ void TIM3_Int_Init(uint16_t arr,uint16_t psc)
   TIM_ITConfig(TIM3,TIM_IT_Update,ENABLE ); //③允许更新中断
   //中断优先级 NVIC 设置
   NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn; //TIM3 中断
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3//0; //先占优先级 0 级
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;//0; //先占优先级 0 级
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1; //从优先级 1级
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
   NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
   
-  //TIM_Cmd(TIM3, DISABLE); //⑤使能 TIM3
+  TIM_Cmd(TIM3, DISABLE); //⑤使能 TIM3
   
 }
 
@@ -458,14 +458,42 @@ static void NVIC_Configuration(void)
 
 }
 
+static void usb_virtual_comport_init()
+{
+  
+  Set_USB_GPIO_Config();
+  Set_USBClock();// 配置 USB 时钟，也就是从 72M 的主频得到 48M 的 USB 时钟（1.5 分频）
+  USB_Interrupts_Config();// USB 唤醒中断和USB 低优先级数据处理中断
+  USB_Init();//用于初始化 USB，;
 
+}
 
 void hardware_init()
 {
   NVIC_Configuration();//设置中断优先级分组
   
-
-
+  logger_init();//logger 初始化
+  
+#if defined(STM32L1XX_MD) 
+   TIM3_Int_Init(99,3199);//定时输出log  
+    //Tout= ((arr+1)*( psc+1))/Tclk=(99+1)*( 3199+1))/32=10ms
+#else  
+   TIM3_Int_Init(99,7199); //10Khz 的计数频率，计数到 500 为 50ms
+                          //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
+#endif 
+  
+  
+  STM_EVAL_LEDInit(LED2);//根据原理图，修改函数里的LED宏定义即可
+  STM_EVAL_LEDInit(LED3);
+  
+  STM_EVAL_LEDOn(LED2);//高电平，点亮
+  STM_EVAL_LEDOn(LED3);
+  
+  DC2039A_Init();//充电器模块初始化
+                        
+  usb_virtual_comport_init();//通信协议硬件接口初始化
+  
+  log_debug("hardware initialization has already been completed.");
 }
 
 

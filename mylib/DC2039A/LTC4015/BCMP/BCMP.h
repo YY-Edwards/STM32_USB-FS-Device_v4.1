@@ -209,6 +209,8 @@ typedef struct
 void bcmp_init(void);
 
 void bcmp_opcode_not_support_reply(void);
+
+extern void bcmp_parse_func(const bcmp_fragment_t);
   
     
 

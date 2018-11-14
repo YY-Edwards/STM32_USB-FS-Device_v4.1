@@ -109,3 +109,17 @@ static const volatile BCMP_process_list_t bcmp_process_list[]=
   {              NULL                   },
     
 };
+
+
+void bcmp_parse_func(const bcmp_fragment_t bcmp)
+{
+
+
+}
+
+  
+void bcmp_init(void)
+{
+  
+
+}

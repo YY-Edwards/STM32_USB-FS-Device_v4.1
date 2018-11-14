@@ -42,7 +42,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "platform_config.h"
-#include "usb_type.h"
+//#include "stdbool.h"
+//#include "usb_type.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

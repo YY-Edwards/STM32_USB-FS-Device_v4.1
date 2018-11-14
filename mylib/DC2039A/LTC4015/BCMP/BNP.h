@@ -21,7 +21,7 @@ extern "C" {
   {
     SUCCESS_NO_PROBLEM  =0x00,
     FAILURE             =0x01,
-    UNCONNECTED         =0x02,
+    PRO_UNCONNECTED         =0x02,
     INVALID_PARAM       =0x03,
     UNSUPPORT_OPCODE    =0x04,
           
@@ -187,7 +187,8 @@ void bnp_set_bcmp_analyse_callback( void ( *func)(const bnp_content_data_msg_t))
  
 void bnp_init();
 void bnp_tx(bnp_fragment_t * bnp_tx_p);
-  
+
+void protocol_init();
   
 
 #ifdef __cplusplus
