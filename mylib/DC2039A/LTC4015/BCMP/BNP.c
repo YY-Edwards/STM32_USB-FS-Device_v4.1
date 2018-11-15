@@ -294,7 +294,7 @@ void bnp_init()
      usb_rx_queue_ptr =NULL;
   }
   
-  usb_rx_queue_ptr = malloc(sizeof(ring_queue_t));
+  usb_rx_queue_ptr = malloc(sizeof(dyn_ring_queue_t));
   if(usb_rx_queue_ptr ==NULL)
   {
     //printf("malloc ble_msg_queue_ptr failure\r\n");

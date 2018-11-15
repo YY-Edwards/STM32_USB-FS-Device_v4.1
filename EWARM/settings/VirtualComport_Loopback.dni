@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1926039119
+Checksum=-1965871111
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -102,11 +102,12 @@ mode=0
 [Breakpoints2]
 Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.152.1" 0 0 1 "" 0 "" 0
 Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\SMBus\SMBus.c}.218.11" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.454.1" 0 0 1 "" 0 "" 0
-Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.432.3" 0 0 1 "" 0 "" 0
-Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.107.7" 0 0 1 "" 0 "" 0
-Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.424.3" 0 0 1 "" 0 "" 0
-Count=6
+Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.453.1" 0 0 1 "" 0 "" 0
+Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.107.7" 0 0 1 "" 0 "" 0
+Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.424.3" 0 0 1 "" 0 "" 0
+Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\LOG\logger.c}.246.3" 0 0 1 "" 0 "" 0
+Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\LOG\logger.c}.263.3" 0 0 1 "" 0 "" 0
+Count=7
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""

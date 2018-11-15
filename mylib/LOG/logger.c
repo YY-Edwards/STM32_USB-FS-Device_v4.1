@@ -243,17 +243,17 @@ void logger_init()
      logger_msg_queue_ptr =NULL;
   }
   
-  logger_msg_queue_ptr = malloc(sizeof(ring_queue_t));
+  logger_msg_queue_ptr = malloc(sizeof(dyn_ring_queue_t));
   if(logger_msg_queue_ptr ==NULL)
   {
     //printf("malloc ble_msg_queue_ptr failure\r\n");
     return ;
   }
-  logger_msg_queue_ptr->head            = 0;
-  logger_msg_queue_ptr->tail            = 0;
-  logger_msg_queue_ptr->queue_deep      = 20;
-  logger_msg_queue_ptr->data_size       = 128;
-  logger_msg_queue_ptr->queue_point     = NULL;
+  logger_msg_queue_ptr->head                    = 0;
+  logger_msg_queue_ptr->tail                    = 0;
+  logger_msg_queue_ptr->queue_deep              = 20;
+  logger_msg_queue_ptr->data_size               = 128;
+  logger_msg_queue_ptr->queue_point             = NULL;
   
   
   bool ret = init_queue(logger_msg_queue_ptr);

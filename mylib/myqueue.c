@@ -9,10 +9,12 @@ bool init_queue(RingQueue_t ring_queue)
   unsigned short array_deep = ring_queue->queue_deep;
   unsigned short data_size = ring_queue->data_size;
   
-  ring_queue->queue_point = malloc(array_deep);//分配队列深度内存
+  ring_queue->queue_point = NULL;
+  ring_queue->queue_point = malloc(array_deep*sizeof(dyn_mydata_t));//分配队列深度内存
   if(ring_queue->queue_point == NULL)return false;
   for(int i =0; i < (ring_queue->queue_deep); i++)
   {
+    (ring_queue->queue_point +i)->data = NULL;
     (ring_queue->queue_point +i)->data = malloc(data_size);//分配队列宽度内存
     if((ring_queue->queue_point +i)->data ==NULL)return false;
     memset((ring_queue->queue_point +i)->data, 0x00, data_size);//清理数据
