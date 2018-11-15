@@ -44,6 +44,8 @@
 #include "usb_istr.h"
 #include "usb_pwr.h"
 
+#include "stdbool.h"
+#include "myqueue.h"    
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
@@ -53,6 +55,7 @@
 /* Private variables ---------------------------------------------------------*/
 extern __IO uint32_t packet_sent;
 extern __IO uint32_t packet_receive;
+extern volatile RingQueue_t usb_rx_queue_ptr;
 uint32_t Receive_length;
 
 //uint16_t In_Data_Offset;
@@ -104,7 +107,14 @@ void EP3_OUT_Callback(void)
   }
   
   
-
+  if(usb_rx_queue_ptr != NULL)
+  {
+    bool ret =false;
+    ret = push_to_queue(usb_rx_queue_ptr, Receive_Buffer, Data_Len);
+    if(ret !=true)
+    {
+    }
+  }
   SetEPRxValid(ENDP3); //重新设置端点接收状态有效，因为当接收数据后，端点就会被关闭.
   
   

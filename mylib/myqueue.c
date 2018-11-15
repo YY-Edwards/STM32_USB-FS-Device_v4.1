@@ -26,6 +26,8 @@ bool init_queue(RingQueue_t ring_queue)
 bool take_from_queue(RingQueue_t ring_queue, void *buf, int *len, bool erase)
 {
   bool ret =false;
+  if(ring_queue == NULL)return false;
+  
   int snap_head = ring_queue->head;
   if(snap_head != ring_queue->tail)
   {
@@ -54,11 +56,13 @@ bool push_to_queue(RingQueue_t ring_queue, void *buf, int len)
   int next_index =0;
   bool ret =false;
   if(len == 0)return false;
+  if(ring_queue == NULL)return false;
   
   if(len > ring_queue->data_size)
      len = ring_queue->data_size;
   
-  p = (dyn_mydata_t *)(&(ring_queue->queue_point[ring_queue->head]));
+ // p = (dyn_mydata_t *)(&(ring_queue->queue_point[ring_queue->head]));
+   p = (dyn_mydata_t *)((ring_queue->queue_point + ring_queue->head));
   memcpy(p->data, buf, len);
   p->len = len;
   
@@ -87,6 +91,8 @@ void clear_queue(RingQueue_t ring_queue)
 }
 bool queue_is_empty(RingQueue_t ring_queue)
 {
+  if(ring_queue == NULL)return false;
+  
   int mid_flag = ring_queue->head;
   if(mid_flag != ring_queue->tail)
   {
