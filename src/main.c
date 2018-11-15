@@ -44,7 +44,8 @@
 #include "delay.h"
 
 #include "logger.h"
-#include "BNP.h"    
+#include "BNP.h" 
+#include "task_timer.h"    
 
 extern __IO uint32_t bDeviceState; 
 
@@ -69,12 +70,16 @@ void set_system()
   { }
   
   
-   delay_init(32);
+  delay_init(32);
+  //同时启用有冲突。
+  //SYSCLK = 32M
+  //SysTick_Config(32000000 / 500);//2ms
+  
 #else
    delay_init(72);//延时功能初始化
+   //SysTick_Config(SYSTEM_CLOCK / 500);//2ms
 #endif  
 
-    //SysTick_Config(SYSTEM_CLOCK / 500);//2ms
    
 }
 
@@ -94,38 +99,34 @@ int main(void)
   protocol_init();//协议初始化
 
   unsigned int run_counts = 0;
-  unsigned char timer3_run_flag = 0;
   while (1)
   {
     if (bDeviceState == CONFIGURED)
     {
-      run_counts++;
-      if(timer3_run_flag == 0)
+      
+      start_timer_task_schedule();
+      
+      log_debug("start task schedule.");
+      
+      while(bDeviceState == CONFIGURED)
       {
-        TIM_Cmd(TIM3, ENABLE);//启动定时器3
-        timer3_run_flag = 1;
-        log_info("hello, LTC4105.");
+        
+        task_process();
+        run_counts++;
+        if(run_counts == 35*60000)
+        {
+          STM_EVAL_LEDToggle(LED2);
+          run_counts = 0;
+        }
       }
-//      CDC_Receive_DATA();
-//      /*Check to see if we have data yet */
-//      if (Receive_length  != 0)
-//      {
-////        if (packet_sent == 1)
-////          CDC_Send_DATA ((unsigned char*)Receive_Buffer,Receive_length);
-//       Receive_length = 0;
-//      }
-      if(run_counts == 35*60000)
-      {
-        STM_EVAL_LEDToggle(LED2);
-        run_counts = 0;
-        log_debug("hello, world.");
-//        if(timer3_run_flag)
-//          DC2039A_Run();//测试
-      }
+      
+      log_warning("stop task schedule!");
+      stop_timer_task_schedule();
+      
     }
     else
     {
-      STM_EVAL_LEDToggle(LED3);   
+      STM_EVAL_LEDToggle(LED3);//指示等待上位机识别   
       delay_ms(100); 
     }
   }

@@ -285,12 +285,30 @@ void bnp_init()
   bnp_set_bcmp_analyse_callback(bcmp_parse_func);
 }
 
+void bnp_parse_task(void *p)
+{
+   static unsigned int run_count = 0;
+   run_count++;
+   
+   log_debug("[bnp_parse_task] is running: %d", run_count);
+
+}
+
+extern void set_timer_task(unsigned char       timer_id, 
+                            unsigned int        delay, 
+                            unsigned char       rearm, 
+                            handler              timehandler, 
+                            void *               param );
 void protocol_init()
 {
   bnp_init();
   
   bcmp_init();
   
+  set_timer_task(BNP_PARSE_TASK, TIME_BASE_500MS, true, bnp_parse_task, NULL);
+  
+  set_timer_task(BCMP_SEND_TASK, 2*TIME_BASE_500MS, true, bcmp_send_task, NULL);
+  
   log_debug("protocol init has already been completed.");
-
+  
 }

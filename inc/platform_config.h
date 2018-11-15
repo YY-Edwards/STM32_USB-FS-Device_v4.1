@@ -151,7 +151,23 @@
  /* Uncomment the following define to use an external pull up instead of the 
     integrated STM32L15xx internal pull up. In this case make sure to set up
     correctly the external required hardware and the GPIO defines below.*/
+      
+#define LOGGER_TASK                     0
+#define BNP_PARSE_TASK                  1
+#define BCMP_SEND_TASK                  2
+#define BATTERY_MONITOR_TASK            3
+#define UNDEFINED_TASK                  1    
+      
+#define TIME_BASE_100MS                 100
+#define TIME_BASE_500MS                 500
+#define TIME_BASE_10MS                  10
+
+
+    
+      
+      
 #define USB_USE_EXTERNAL_PULLUP
+      
 
 #define TEST_TP                               GPIOB 
   #define TEST_TP1_PIN                        //GPIO_Pin_2

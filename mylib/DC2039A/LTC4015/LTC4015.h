@@ -93,6 +93,7 @@ extern "C" {
 #include <stddef.h>
 #include <string.h>
 
+#pragma pack(1)  
 // Type declarations
   /*! Hardware port information. Modify as needed for local hardware
   requirements. Available to user supplied read and write functions. */
@@ -205,7 +206,7 @@ extern "C" {
 //  } LTC4015_detail_info_t;
   
   
-
+#pragma pack()
   // function declarations
   /*! Returns a pointer to a LTC4015 structure used by LTC4015_write_register and LTC4015_read_register */
   LTC4015 LTC4015_init(LTC4015_chip_cfg_t *cfg //!< Information required to access hardware SMBus port

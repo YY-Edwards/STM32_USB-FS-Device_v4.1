@@ -35,7 +35,7 @@ LTC4015_charge_status_t charge_status;
 LTC4015_system_status_t system_status;
 
 void DC2039A_Config_Param(void);
-void DC2039A_Run(void);
+void DC2039A_Run(void *);
 void DC2039A_Init(void);
 void ADC_GPIO_Configuration(void);
 uint16_t INTVCC_ADC_Read(void);
@@ -51,6 +51,14 @@ uint16_t INTVCC_ADC_Read(void)
 
   return Voltage;
 }
+
+
+extern void set_timer_task(unsigned char       timer_id, 
+                            unsigned int        delay, 
+                            unsigned char       rearm, 
+                            handler              timehandler, 
+                            void *               param );
+
 
 void DC2039A_Init(void)
 {
@@ -117,6 +125,9 @@ void DC2039A_Init(void)
     uint8_t cat5140_id = Get_CAT5140_ID();
     
     CAT5140_Optional_Handle();
+    
+    //3s
+    set_timer_task(BATTERY_MONITOR_TASK, 6*TIME_BASE_500MS, true, DC2039A_Run, NULL);
   
 }
 void ADC_GPIO_Configuration(void)
@@ -357,7 +368,7 @@ void DC2039A_Config_Param(void)
     return;
 }
 
-void DC2039A_Run(void)
+void DC2039A_Run(void *p)
 {
     uint16_t   value = 0;
     uint8_t    ara_address = 0; 

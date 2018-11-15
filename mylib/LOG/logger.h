@@ -2,6 +2,7 @@
 #define _LOGGER_H_
 #include "myqueue.h"
 #include "platform_config.h"
+#include "task_timer.h"
 #include "stdio.h"
 #include <stdarg.h>
 

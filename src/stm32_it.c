@@ -46,14 +46,15 @@
 #include <string.h>
 #include "stdbool.h"
 #include "logger.h"
-static int check_count = 0;  
-static unsigned char PTT_Sta = 1;//默认高电平
+#include "task_timer.h"
+//static int check_count = 0;  
+//static unsigned char PTT_Sta = 1;//默认高电平
 extern __IO uint32_t packet_sent;  
 extern __IO uint32_t bDeviceState; 
 
-extern volatile unsigned char usart_send_buffer[256];
+//extern volatile unsigned char usart_send_buffer[256];
 
-static volatile bool DMA_ALLOW_SEND_FLAG  = true;
+//static volatile bool DMA_ALLOW_SEND_FLAG  = true;
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -179,34 +180,9 @@ void PendSV_Handler(void)
 
 void SysTick_Handler(void)
 {
+//  timer_task_schedule();//调度任务
 }
 
-//void SysTick_Handler(void)
-//{
-//  check_count++;
-//  if(check_count >= 8)
-//  {
-//    check_count =0;
-//    static uint8_t Keybuf1 = 0xff;
-////    
-////    //PA8,调试用PA8
-////    Keybuf1 = ( ( Keybuf1 << 1 ) | GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) );//缓存区左移1位，并将当前值移入最低位
-////
-////    if ( 0x00 == Keybuf1 )//连续8次扫描都为0，即16毫秒内都检测到按下状态，即认为按键按下
-////    {
-////      PTT_Sta = 0;
-////    }
-////    else if ( 0xff == Keybuf1 )//按键弹起
-////    {
-////      PTT_Sta = 1;
-////    }
-////    else//其它情况则说明按键状态尚未稳定，则不对 KeySta 变量值进行更新
-////    //Key1Sta = 1;//default value 
-////    {
-////    }
-//    
-//  } 
-//}
 
 /*******************************************************************************
 * Function Name  : USB_IRQHandler
@@ -246,34 +222,34 @@ void USBWakeUp_IRQHandler(void)
 void TIM2_IRQHandler(void)
 {
 
-  if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
-  {
-     check_count++;
-     if(check_count >= 8)
-    {
-      check_count =0;
-      static uint8_t Keybuf1 = 0xff;
-      
-      //PA3
-      Keybuf1 = ( ( Keybuf1 << 1 ) | GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) );//缓存区左移1位，并将当前值移入最低位
-
-      if ( 0x00 == Keybuf1 )//连续8次扫描都为0，即16毫秒内都检测到按下状态，即认为按键按下
-      {
-        PTT_Sta = 0;
-      }
-      else if ( 0xff == Keybuf1 )//按键弹起
-      {
-        PTT_Sta = 1;
-      }
-      else//其它情况则说明按键状态尚未稳定，则不对 KeySta 变量值进行更新
-      //Key1Sta = 1;//default value 
-      {
-      }
-      
-    } 
-
-    TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-  }
+//  if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
+//  {
+//     check_count++;
+//     if(check_count >= 8)
+//    {
+//      check_count =0;
+//      static uint8_t Keybuf1 = 0xff;
+//      
+//      //PA3
+//      Keybuf1 = ( ( Keybuf1 << 1 ) | GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) );//缓存区左移1位，并将当前值移入最低位
+//
+//      if ( 0x00 == Keybuf1 )//连续8次扫描都为0，即16毫秒内都检测到按下状态，即认为按键按下
+//      {
+//        PTT_Sta = 0;
+//      }
+//      else if ( 0xff == Keybuf1 )//按键弹起
+//      {
+//        PTT_Sta = 1;
+//      }
+//      else//其它情况则说明按键状态尚未稳定，则不对 KeySta 变量值进行更新
+//      //Key1Sta = 1;//default value 
+//      {
+//      }
+//      
+//    } 
+//
+//    TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+//  }
 
 }
 
@@ -285,10 +261,15 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
  
-    unsigned short msg_len = 0;
-    bool ret = false;
+    //unsigned short msg_len = 0;
+   // bool ret = false;
     
-#if defined (USE_USART_LOGGER) 
+#if defined (USE_TIMER_TASK)  
+    
+    timer_task_schedule_func();//调度任务
+    
+       
+#elif defined (USE_USART_LOGGER) 
   
   
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
@@ -367,27 +348,27 @@ void TIM3_IRQHandler(void)
 
 
 
-void DMA1_Channel4_IRQHandler(void)
-{
-
-   if (DMA_GetITStatus(DMA1_IT_TC4) != RESET)
-  {
-    //清除标志位  	
-    DMA_ClearFlag(DMA1_FLAG_TC4);	
-    
-    //DMA_ClearITPendingBit(DMA1_FLAG_TC4);  	
-    //DMA1->IFCR |= DMA1_FLAG_TC4;	
-    //关闭DMA	
-    DMA_Cmd(DMA1_Channel4, DISABLE); 
-    
-    //DMA1_Channel4->CCR &= ~(1<<0); 
-    
-    //允许再次发送	
-    DMA_ALLOW_SEND_FLAG = true;
-    //Flag_Uart_Send = 0;
-  }
-
-}
+//void DMA1_Channel4_IRQHandler(void)
+//{
+//
+//   if (DMA_GetITStatus(DMA1_IT_TC4) != RESET)
+//  {
+//    //清除标志位  	
+//    DMA_ClearFlag(DMA1_FLAG_TC4);	
+//    
+//    //DMA_ClearITPendingBit(DMA1_FLAG_TC4);  	
+//    //DMA1->IFCR |= DMA1_FLAG_TC4;	
+//    //关闭DMA	
+//    DMA_Cmd(DMA1_Channel4, DISABLE); 
+//    
+//    //DMA1_Channel4->CCR &= ~(1<<0); 
+//    
+//    //允许再次发送	
+//    DMA_ALLOW_SEND_FLAG = true;
+//    //Flag_Uart_Send = 0;
+//  }
+//
+//}
 
 
 

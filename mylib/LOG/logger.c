@@ -5,6 +5,7 @@ RingQueue_t logger_msg_queue_ptr = NULL;
 static volatile unsigned int logger_count = 0;
 
 volatile unsigned char usart_send_buffer[256]= {0};
+static volatile bool DMA_ALLOW_SEND_FLAG  = true;
 
 DMA_InitTypeDef DMA_InitStructure;        //DMA初始化结构体声明：全局
 
@@ -21,7 +22,8 @@ void my_dma_config_and_enabled(void *p, uint16_t p_len)
   //while (DMA_GetFlagStatus(DMA1_FLAG_TC4) == RESET);//等待DMA数据传输完毕
   
   DMA_DeInit(DMA1_Channel4);//重置DMA1的CH4
-  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)usart_send_buffer;//设置DMA缓冲区地址
+  //DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)usart_send_buffer;//设置DMA缓冲区地址
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)p;//设置DMA缓冲区地址
   DMA_InitStructure.DMA_BufferSize = send_len;//要传送数据长度
   DMA_Init(DMA1_Channel4, &DMA_InitStructure);//初始化DMA1的CH7
   
@@ -85,8 +87,8 @@ static void usart1_dma_interrupt_config()
   NVIC_InitTypeDef NVIC_InitStructure;
   
   NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;         //通道设置为DMA1_4中断  
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;       //中断占先等级3 
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;              //中断响应优先级0 
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;       //中断占先等级2 
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;              //中断响应优先级0
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                 //打开中断  
   NVIC_Init(&NVIC_InitStructure);                                 //初始化  
 
@@ -172,6 +174,57 @@ static void logger_output_peripheral_init()
 
 }
 
+void usart_output_log_task(void *p)//将参数传递进去
+{
+    unsigned short msg_len = 0;
+    bool ret = false;
+  
+    if(DMA_ALLOW_SEND_FLAG == true)
+    {   
+        ret = logger_output_msg(p, &msg_len);
+        if(ret == true)//读取数据成功
+        {
+          if(msg_len >256)msg_len =256;
+          
+          DMA_ALLOW_SEND_FLAG = false;
+          
+          my_dma_config_and_enabled(p, msg_len);//启动DMA传输
+                    
+        }
+        else//logger缓冲区无数据，则不作任何处理。
+        {
+          
+        }  
+    }
+}
+
+void DMA1_Channel4_IRQHandler(void)
+{
+
+   if (DMA_GetITStatus(DMA1_IT_TC4) != RESET)
+  {
+    //清除标志位  	
+    DMA_ClearFlag(DMA1_FLAG_TC4);	
+    
+    //DMA_ClearITPendingBit(DMA1_FLAG_TC4);  	
+    //DMA1->IFCR |= DMA1_FLAG_TC4;	
+    //关闭DMA	
+    DMA_Cmd(DMA1_Channel4, DISABLE); 
+    
+    //DMA1_Channel4->CCR &= ~(1<<0); 
+    
+    //允许再次发送	
+    DMA_ALLOW_SEND_FLAG = true;
+    //Flag_Uart_Send = 0;
+  }
+
+}
+
+extern void set_timer_task(unsigned char       timer_id, 
+                            unsigned int        delay, 
+                            unsigned char       rearm, 
+                            handler              timehandler, 
+                            void *               param );
 
 void logger_init()
 {
@@ -192,6 +245,8 @@ void logger_init()
   init_queue(logger_msg_queue_ptr);
 
   logger_output_peripheral_init();
+  
+  set_timer_task(LOGGER_TASK, TIME_BASE_100MS, true, usart_output_log_task, (void *)usart_send_buffer);
   
 }
 

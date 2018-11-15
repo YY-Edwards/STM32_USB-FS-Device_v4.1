@@ -21,7 +21,8 @@ extern "C" {
   #define BCMP_REPLY	        0x8000
   #define BCMP_BRDCAST		0xB000
   
-  
+ 
+#pragma pack(1)
   
   /*
 Battery Information: 0x0001.
@@ -205,12 +206,14 @@ typedef struct
   
 }BCMP_process_list_t;  
   
+#pragma pack()
+
   
 void bcmp_init(void);
 
 void bcmp_opcode_not_support_reply(void);
-
-extern void bcmp_parse_func(const bcmp_fragment_t);
+void bcmp_parse_func(const bcmp_fragment_t);
+void bcmp_send_task(void *p);
   
     
 

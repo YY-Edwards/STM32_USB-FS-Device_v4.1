@@ -15,9 +15,10 @@ static uint8_t  fac_us=0;//us延时倍乘数
 static uint16_t fac_ms=0;//ms延时倍乘数
 //初始化延迟函数
 //SYSTICK的时钟固定为HCLK时钟的1/8
-//SYSCLK:系统时钟
+//SYSCLK:系统时钟(Mhz)
 void delay_init(uint8_t SYSCLK)
 {
+        //SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);
 	SysTick->CTRL&=0xfffffffb;//bit2清空,选择外部时钟  HCLK/8
 	fac_us=SYSCLK/8;		    
 	fac_ms=(uint16_t)fac_us*1000;

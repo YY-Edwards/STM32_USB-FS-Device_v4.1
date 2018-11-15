@@ -3017,7 +3017,7 @@
           <state>USE_STDPERIPH_DRIVER</state>
           <state>STM32L1XX_MD</state>
           <state>USE_STM32L152_EVAL</state>
-          <state>USE_USART_LOGGER</state>
+          <state>USE_TIMER_TASK</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -3168,6 +3168,7 @@
           <state>$PROJ_DIR$\..\mylib\DC2039A\SMBus</state>
           <state>$PROJ_DIR$\..\mylib\DC2039A\LTC4015</state>
           <state>$PROJ_DIR$\..\mylib\DC2039A</state>
+          <state>$PROJ_DIR$\..\mylib\TASK_TIMER</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -8911,7 +8912,7 @@
           <group>
             <name>PHY_Slip</name>
             <file>
-              <name>$PROJ_DIR$\..\mylib\SMBus\LTC4015\PHY_Slip\PHY_Slip.h</name>
+              <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\PHY_Slip\PHY_Slip.h</name>
             </file>
           </group>
           <file>
@@ -8977,6 +8978,15 @@
         </file>
         <file>
           <name>$PROJ_DIR$\..\mylib\SYS\sys.h</name>
+        </file>
+      </group>
+      <group>
+        <name>TASK_TIMER</name>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\TASK_TIMER\task_timer.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\TASK_TIMER\task_timer.h</name>
         </file>
       </group>
       <file>

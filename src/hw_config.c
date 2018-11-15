@@ -47,6 +47,7 @@
 
 #include "DC2039A.h"
 #include "logger.h"
+#include "task_timer.h"    
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -256,71 +257,29 @@ void USB_Interrupts_Config(void)
 }
 
 
-
-//通用定时器 3 中断初始化
-
-//这里时钟选择为 APB1 的 2 倍，而 APB1 为 36M(当SYSCLK==72M时，SYSCLK2分频得到36M的APB1)
-//#if defined(STM32L1XX_MD)
-//这里时钟选择为 APB1，而 APB1 为 32M(当SYSCLK==32M时，1分频得到32M的APB1)
-//#endif
-
-//arr：自动重装值。
-//psc：时钟预分频数
-//这里使用的是定时器 3!
-void TIM3_Int_Init(uint16_t arr,uint16_t psc)
-{
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-  NVIC_InitTypeDef NVIC_InitStructure;
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE); //①时钟 TIM3 使能
-  //定时器 TIM3 初始化
-  TIM_TimeBaseStructure.TIM_Period = arr; //设置自动重装载寄存器周期的值
-  TIM_TimeBaseStructure.TIM_Prescaler =psc; //设置时钟频率除数的预分频值
-  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1; //设置时钟分割
-  
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; //TIM 向上计数
-  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure); //②初始化 TIM3
-  
-  //这样后可以修正：
-  //在用到STM32定时器的更新中断时，发现有些情形下只要开启定时器就立即进入一次中断。
-  //准确说，只要使能更新中断允许位就立即响应一次更新中断【当然前提是相关NVIC也已经配置好】
-  TIM_ClearITPendingBit(TIM3,TIM_IT_Update);
-  
-  TIM_ITConfig(TIM3,TIM_IT_Update,ENABLE ); //③允许更新中断
-  //中断优先级 NVIC 设置
-  NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn; //TIM3 中断
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;//0; //先占优先级 3 级
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1; //从优先级 1级
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
-  NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
-  
-//  TIM_Cmd(TIM3, ENABLE); //⑤使能 TIM3
-  
-}
-
-
-void TIM2_Int_Init(uint16_t arr,uint16_t psc)
-{
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-  NVIC_InitTypeDef NVIC_InitStructure;
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE); //①时钟 TIM2 使能
-  //定时器 TIM2 初始化
-  TIM_TimeBaseStructure.TIM_Period = arr; //设置自动重装载寄存器周期的值
-  TIM_TimeBaseStructure.TIM_Prescaler =psc; //设置时钟频率除数的预分频值
-  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1; //设置时钟分割
-  
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; //TIM 向上计数
-  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure); //②初始化 TIM2
-  TIM_ITConfig(TIM2,TIM_IT_Update,ENABLE ); //③允许更新中断
-  //中断优先级 NVIC 设置
-  NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn; //TIM2 中断
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0; //先占优先级 0 级
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0; //从优先级 0级
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
-  NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
-  
-  TIM_Cmd(TIM2, ENABLE); //⑤使能 TIM2
-  
-}
+//void TIM2_Int_Init(uint16_t arr,uint16_t psc)
+//{
+//  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+//  NVIC_InitTypeDef NVIC_InitStructure;
+//  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE); //①时钟 TIM2 使能
+//  //定时器 TIM2 初始化
+//  TIM_TimeBaseStructure.TIM_Period = arr; //设置自动重装载寄存器周期的值
+//  TIM_TimeBaseStructure.TIM_Prescaler =psc; //设置时钟频率除数的预分频值
+//  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1; //设置时钟分割
+//  
+//  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; //TIM 向上计数
+//  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure); //②初始化 TIM2
+//  TIM_ITConfig(TIM2,TIM_IT_Update,ENABLE ); //③允许更新中断
+//  //中断优先级 NVIC 设置
+//  NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn; //TIM2 中断
+//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0; //先占优先级 0 级
+//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0; //从优先级 0级
+//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
+//  NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
+//  
+//  TIM_Cmd(TIM2, ENABLE); //⑤使能 TIM2
+//  
+//}
 
 #if !defined (USE_NUCLEO)
 /*******************************************************************************
@@ -470,18 +429,11 @@ static void usb_virtual_comport_init()
 
 void hardware_init()
 {
+  task_init();//初始化调度任务,后续可以通过set_timer_task()接口添加任务
+  
   NVIC_Configuration();//设置中断优先级分组
   
   logger_init();//logger 初始化
-  
-#if defined(STM32L1XX_MD) 
-   TIM3_Int_Init(99,3199);//定时输出log  
-    //Tout= ((arr+1)*( psc+1))/Tclk=(99+1)*( 3199+1))/32=10ms
-#else  
-   TIM3_Int_Init(99,7199); //10Khz 的计数频率，计数到 500 为 50ms
-                          //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
-#endif 
-  
   
   STM_EVAL_LEDInit(LED2);//根据原理图，修改函数里的LED宏定义即可
   STM_EVAL_LEDInit(LED3);

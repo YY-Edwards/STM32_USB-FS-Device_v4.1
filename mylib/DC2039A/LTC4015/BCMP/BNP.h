@@ -10,12 +10,13 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include "task_timer.h"
   
 #define BNP_HEADER_FLAG             (char)0x7E    
 #define BNP_END_FLAG                (char)0x3E
 #define DEFAULT_VALUE	            0x0000  
   
-   
+#pragma pack(1)
   
     typedef enum
   {
@@ -168,6 +169,8 @@ typedef union {
 	
 }BNP_process_list_t;
   
+#pragma pack()
+
 
 #define MIN_RESEND_TIMES	3
   
