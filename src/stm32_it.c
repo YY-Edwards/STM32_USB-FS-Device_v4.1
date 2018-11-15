@@ -266,8 +266,12 @@ void TIM3_IRQHandler(void)
     
 #if defined (USE_TIMER_TASK)  
     
+    if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
+  {
     timer_task_schedule_func();//调度任务
     
+    TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+  }
        
 #elif defined (USE_USART_LOGGER) 
   

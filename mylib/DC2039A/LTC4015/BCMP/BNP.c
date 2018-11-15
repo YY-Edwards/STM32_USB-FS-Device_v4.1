@@ -305,9 +305,9 @@ void protocol_init()
   
   bcmp_init();
   
-  set_timer_task(BNP_PARSE_TASK, TIME_BASE_500MS, true, bnp_parse_task, NULL);
+  set_timer_task(BNP_PARSE_TASK, 5*TIME_BASE_500MS, true, bnp_parse_task, NULL);
   
-  set_timer_task(BCMP_SEND_TASK, 2*TIME_BASE_500MS, true, bcmp_send_task, NULL);
+  set_timer_task(BCMP_SEND_TASK, 6*TIME_BASE_500MS, true, bcmp_send_task, NULL);
   
   log_debug("protocol init has already been completed.");
   

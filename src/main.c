@@ -113,7 +113,7 @@ int main(void)
         
         task_process();
         run_counts++;
-        if(run_counts == 35*60000)
+        if(run_counts == 10*60000)
         {
           STM_EVAL_LEDToggle(LED2);
           run_counts = 0;
