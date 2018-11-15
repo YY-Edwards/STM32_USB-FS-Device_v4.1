@@ -130,8 +130,9 @@ void task_process()
     for (i=0; i < MAX_TASKS; ++i) //遍历任务数组     
     {         
       if (tasks[i].is_run == true) //若任务可执行，则执行任务         
-      {            
-        tasks[i].timer_handler(tasks[i].param);             
+      {   
+        void *p = tasks[i].param;
+        tasks[i].timer_handler(p);             
         tasks[i].is_run = false;//将标志位清零        
       }    
     }
