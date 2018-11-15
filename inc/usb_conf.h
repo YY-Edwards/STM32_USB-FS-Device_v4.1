@@ -70,7 +70,10 @@
 /* tx buffer base address */
 #define ENDP1_TXADDR        (0xC0)
 #define ENDP2_TXADDR        (0x100)
-#define ENDP3_RXADDR        (0x110)
+
+//#define ENDP3_RXADDR        (0x110)
+#define ENDP3_BUF0Addr        (0x110)
+#define ENDP3_BUF1Addr        (0x150)
 
 
 /*-------------------------------------------------------------*/

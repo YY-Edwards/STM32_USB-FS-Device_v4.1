@@ -59,7 +59,6 @@ EXTI_InitTypeDef EXTI_InitStructure;
 __IO uint32_t packet_sent;
 //__IO uint8_t Send_Buffer[VIRTUAL_COM_PORT_DATA_SIZE] ;
 __IO  uint32_t packet_receive;
-uint8_t Receive_Buffer[64];
 uint32_t Send_length;
 
 

@@ -53,8 +53,9 @@
 /* Private variables ---------------------------------------------------------*/
 extern __IO uint32_t packet_sent;
 extern __IO uint32_t packet_receive;
-extern __IO uint8_t Receive_Buffer[64];
 uint32_t Receive_length;
+
+//uint16_t In_Data_Offset;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -80,10 +81,39 @@ void EP1_IN_Callback (void)
 *******************************************************************************/
 void EP3_OUT_Callback(void)
 {
-  packet_receive = 1;
-  Receive_length = GetEPRxCount(ENDP3);//获取接收PC端发送的数据长度
-  //将接收到的数据从PMA区域取出放到自定义缓冲区
-  PMAToUserBufferCopy((unsigned char*)Receive_Buffer, ENDP3_RXADDR, Receive_length);
+  
+  uint16_t Data_Len;       /* data length*/
+  uint8_t Receive_Buffer[64];
+  
+  if (GetENDPOINT(ENDP3) & EP_DTOG_TX)
+  {
+    //先释放用户对缓冲区的占有，这样的话USB的下一个接收过程可以立刻进行，
+    //用另一块缓冲区，同时用户并行进行下面处理，在另一块接收完之前，
+    //处理完用户数据就行，否则缓冲区竞争。
+    FreeUserBuffer(ENDP3, EP_DBUF_OUT);//该语句放在处理数据前会出现接收空包情况吗？待验证
+    /*read from ENDP3_BUF0Addr buffer*/
+    Data_Len = GetEPDblBuf0Count(ENDP3);
+    PMAToUserBufferCopy((unsigned char*)Receive_Buffer, ENDP3_BUF0Addr, Data_Len);
+  }
+  else
+  {
+    FreeUserBuffer(ENDP3, EP_DBUF_OUT);
+    /*read from ENDP3_BUF1Addr buffer*/
+    Data_Len = GetEPDblBuf1Count(ENDP3);
+    PMAToUserBufferCopy((unsigned char*)Receive_Buffer, ENDP3_BUF1Addr, Data_Len);
+  }
+  
+  
+
+  SetEPRxValid(ENDP3); //重新设置端点接收状态有效，因为当接收数据后，端点就会被关闭.
+  
+  
+//  packet_receive = 1;
+//  Receive_length = GetEPRxCount(ENDP3);//获取接收PC端发送的数据长度
+//  //将接收到的数据从PMA区域取出放到自定义缓冲区
+//  PMAToUserBufferCopy((unsigned char*)Receive_Buffer, ENDP3_RXADDR, Receive_length);
+
+
 }
 
 

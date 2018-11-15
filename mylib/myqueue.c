@@ -1,17 +1,27 @@
 #include "myqueue.h"
 
 
-void init_queue(RingQueue_t ring_queue)
+bool init_queue(RingQueue_t ring_queue)
 {
   ring_queue->head = 0;
   ring_queue->tail = 0;
-  for(int i =0; i < QUEUEDEEP; i++)
+  
+  unsigned short array_deep = ring_queue->queue_deep;
+  unsigned short data_size = ring_queue->data_size;
+  
+  ring_queue->queue_point = malloc(array_deep);//分配队列深度内存
+  if(ring_queue->queue_point == NULL)return false;
+  for(int i =0; i < (ring_queue->queue_deep); i++)
   {
-    memset(&(ring_queue->queue_array[i].data), 0x00, DATADEEP);
-    ring_queue->queue_array[i].len=0;
+    (ring_queue->queue_point +i)->data = malloc(data_size);//分配队列宽度内存
+    if((ring_queue->queue_point +i)->data ==NULL)return false;
+    memset((ring_queue->queue_point +i)->data, 0x00, data_size);//清理数据
+    ring_queue->queue_point->len=0;
   }
-
+  return true;
 }
+
+
 
 bool take_from_queue(RingQueue_t ring_queue, void *buf, int *len, bool erase)
 {
@@ -19,12 +29,12 @@ bool take_from_queue(RingQueue_t ring_queue, void *buf, int *len, bool erase)
   int snap_head = ring_queue->head;
   if(snap_head != ring_queue->tail)
   {
-    memcpy(buf, ring_queue->queue_array[ring_queue->tail].data,  ring_queue->queue_array[ring_queue->tail].len);
-    *len = ring_queue->queue_array[ring_queue->tail].len;
+    memcpy(buf, ring_queue->queue_point[ring_queue->tail].data,  ring_queue->queue_point[ring_queue->tail].len);
+    *len = ring_queue->queue_point[ring_queue->tail].len;
     if(true == erase)
     {
       ring_queue->tail= ring_queue->tail + 1;
-      if(ring_queue->tail == QUEUEDEEP)
+      if(ring_queue->tail == ring_queue->queue_deep)
       {
         ring_queue->tail = 0;
       }
@@ -40,22 +50,22 @@ bool take_from_queue(RingQueue_t ring_queue, void *buf, int *len, bool erase)
 }
 bool push_to_queue(RingQueue_t ring_queue, void *buf, int len)
 {
-  mydata_t *p;
+  dyn_mydata_t *p =NULL;
   int next_index =0;
   bool ret =false;
   if(len == 0)return false;
   
-  if(len > DATADEEP)
-     len = DATADEEP;
+  if(len > ring_queue->data_size)
+     len = ring_queue->data_size;
   
-  p = (mydata_t *)(&(ring_queue->queue_array[ring_queue->head]));
+  p = (dyn_mydata_t *)(&(ring_queue->queue_point[ring_queue->head]));
   memcpy(p->data, buf, len);
   p->len = len;
   
   next_index = ring_queue->head +1;
   if(next_index != ring_queue->tail)
   {
-    if(next_index == QUEUEDEEP)
+    if(next_index == ring_queue->queue_deep)
     {
       next_index =0 ;
     }

@@ -5,6 +5,7 @@
 
 static volatile bnp_information_t bnp_information;
 static volatile unsigned short server_transaction_id = 1;
+volatile RingQueue_t usb_rx_queue_ptr = NULL;
 
 /*Defines the callback function is used to handle BCMP*/
 void ( *bcmp_analyse_callback_func)(const bnp_content_data_msg_t) = NULL;
@@ -278,6 +279,38 @@ static const volatile BNP_process_list_t bnp_process_list[]=
 
 void bnp_init()
 {
+  
+   if(usb_rx_queue_ptr!=NULL)
+  {
+   for (unsigned int i = 0; i < (usb_rx_queue_ptr->queue_deep); i++)
+    {
+      if(((usb_rx_queue_ptr->queue_point + i)->data)!= NULL)
+      {
+        free((usb_rx_queue_ptr->queue_point + i)->data);
+        (usb_rx_queue_ptr->queue_point + i)->data = NULL;
+      }
+    }
+     free(usb_rx_queue_ptr);
+     usb_rx_queue_ptr =NULL;
+  }
+  
+  usb_rx_queue_ptr = malloc(sizeof(ring_queue_t));
+  if(usb_rx_queue_ptr ==NULL)
+  {
+    //printf("malloc ble_msg_queue_ptr failure\r\n");
+    return ;
+  }
+  usb_rx_queue_ptr->head            = 0;
+  usb_rx_queue_ptr->tail            = 0;
+  usb_rx_queue_ptr->queue_deep      = 20;
+  usb_rx_queue_ptr->data_size       = 64;
+  usb_rx_queue_ptr->queue_point     = NULL;
+  
+  
+  bool ret = init_queue(usb_rx_queue_ptr);
+  
+  if(ret == false)return;
+
   
   bnp_information.is_connected = false;
   bnp_information.transaction_id = NULL;

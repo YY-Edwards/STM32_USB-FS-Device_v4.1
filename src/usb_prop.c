@@ -187,17 +187,38 @@ void Virtual_Com_Port_Reset(void)
   SetEPRxStatus(ENDP2, EP_RX_DIS);
   SetEPTxStatus(ENDP2, EP_TX_NAK);
 
-  /* Initialize Endpoint 3 *///这里可以将USB更改为双缓冲接收模式
+//  /* Initialize Endpoint 3 *///这里可以将USB更改为双缓冲接收模式
+//  SetEPType(ENDP3, EP_BULK);
+//  SetEPRxAddr(ENDP3, ENDP3_RXADDR);
+//  SetEPRxCount(ENDP3, VIRTUAL_COM_PORT_DATA_SIZE);
+//  SetEPRxStatus(ENDP3, EP_RX_VALID);
+//  SetEPTxStatus(ENDP3, EP_TX_DIS);
+  
+  /**/
+  
+  //修改EP3为BULK双缓冲方式
   SetEPType(ENDP3, EP_BULK);
-  SetEPRxAddr(ENDP3, ENDP3_RXADDR);
-  SetEPRxCount(ENDP3, VIRTUAL_COM_PORT_DATA_SIZE);
+  
+  SetEPDoubleBuff(ENDP3);
+  SetEPDblBuffAddr(ENDP3, ENDP3_BUF0Addr, ENDP3_BUF1Addr);
+  SetEPDblBuffCount(ENDP3, EP_DBUF_OUT, VIRTUAL_COM_PORT_DATA_SIZE);
+  ClearDTOG_RX(ENDP3);
+  ClearDTOG_TX(ENDP3);
+  ToggleDTOG_TX(ENDP3);
+  
   SetEPRxStatus(ENDP3, EP_RX_VALID);
   SetEPTxStatus(ENDP3, EP_TX_DIS);
+  
+  /**/
+  
 
   /* Set this device to response on default address */
   SetDeviceAddress(0);
   
   bDeviceState = ATTACHED;
+  
+  
+  
 }
 
 /*******************************************************************************

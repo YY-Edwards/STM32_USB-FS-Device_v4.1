@@ -24,15 +24,34 @@ typedef struct
 
 typedef struct
 {
+  char  *data;
+  int   len ;
+}dyn_mydata_t;
+
+typedef struct
+{
     mydata_t queue_array[QUEUEDEEP];
     unsigned short head;
     unsigned short tail;
+
     
 } ring_queue_t;
 
-typedef ring_queue_t* RingQueue_t;
+typedef struct
+{
 
-void init_queue(RingQueue_t ring_queue);
+    dyn_mydata_t *queue_point;
+    unsigned short head;
+    unsigned short tail;
+    unsigned short data_size;
+    unsigned short queue_deep;
+   
+} dyn_ring_queue_t;
+
+//typedef ring_queue_t* RingQueue_t;
+typedef dyn_ring_queue_t* RingQueue_t;
+
+bool init_queue(RingQueue_t ring_queue);
 bool take_from_queue(RingQueue_t ring_queue, void *buf, int *len, bool erase);
 bool push_to_queue(RingQueue_t ring_queue, void *buf, int len);
 void clear_queue(RingQueue_t ring_queue);

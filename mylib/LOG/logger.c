@@ -231,6 +231,14 @@ void logger_init()
   
   if(logger_msg_queue_ptr!=NULL)
   {
+   for (unsigned int i = 0; i < (logger_msg_queue_ptr->queue_deep); i++)
+    {
+      if(((logger_msg_queue_ptr->queue_point + i)->data)!= NULL)
+      {
+        free((logger_msg_queue_ptr->queue_point + i)->data);
+        (logger_msg_queue_ptr->queue_point + i)->data = NULL;
+      }
+    }
      free(logger_msg_queue_ptr);
      logger_msg_queue_ptr =NULL;
   }
@@ -241,8 +249,16 @@ void logger_init()
     //printf("malloc ble_msg_queue_ptr failure\r\n");
     return ;
   }
+  logger_msg_queue_ptr->head            = 0;
+  logger_msg_queue_ptr->tail            = 0;
+  logger_msg_queue_ptr->queue_deep      = 20;
+  logger_msg_queue_ptr->data_size       = 128;
+  logger_msg_queue_ptr->queue_point     = NULL;
   
-  init_queue(logger_msg_queue_ptr);
+  
+  bool ret = init_queue(logger_msg_queue_ptr);
+  
+  if(ret == false)return;
 
   logger_output_peripheral_init();
   
