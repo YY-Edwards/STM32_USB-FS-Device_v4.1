@@ -53,7 +53,7 @@ extern __IO uint32_t bDeviceState;
 
 extern volatile unsigned char usart_send_buffer[256];
 
-static volatile bool DMA_ALLOW_SEND_FLAG  = false;
+static volatile bool DMA_ALLOW_SEND_FLAG  = true;
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/

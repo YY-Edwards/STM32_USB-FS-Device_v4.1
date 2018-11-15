@@ -94,18 +94,18 @@ int main(void)
   protocol_init();//协议初始化
 
   unsigned int run_counts = 0;
-  //unsigned char timer3_run_flag = 0;
+  unsigned char timer3_run_flag = 0;
   while (1)
   {
     if (bDeviceState == CONFIGURED)
     {
       run_counts++;
-//      if(timer3_run_flag == 0)
-//      {
-//        TIM_Cmd(TIM3, ENABLE);//启动定时器3
-//        timer3_run_flag = 1;
-//        log_info("hello, LTC4105.");
-//      }
+      if(timer3_run_flag == 0)
+      {
+        TIM_Cmd(TIM3, ENABLE);//启动定时器3
+        timer3_run_flag = 1;
+        log_info("hello, LTC4105.");
+      }
 //      CDC_Receive_DATA();
 //      /*Check to see if we have data yet */
 //      if (Receive_length  != 0)
@@ -118,6 +118,7 @@ int main(void)
       {
         STM_EVAL_LEDToggle(LED2);
         run_counts = 0;
+        log_debug("hello, world.");
 //        if(timer3_run_flag)
 //          DC2039A_Run();//测试
       }

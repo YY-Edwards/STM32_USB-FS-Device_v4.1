@@ -25,6 +25,8 @@ void my_dma_config_and_enabled(void *p, uint16_t p_len)
   DMA_InitStructure.DMA_BufferSize = send_len;//要传送数据长度
   DMA_Init(DMA1_Channel4, &DMA_InitStructure);//初始化DMA1的CH7
   
+  DMA_ITConfig(DMA1_Channel4,DMA_IT_TC,ENABLE);//使能传输完成中断
+  
   DMA_Cmd(DMA1_Channel4, ENABLE);//打开DMA的通道4，这时候数据就发送出去了！
 
 }
@@ -84,7 +86,7 @@ static void usart1_dma_interrupt_config()
   
   NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;         //通道设置为DMA1_4中断  
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;       //中断占先等级3 
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;              //中断响应优先级2 
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;              //中断响应优先级0 
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                 //打开中断  
   NVIC_Init(&NVIC_InitStructure);                                 //初始化  
 

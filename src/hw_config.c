@@ -288,12 +288,12 @@ void TIM3_Int_Init(uint16_t arr,uint16_t psc)
   TIM_ITConfig(TIM3,TIM_IT_Update,ENABLE ); //③允许更新中断
   //中断优先级 NVIC 设置
   NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn; //TIM3 中断
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;//0; //先占优先级 0 级
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;//0; //先占优先级 3 级
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1; //从优先级 1级
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
   NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
   
-  TIM_Cmd(TIM3, DISABLE); //⑤使能 TIM3
+//  TIM_Cmd(TIM3, ENABLE); //⑤使能 TIM3
   
 }
 
