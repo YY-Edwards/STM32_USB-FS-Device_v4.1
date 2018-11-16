@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-516973315
+Checksum=-1386505340
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -57,6 +57,8 @@ Fmt5=dyn_mydata_t-len	4	0
 [array_types]
 Fmt0=uint8_t[1]	4	0
 Fmt1=uint8_t[2]	4	0
+[watch_formats]
+Fmt0={W}0:(ring_queue->queue_point +i)->data	4	0
 [Trace2]
 Enabled=0
 ShowSource=0
@@ -103,15 +105,12 @@ mode=0
 [Breakpoints2]
 Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.152.1" 0 0 1 "" 0 "" 0
 Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\SMBus\SMBus.c}.218.11" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.453.1" 0 0 1 "" 0 "" 0
+Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.452.1" 0 0 1 "" 0 "" 0
 Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.107.7" 0 0 1 "" 0 "" 0
-Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.424.3" 0 0 1 "" 0 "" 0
-Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\LOG\logger.c}.245.3" 0 0 1 "" 0 "" 0
-Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.70.3" 0 0 1 "" 0 "" 0
-Bp7=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\LTC4015\BCMP\BNP.c}.315.3" 0 0 1 "" 0 "" 0
-Bp8=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.40.3" 0 0 1 "" 0 "" 0
-Bp9=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.84.5" 0 0 1 "" 0 "" 0
-Count=10
+Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.70.3" 0 0 1 "" 0 "" 0
+Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.32.7" 0 0 1 "" 0 "" 0
+Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.423.3" 0 0 1 "" 0 "" 0
+Count=7
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""

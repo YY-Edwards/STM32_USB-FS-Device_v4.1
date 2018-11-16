@@ -112,13 +112,13 @@ static const volatile BCMP_process_list_t bcmp_process_list[]=
 };
 
 
-void bcmp_send_task(void *p)
-{
-   static unsigned int run_count = 0;
-   run_count++;
-   
-   log_debug("[bcmp_send_task] is running: %d", run_count);
-}
+//void bcmp_send_task(void *p)
+//{
+//   static unsigned int run_count = 0;
+//   run_count++;
+//   
+//   log_debug("[bcmp_send_task] is running: %d", run_count);
+//}
 
 
 void bcmp_parse_func(const bcmp_fragment_t bcmp)

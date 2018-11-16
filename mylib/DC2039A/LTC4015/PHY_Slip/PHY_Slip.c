@@ -3,7 +3,7 @@
 #include "usb_regs.h"
 #include "usb_desc.h"
 
-volatile RingQueue_t usb_rx_queue_ptr = NULL;
+volatile RingQueue_t  usb_rx_queue_ptr = NULL;
 volatile RingQueue_t  slip_usb_send_queue_ptr = NULL;
 
 
@@ -120,6 +120,7 @@ void phy_slip_assemble_task(void *p)
     bool ret = take_from_queue(bnp_tx_queue_ptr, &g_usb_buf[0], &recv_len, true);
     if(ret == true)//assemble and send
     {
+        log_debug("bnp send a msg.");
         uint16_t index =0;
         uint16_t idx =0;
         uint8_t usb_send_buf[256];
@@ -178,13 +179,13 @@ void phy_slip_assemble_task(void *p)
 
 void phy_slip_init()
 {
-  usb_rx_queue_ptr = create_queue(20, 64);
+  usb_rx_queue_ptr = create_queue(10, 64);
   if(usb_rx_queue_ptr == NULL)
   {
     return;
   }
   
-  slip_usb_send_queue_ptr = create_queue(20, 64);
+  slip_usb_send_queue_ptr = create_queue(10, 64);
   if(slip_usb_send_queue_ptr == NULL)
   {
     return;

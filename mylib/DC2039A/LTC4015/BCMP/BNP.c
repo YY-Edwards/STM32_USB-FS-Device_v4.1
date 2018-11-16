@@ -335,14 +335,14 @@ void bnp_init()
 //  if(ret == false)return;
   
   
-  bnp_rx_queue_ptr = create_queue(10, sizeof(bnp_fragment_t));
+  bnp_rx_queue_ptr = create_queue(5, sizeof(bnp_fragment_t));
   if(bnp_rx_queue_ptr == NULL)
   {
     return;
   }
   
   
-   bnp_tx_queue_ptr = create_queue(8, sizeof(bnp_fragment_t));
+   bnp_tx_queue_ptr = create_queue(5, sizeof(bnp_fragment_t));
   if(bnp_tx_queue_ptr == NULL)
   {
     return;

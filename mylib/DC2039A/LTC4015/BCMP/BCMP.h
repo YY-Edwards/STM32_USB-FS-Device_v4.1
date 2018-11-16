@@ -213,7 +213,7 @@ void bcmp_init(void);
 
 void bcmp_opcode_not_support_reply(void);
 void bcmp_parse_func(const bcmp_fragment_t);
-void bcmp_send_task(void *p);
+//void bcmp_send_task(void *p);
   
     
 
