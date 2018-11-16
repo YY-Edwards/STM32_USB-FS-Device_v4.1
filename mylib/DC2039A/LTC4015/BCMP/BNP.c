@@ -311,26 +311,14 @@ void bnp_init()
 //  
 //  if(ret == false)return;
   
-  bool ret = create_queue(usb_rx_queue_ptr, 20, 64);
-  if(ret == false)
+  
+  usb_rx_queue_ptr = create_queue(20, 64);
+  if(usb_rx_queue_ptr == NULL)
   {
-    if(usb_rx_queue_ptr!=NULL)
-    {
-     for (unsigned int i = 0; i < (usb_rx_queue_ptr->queue_deep); i++)
-      {
-        if(((usb_rx_queue_ptr->queue_point + i)->data)!= NULL)
-        {
-          free((usb_rx_queue_ptr->queue_point + i)->data);
-          (usb_rx_queue_ptr->queue_point + i)->data = NULL;
-        }
-      }
-       free(usb_rx_queue_ptr);
-       usb_rx_queue_ptr =NULL;
-    }
     return;
   }
-
   
+
   bnp_information.is_connected = false;
   bnp_information.transaction_id = NULL;
   

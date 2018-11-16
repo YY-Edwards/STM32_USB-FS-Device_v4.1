@@ -242,22 +242,9 @@ void logger_init()
 //  logger_msg_queue_ptr->data_size               = 128;
 //  logger_msg_queue_ptr->queue_point             = NULL;
   
-  bool ret = create_queue(logger_msg_queue_ptr, 20, 128);
-  if(ret == false)
+  logger_msg_queue_ptr = create_queue(20, 128);
+  if(logger_msg_queue_ptr == NULL)
   {
-    if(logger_msg_queue_ptr!=NULL)
-    {
-     for (unsigned int i = 0; i < (logger_msg_queue_ptr->queue_deep); i++)
-      {
-        if(((logger_msg_queue_ptr->queue_point + i)->data)!= NULL)
-        {
-          free((logger_msg_queue_ptr->queue_point + i)->data);
-          (logger_msg_queue_ptr->queue_point + i)->data = NULL;
-        }
-      }
-       free(logger_msg_queue_ptr);
-       logger_msg_queue_ptr =NULL;
-    }
     return;
   }
   

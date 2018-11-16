@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1965871111
+Checksum=-516973315
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -53,6 +53,7 @@ Fmt1=DMA_InitTypeDef-DMA_MemoryBaseAddr	4	0
 Fmt2=DMA_InitTypeDef-DMA_MemoryInc	4	0
 Fmt3=DMA_InitTypeDef-DMA_PeripheralBaseAddr	4	0
 Fmt4=LTC4015_chip_cfg_t-addr	4	0
+Fmt5=dyn_mydata_t-len	4	0
 [array_types]
 Fmt0=uint8_t[1]	4	0
 Fmt1=uint8_t[2]	4	0
@@ -105,9 +106,12 @@ Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\SMBus\SMBus.c}.218.11" 0 0 1 "
 Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.453.1" 0 0 1 "" 0 "" 0
 Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.107.7" 0 0 1 "" 0 "" 0
 Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.424.3" 0 0 1 "" 0 "" 0
-Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\LOG\logger.c}.246.3" 0 0 1 "" 0 "" 0
-Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\LOG\logger.c}.263.3" 0 0 1 "" 0 "" 0
-Count=7
+Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\LOG\logger.c}.245.3" 0 0 1 "" 0 "" 0
+Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.70.3" 0 0 1 "" 0 "" 0
+Bp7=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\LTC4015\BCMP\BNP.c}.315.3" 0 0 1 "" 0 "" 0
+Bp8=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.40.3" 0 0 1 "" 0 "" 0
+Bp9=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.84.5" 0 0 1 "" 0 "" 0
+Count=10
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""

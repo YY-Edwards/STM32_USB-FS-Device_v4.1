@@ -1,11 +1,11 @@
 #include "myqueue.h"
 
 
-bool create_queue(RingQueue_t ring_queue, unsigned int deep, unsigned int size)
+RingQueue_t create_queue(unsigned int deep, unsigned int size)
 {
   
-  ring_queue = malloc(sizeof(dyn_ring_queue_t));
-  if(ring_queue ==NULL)return false;
+   RingQueue_t ring_queue = malloc(sizeof(dyn_ring_queue_t));
+  if(ring_queue ==NULL)return NULL;
   
   unsigned short array_deep     = deep;
   unsigned short data_size      = size;
@@ -17,16 +17,27 @@ bool create_queue(RingQueue_t ring_queue, unsigned int deep, unsigned int size)
   ring_queue->queue_point       = NULL;
  
   ring_queue->queue_point = malloc(array_deep*sizeof(dyn_mydata_t));//分配二维队列深度内存
-  if(ring_queue->queue_point == NULL)return false;
+  if(ring_queue->queue_point == NULL)
+  {
+    free(ring_queue);
+    ring_queue =NULL;
+    return NULL;
+  }
   for(int i =0; i < (ring_queue->queue_deep); i++)
   {
     (ring_queue->queue_point +i)->data = NULL;
     (ring_queue->queue_point +i)->data = malloc(data_size);//分配队列宽度内存
-    if((ring_queue->queue_point +i)->data ==NULL)return false;
+    if((ring_queue->queue_point +i)->data ==NULL)
+    {
+      free((ring_queue->queue_point +i)->data);
+      ((ring_queue->queue_point +i)->data) =NULL;
+      return NULL;
+    }
     memset((ring_queue->queue_point +i)->data, 0x00, data_size);//清理数据
-    ring_queue->queue_point->len=0;
+    (ring_queue->queue_point+i)->len=0;
   }
-  return true;
+  
+  return ring_queue;
 }
 
 
@@ -70,8 +81,8 @@ bool push_to_queue(RingQueue_t ring_queue, void *buf, int len)
      len = ring_queue->data_size;
   
   //p = (dyn_mydata_t *)((ring_queue->queue_point[ring_queue->head].data));
-  p = (dyn_mydata_t *)(&(ring_queue->queue_point[ring_queue->head]));
-   //p = (dyn_mydata_t *)((ring_queue->queue_point + ring_queue->head));
+  //p = (dyn_mydata_t *)(&(ring_queue->queue_point[ring_queue->head]));
+  p = (dyn_mydata_t *)((ring_queue->queue_point + ring_queue->head));
   memcpy(p->data, buf, len);
   p->len = len;
   
