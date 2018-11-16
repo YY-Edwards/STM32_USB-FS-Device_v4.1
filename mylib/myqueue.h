@@ -51,7 +51,8 @@ typedef struct
 //typedef ring_queue_t* RingQueue_t;
 typedef dyn_ring_queue_t* RingQueue_t;
 
-bool init_queue(RingQueue_t ring_queue);
+//bool init_queue(RingQueue_t ring_queue);
+bool create_queue(RingQueue_t ring_queue, unsigned int queue_deep, unsigned int data_size);
 bool take_from_queue(RingQueue_t ring_queue, void *buf, int *len, bool erase);
 bool push_to_queue(RingQueue_t ring_queue, void *buf, int len);
 void clear_queue(RingQueue_t ring_queue);

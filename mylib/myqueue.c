@@ -1,16 +1,22 @@
 #include "myqueue.h"
 
 
-bool init_queue(RingQueue_t ring_queue)
+bool create_queue(RingQueue_t ring_queue, unsigned int deep, unsigned int size)
 {
-  ring_queue->head = 0;
-  ring_queue->tail = 0;
   
-  unsigned short array_deep = ring_queue->queue_deep;
-  unsigned short data_size = ring_queue->data_size;
+  ring_queue = malloc(sizeof(dyn_ring_queue_t));
+  if(ring_queue ==NULL)return false;
   
-  ring_queue->queue_point = NULL;
-  ring_queue->queue_point = malloc(array_deep*sizeof(dyn_mydata_t));//分配队列深度内存
+  unsigned short array_deep     = deep;
+  unsigned short data_size      = size;
+  
+  ring_queue->head              = 0;
+  ring_queue->tail              = 0;
+  ring_queue->queue_deep        = deep;
+  ring_queue->data_size         = size;
+  ring_queue->queue_point       = NULL;
+ 
+  ring_queue->queue_point = malloc(array_deep*sizeof(dyn_mydata_t));//分配二维队列深度内存
   if(ring_queue->queue_point == NULL)return false;
   for(int i =0; i < (ring_queue->queue_deep); i++)
   {
@@ -63,8 +69,9 @@ bool push_to_queue(RingQueue_t ring_queue, void *buf, int len)
   if(len > ring_queue->data_size)
      len = ring_queue->data_size;
   
- // p = (dyn_mydata_t *)(&(ring_queue->queue_point[ring_queue->head]));
-   p = (dyn_mydata_t *)((ring_queue->queue_point + ring_queue->head));
+  //p = (dyn_mydata_t *)((ring_queue->queue_point[ring_queue->head].data));
+  p = (dyn_mydata_t *)(&(ring_queue->queue_point[ring_queue->head]));
+   //p = (dyn_mydata_t *)((ring_queue->queue_point + ring_queue->head));
   memcpy(p->data, buf, len);
   p->len = len;
   

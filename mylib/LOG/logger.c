@@ -1,7 +1,7 @@
 #include "logger.h"
 
 
-RingQueue_t logger_msg_queue_ptr = NULL;
+volatile RingQueue_t logger_msg_queue_ptr = NULL;
 static volatile unsigned int logger_count = 0;
 
 volatile unsigned char usart_send_buffer[256]= {0};
@@ -229,36 +229,38 @@ extern void set_timer_task(unsigned char       timer_id,
 void logger_init()
 {
   
-  if(logger_msg_queue_ptr!=NULL)
+
+//  logger_msg_queue_ptr = malloc(sizeof(dyn_ring_queue_t));
+//  if(logger_msg_queue_ptr ==NULL)
+//  {
+//    //printf("malloc ble_msg_queue_ptr failure\r\n");
+//    return ;
+//  }
+//  logger_msg_queue_ptr->head                    = 0;
+//  logger_msg_queue_ptr->tail                    = 0;
+//  logger_msg_queue_ptr->queue_deep              = 20;
+//  logger_msg_queue_ptr->data_size               = 128;
+//  logger_msg_queue_ptr->queue_point             = NULL;
+  
+  bool ret = create_queue(logger_msg_queue_ptr, 20, 128);
+  if(ret == false)
   {
-   for (unsigned int i = 0; i < (logger_msg_queue_ptr->queue_deep); i++)
+    if(logger_msg_queue_ptr!=NULL)
     {
-      if(((logger_msg_queue_ptr->queue_point + i)->data)!= NULL)
+     for (unsigned int i = 0; i < (logger_msg_queue_ptr->queue_deep); i++)
       {
-        free((logger_msg_queue_ptr->queue_point + i)->data);
-        (logger_msg_queue_ptr->queue_point + i)->data = NULL;
+        if(((logger_msg_queue_ptr->queue_point + i)->data)!= NULL)
+        {
+          free((logger_msg_queue_ptr->queue_point + i)->data);
+          (logger_msg_queue_ptr->queue_point + i)->data = NULL;
+        }
       }
+       free(logger_msg_queue_ptr);
+       logger_msg_queue_ptr =NULL;
     }
-     free(logger_msg_queue_ptr);
-     logger_msg_queue_ptr =NULL;
+    return;
   }
   
-  logger_msg_queue_ptr = malloc(sizeof(dyn_ring_queue_t));
-  if(logger_msg_queue_ptr ==NULL)
-  {
-    //printf("malloc ble_msg_queue_ptr failure\r\n");
-    return ;
-  }
-  logger_msg_queue_ptr->head                    = 0;
-  logger_msg_queue_ptr->tail                    = 0;
-  logger_msg_queue_ptr->queue_deep              = 20;
-  logger_msg_queue_ptr->data_size               = 128;
-  logger_msg_queue_ptr->queue_point             = NULL;
-  
-  
-  bool ret = init_queue(logger_msg_queue_ptr);
-  
-  if(ret == false)return;
 
   logger_output_peripheral_init();
   

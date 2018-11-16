@@ -280,36 +280,55 @@ static const volatile BNP_process_list_t bnp_process_list[]=
 void bnp_init()
 {
   
-   if(usb_rx_queue_ptr!=NULL)
+//   if(usb_rx_queue_ptr!=NULL)
+//  {
+//   for (unsigned int i = 0; i < (usb_rx_queue_ptr->queue_deep); i++)
+//    {
+//      if(((usb_rx_queue_ptr->queue_point + i)->data)!= NULL)
+//      {
+//        free((usb_rx_queue_ptr->queue_point + i)->data);
+//        (usb_rx_queue_ptr->queue_point + i)->data = NULL;
+//      }
+//    }
+//     free(usb_rx_queue_ptr);
+//     usb_rx_queue_ptr =NULL;
+//  }
+//  
+//  usb_rx_queue_ptr = malloc(sizeof(dyn_ring_queue_t));
+//  if(usb_rx_queue_ptr ==NULL)
+//  {
+//    //printf("malloc ble_msg_queue_ptr failure\r\n");
+//    return ;
+//  }
+//  usb_rx_queue_ptr->head            = 0;
+//  usb_rx_queue_ptr->tail            = 0;
+//  usb_rx_queue_ptr->queue_deep      = 20;
+//  usb_rx_queue_ptr->data_size       = 64;
+//  usb_rx_queue_ptr->queue_point     = NULL;
+//  
+//  
+//  bool ret = init_queue(usb_rx_queue_ptr);
+//  
+//  if(ret == false)return;
+  
+  bool ret = create_queue(usb_rx_queue_ptr, 20, 64);
+  if(ret == false)
   {
-   for (unsigned int i = 0; i < (usb_rx_queue_ptr->queue_deep); i++)
+    if(usb_rx_queue_ptr!=NULL)
     {
-      if(((usb_rx_queue_ptr->queue_point + i)->data)!= NULL)
+     for (unsigned int i = 0; i < (usb_rx_queue_ptr->queue_deep); i++)
       {
-        free((usb_rx_queue_ptr->queue_point + i)->data);
-        (usb_rx_queue_ptr->queue_point + i)->data = NULL;
+        if(((usb_rx_queue_ptr->queue_point + i)->data)!= NULL)
+        {
+          free((usb_rx_queue_ptr->queue_point + i)->data);
+          (usb_rx_queue_ptr->queue_point + i)->data = NULL;
+        }
       }
+       free(usb_rx_queue_ptr);
+       usb_rx_queue_ptr =NULL;
     }
-     free(usb_rx_queue_ptr);
-     usb_rx_queue_ptr =NULL;
+    return;
   }
-  
-  usb_rx_queue_ptr = malloc(sizeof(dyn_ring_queue_t));
-  if(usb_rx_queue_ptr ==NULL)
-  {
-    //printf("malloc ble_msg_queue_ptr failure\r\n");
-    return ;
-  }
-  usb_rx_queue_ptr->head            = 0;
-  usb_rx_queue_ptr->tail            = 0;
-  usb_rx_queue_ptr->queue_deep      = 20;
-  usb_rx_queue_ptr->data_size       = 64;
-  usb_rx_queue_ptr->queue_point     = NULL;
-  
-  
-  bool ret = init_queue(usb_rx_queue_ptr);
-  
-  if(ret == false)return;
 
   
   bnp_information.is_connected = false;
