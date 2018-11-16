@@ -2,10 +2,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "BNP.h"
 #include "BCMP.h"
+#include "PHY_Slip.h"
 
 static volatile bnp_information_t bnp_information;
 static volatile unsigned short server_transaction_id = 1;
-volatile RingQueue_t usb_rx_queue_ptr = NULL;
+volatile RingQueue_t bnp_rx_queue_ptr = NULL;
+volatile RingQueue_t bnp_tx_queue_ptr = NULL;
 
 /*Defines the callback function is used to handle BCMP*/
 void ( *bcmp_analyse_callback_func)(const bnp_content_data_msg_t) = NULL;
@@ -65,7 +67,28 @@ void bnp_tx(bnp_fragment_t * bnp_tx_p)
 //    bnp_tx_p->bnp_end.checksum = check_sum(&bnp_tx_frame);
 //  }
   
+  unsigned short send_len = 0;
   
+  phy_fragment_t *ptr = (phy_fragment_t *)bnp_tx_p;
+  //传输前需要进行包结构调整(将end_t贴在bcmp的payload之后)：保证字节流
+  send_len = 
+    bnp_tx_p->bnp_header.length 
+      +sizeof(bnp_tx_p->bnp_end)
+        +sizeof(bnp_tx_p->bnp_header);
+  
+  //需要验证算法是否正确
+  memcpy(&(ptr->u8[send_len - sizeof(bnp_tx_p->bnp_end)]), (void *)&(bnp_tx_p->bnp_end), sizeof(bnp_tx_p->bnp_end));
+  
+  
+  if(bnp_tx_queue_ptr != NULL)
+  {
+    bool ret =false;
+    ret = push_to_queue(bnp_tx_queue_ptr, (void *)ptr, send_len);
+    if(ret !=true)
+    {
+      log_warning("bnp_tx_queue_ptr full!");          
+    }
+  }
 }
 
 void bnp_client_heart_beat_req_func(bnp_fragment_t *bnp_p)           /*-0x1-BNP_CLIENT_HEART*/
@@ -312,42 +335,115 @@ void bnp_init()
 //  if(ret == false)return;
   
   
-  usb_rx_queue_ptr = create_queue(20, 64);
-  if(usb_rx_queue_ptr == NULL)
+  bnp_rx_queue_ptr = create_queue(10, sizeof(bnp_fragment_t));
+  if(bnp_rx_queue_ptr == NULL)
   {
     return;
   }
   
-
+  
+   bnp_tx_queue_ptr = create_queue(8, sizeof(bnp_fragment_t));
+  if(bnp_tx_queue_ptr == NULL)
+  {
+    return;
+  }
+  
   bnp_information.is_connected = false;
   bnp_information.transaction_id = NULL;
   
   bnp_set_bcmp_analyse_callback(bcmp_parse_func);
 }
-
+extern volatile RingQueue_t usb_rx_queue_ptr;
 void bnp_parse_task(void *p)
 {
-   static unsigned int run_count = 0;
-   run_count++;
-   
-   log_debug("[bnp_parse_task] is running: %d", run_count);
+  static unsigned int run_count = 0;
 
-}
+  run_count++;
+
+  log_debug("[bnp_parse_task] is running: %d", run_count);
+
+  unsigned char rx_bnp_buffer[250];
+  int rx_len =0;
+  
+  unsigned short bnp_end_index =  0;
+  unsigned short checksum_value =  0x0000;
+  
+  bool ret =false;
+  if(usb_rx_queue_ptr !=NULL)
+  {
+     ret = take_from_queue(bnp_rx_queue_ptr, &rx_bnp_buffer, &rx_len, true);
+     if(ret == true)
+     {
+        phy_fragment_t *ptr = (phy_fragment_t *)(rx_bnp_buffer);//类型转换
+        
+        //计算end标识的位置
+        bnp_end_index = 
+          sizeof(ptr->bnp_fragment.bnp_header)
+            +ptr->bnp_fragment.bnp_header.length
+              +sizeof(ptr->bnp_fragment.bnp_end.checksum);
+        
+        //计算checksum
+        checksum_value = check_sum(&ptr->bnp_fragment);
+        
+        unsigned short rx_checksum =0;
+        rx_checksum += ptr->u8[bnp_end_index -2] ;//低字节在前
+        rx_checksum += (ptr->u8[bnp_end_index -1]<<8 && 0xFF00);//高字节在后
+          
+        if(
+           (ptr->bnp_fragment.bnp_header.start_flag == BNP_HEADER_FLAG)   //0x7e
+           && (ptr->bnp_fragment.bnp_header.tx_number > 0x8fff)
+           && (ptr->u8[bnp_end_index] == BNP_END_FLAG)                    //0x3e
+           && (checksum_value == rx_checksum)     //check bnp
+           )
+        {//bnp_okay
+           log_debug("bnp rx okay, bnp_opcode: [0x%2x]", ptr->bnp_fragment.bnp_header.opcode);
+           
+           if(ptr->bnp_fragment.bnp_header.opcode > BNP_DATA_MSG_ACK)//超出范围
+           {
+             bnp_nosupport_opcode_req_func(&ptr->bnp_fragment);
+             return;
+           }
+           
+           if(bnp_process_list[ptr->bnp_fragment.bnp_header.opcode & 0x0F].bnp_rx_req !=NULL)
+           {
+              bnp_process_list[ptr->bnp_fragment.bnp_header.opcode & 0x0F].bnp_rx_req(&ptr->bnp_fragment); 
+           }
+           
+         }
+        else
+        {
+          log_warning("bnp rx err! start_flag: [0x%x], tx_number: [0x%x], start_flag: [0x%x], checksum: [0x%x], checksum_value: [0x%x] ", 
+                    ptr->bnp_fragment.bnp_header.start_flag,
+                    ptr->bnp_fragment.bnp_header.tx_number,
+                    ptr->u8[bnp_end_index],
+                    rx_checksum,
+                    checksum_value);
+        }
+        
+       }
+     }       
+  }
 
 extern void set_timer_task(unsigned char       timer_id, 
                             unsigned int        delay, 
                             unsigned char       rearm, 
                             handler              timehandler, 
                             void *               param );
+
+extern void phy_slip_init();
+
 void protocol_init()
 {
+  
+  phy_slip_init();
+  
   bnp_init();
   
   bcmp_init();
   
   set_timer_task(BNP_PARSE_TASK, 5*TIME_BASE_500MS, true, bnp_parse_task, NULL);
   
-  set_timer_task(BCMP_SEND_TASK, 6*TIME_BASE_500MS, true, bcmp_send_task, NULL);
+  //set_timer_task(BCMP_PARSE_TASK, 6*TIME_BASE_500MS, true, bcmp_send_task, NULL);
   
   log_debug("protocol init has already been completed.");
   

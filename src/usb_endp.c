@@ -46,6 +46,7 @@
 
 #include "stdbool.h"
 #include "myqueue.h"    
+#include "logger.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
@@ -69,6 +70,27 @@ uint32_t Receive_length;
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
+
+extern void Handle_USBAsynchXfer (void);
+
+void SOF_Callback(void)
+{
+  
+  static uint32_t FrameCount = 0;
+  
+  if(bDeviceState == CONFIGURED)
+  {
+    if (FrameCount++ == VCOMPORT_IN_FRAME_INTERVAL)
+    {
+      /* Reset the frame counter */
+      FrameCount = 0;
+      
+      /* Check the data to be sent through IN pipe */
+      Handle_USBAsynchXfer();
+    }
+  } 
+  
+}
 
 void EP1_IN_Callback (void)
 {
@@ -113,6 +135,7 @@ void EP3_OUT_Callback(void)
     ret = push_to_queue(usb_rx_queue_ptr, Receive_Buffer, Data_Len);
     if(ret !=true)
     {
+      log_warning("usb_rx_queue_ptr full!");          
     }
   }
   SetEPRxValid(ENDP3); //重新设置端点接收状态有效，因为当接收数据后，端点就会被关闭.

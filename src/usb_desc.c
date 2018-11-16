@@ -151,7 +151,7 @@ const uint8_t Virtual_Com_Port_ConfigDescriptor[] =
     0x02,   /* bmAttributes: Bulk */
     VIRTUAL_COM_PORT_DATA_SIZE,             /* wMaxPacketSize: */
     0x00,
-    0x00    /* bInterval */
+    0x00    /* bInterval *///这个是端点查询的事件，可以作为定时器用？对于中断端点，标识查询的帧间隔数
   };
 
 /* USB String Descriptors */

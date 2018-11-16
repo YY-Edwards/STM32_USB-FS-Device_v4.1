@@ -22,7 +22,7 @@ extern "C" {
   {
     SUCCESS_NO_PROBLEM  =0x00,
     FAILURE             =0x01,
-    PRO_UNCONNECTED         =0x02,
+    PRO_UNCONNECTED     =0x02,
     INVALID_PARAM       =0x03,
     UNSUPPORT_OPCODE    =0x04,
           

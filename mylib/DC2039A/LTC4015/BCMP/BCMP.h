@@ -196,7 +196,7 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
 typedef struct
 {
   /*request function*/
-  void (* bcmp_rx_req_and_response_func)(bcmp_fragment_t *);
+  void (* bcmp_rx_req_and_response_func)(const bcmp_fragment_t *);
   
 //  /*reply function*/
 //  void (* bcmp_rx_reply)(void *);

@@ -49,7 +49,7 @@
 #include "task_timer.h"
 //static int check_count = 0;  
 //static unsigned char PTT_Sta = 1;//默认高电平
-extern __IO uint32_t packet_sent;  
+//extern __IO uint32_t packet_sent;  
 extern __IO uint32_t bDeviceState; 
 
 //extern volatile unsigned char usart_send_buffer[256];

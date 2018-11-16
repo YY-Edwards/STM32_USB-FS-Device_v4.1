@@ -153,9 +153,16 @@
     correctly the external required hardware and the GPIO defines below.*/
       
 #define LOGGER_TASK                     0
-#define BNP_PARSE_TASK                  1
-#define BCMP_SEND_TASK                  2
-#define BATTERY_MONITOR_TASK            3
+
+#define SLIP_ASSEMBLE_TASK              1//send or receive
+#define BNP_PARSE_TASK                  2//recv and parse
+#define BCMP_PARSE_TASK                 3//recv and parse
+
+#define BATTERY_MONITOR_TASK            4//measure
+
+#define BNP_SEND_TASK                   5//send
+
+
 #define UNDEFINED_TASK                  1    
       
 #define TIME_BASE_100MS                 100

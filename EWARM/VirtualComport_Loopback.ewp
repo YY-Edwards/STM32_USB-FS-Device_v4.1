@@ -8912,6 +8912,9 @@
           <group>
             <name>PHY_Slip</name>
             <file>
+              <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\PHY_Slip\PHY_Slip.c</name>
+            </file>
+            <file>
               <name>$PROJ_DIR$\..\mylib\DC2039A\LTC4015\PHY_Slip\PHY_Slip.h</name>
             </file>
           </group>

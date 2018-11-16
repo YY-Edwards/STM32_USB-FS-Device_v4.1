@@ -56,7 +56,6 @@
 ErrorStatus HSEStartUpStatus;
 EXTI_InitTypeDef EXTI_InitStructure;
 
-__IO uint32_t packet_sent;
 //__IO uint8_t Send_Buffer[VIRTUAL_COM_PORT_DATA_SIZE] ;
 __IO  uint32_t packet_receive;
 uint32_t Send_length;
@@ -380,7 +379,7 @@ uint32_t CDC_Send_DATA (uint8_t *ptrBuffer, uint8_t Send_length)
   if(Send_length <= VIRTUAL_COM_PORT_DATA_SIZE)     
   {
     /*Sent flag*/
-    packet_sent = 0;
+    //packet_sent = 0;
     /* send  packet to PMA*/
     UserToPMABufferCopy((unsigned char*)ptrBuffer, ENDP1_TXADDR, Send_length);
     SetEPTxCount(ENDP1, Send_length);//从端点1发送Send_length字节数据

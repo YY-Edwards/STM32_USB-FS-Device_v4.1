@@ -44,7 +44,7 @@ void bcmp_opcode_not_support_reply(void)
   
 }
 
-static void bcmp_battery_info_req_response(bcmp_fragment_t *bcmp_rx_frame_p)
+static void bcmp_battery_info_req_response(const bcmp_fragment_t *bcmp_rx_frame_p)
 {
   
  /*bcmp frame will be sent*/
@@ -61,13 +61,13 @@ static void bcmp_battery_info_req_response(bcmp_fragment_t *bcmp_rx_frame_p)
 
 }
 
-static void bcmp_alert_and_notice_config_req_response(bcmp_fragment_t *bcmp_rx_frame_p)
+static void bcmp_alert_and_notice_config_req_response(const bcmp_fragment_t *bcmp_rx_frame_p)
 {
   
 
 }
 
-static void bcmp_get_alert_info_req_response(bcmp_fragment_t *bcmp_rx_frame_p)
+static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_frame_p)
 {
   
    /*bcmp frame will be sent*/
@@ -102,6 +102,7 @@ static void bcmp_get_alert_info_req_response(bcmp_fragment_t *bcmp_rx_frame_p)
 static const volatile BCMP_process_list_t bcmp_process_list[]=
 {
   /*BCMP_REQEUST RESPONSE,         BCMP_REPLY,             BCMP_BROADCAST*/
+  {     NULL                            },
   {bcmp_battery_info_req_response                },
   {bcmp_alert_and_notice_config_req_response     },
   {bcmp_get_alert_info_req_response                },
@@ -122,6 +123,18 @@ void bcmp_send_task(void *p)
 
 void bcmp_parse_func(const bcmp_fragment_t bcmp)
 {
+  
+  if(((bcmp.bcmp_opcode & 0x000f) < sizeof(bcmp_process_list))
+     && ((bcmp.bcmp_opcode & 0x000f) !=0))
+  {
+    log_debug("rx bcmp opcode:[0x%x]", bcmp.bcmp_opcode);
+    bcmp_process_list[bcmp.bcmp_opcode & 0x000F].bcmp_rx_req_and_response_func(&bcmp);
+  
+  }
+  else
+  {
+    bcmp_opcode_not_support_reply();
+  }
 
 
 }
