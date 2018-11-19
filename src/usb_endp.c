@@ -50,7 +50,7 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
-/* Interval between sending IN packets in frame number (1 frame = 1ms) */
+/* Interval between sending IN packets in frame number (1 frame = 10ms) */
 #define VCOMPORT_IN_FRAME_INTERVAL             5
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -80,7 +80,7 @@ void SOF_Callback(void)
   
   if(bDeviceState == CONFIGURED)
   {
-    if (FrameCount++ == VCOMPORT_IN_FRAME_INTERVAL)
+    if (FrameCount++ == VCOMPORT_IN_FRAME_INTERVAL)//50ms?
     {
       /* Reset the frame counter */
       FrameCount = 0;

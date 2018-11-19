@@ -30,15 +30,16 @@ bool ltc4015_powered = false;
 bool No_VIN_Flag = false;
 
 __IO uint16_t ADCConvertedValue;     // ADC为12位模数转换器，只有ADCConvertedValue的低12位有效
-LTC4015_charger_state_t charger_state;
-LTC4015_charge_status_t charge_status;
-LTC4015_system_status_t system_status;
+__IO LTC4015_charger_state_t charger_state;
+__IO LTC4015_charge_status_t charge_status;
+__IO LTC4015_system_status_t system_status;
 
-void DC2039A_Config_Param(void);
-void DC2039A_Run(void *);
+static void DC2039A_Config_Param(void);
+static void DC2039A_Run(void *);
 void DC2039A_Init(void);
-void ADC_GPIO_Configuration(void);
-uint16_t INTVCC_ADC_Read(void);
+static void ADC_GPIO_Configuration(void);
+static uint16_t INTVCC_ADC_Read(void);
+void charger_monitor_task(void *);
 
 /* Private functions ---------------------------------------------------------*/
 uint16_t INTVCC_ADC_Read(void)
@@ -60,6 +61,18 @@ extern void set_timer_task(unsigned char       timer_id,
                             void *               param );
 
 
+
+void charger_monitor_task(void *p)
+{
+  
+  memset((void*)&charger_state, 0x00, sizeof(LTC4015_charger_state_t));
+  memset((void*)&charge_status, 0x00, sizeof(LTC4015_charge_status_t));
+  memset((void*)&system_status, 0x00, sizeof(LTC4015_system_status_t));
+    
+  
+  DC2039A_Run(p);
+
+}
 void DC2039A_Init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;  
@@ -127,7 +140,7 @@ void DC2039A_Init(void)
     CAT5140_Optional_Handle();
     
     //3s
-    set_timer_task(BATTERY_MONITOR_TASK, 6*TIME_BASE_500MS, true, DC2039A_Run, NULL);
+    set_timer_task(BATTERY_MONITOR_TASK, 6*TIME_BASE_500MS, true, charger_monitor_task, NULL);
   
 }
 void ADC_GPIO_Configuration(void)
@@ -288,10 +301,7 @@ void DC2039A_Config_Param(void)
     uint16_t value =0;
     
     log_info("init LTC4015 setting.");
-    memset(&charger_state, 0x00, sizeof(LTC4015_charger_state_t));
-    memset(&charge_status, 0x00, sizeof(LTC4015_charge_status_t));
-    memset(&system_status, 0x00, sizeof(LTC4015_system_status_t));
-    
+
     //Set min UVCL ;输入电压至少13V，才能开启充电功能
     LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(13)); // Initialize UVCL Lo Limit to 13V
     
