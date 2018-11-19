@@ -65,12 +65,10 @@ extern void set_timer_task(unsigned char       timer_id,
 void charger_monitor_task(void *p)
 {
   
-  memset((void*)&charger_state, 0x00, sizeof(LTC4015_charger_state_t));
-  memset((void*)&charge_status, 0x00, sizeof(LTC4015_charge_status_t));
-  memset((void*)&system_status, 0x00, sizeof(LTC4015_system_status_t));
-    
-  
-  DC2039A_Run(p);
+  static int t = 0;
+  t++;
+  log_debug("[charger_monitor_task] is running :%d", t);
+  //DC2039A_Run(p);
 
 }
 void DC2039A_Init(void)
@@ -301,6 +299,10 @@ void DC2039A_Config_Param(void)
     uint16_t value =0;
     
     log_info("init LTC4015 setting.");
+    
+    memset((void*)&charger_state, 0x00, sizeof(LTC4015_charger_state_t));
+    memset((void*)&charge_status, 0x00, sizeof(LTC4015_charge_status_t));
+    memset((void*)&system_status, 0x00, sizeof(LTC4015_system_status_t));
 
     //Set min UVCL ;输入电压至少13V，才能开启充电功能
     LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(13)); // Initialize UVCL Lo Limit to 13V

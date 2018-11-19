@@ -115,7 +115,7 @@ void bnp_client_heart_beat_req_func(bnp_fragment_t *bnp_p)           /*-0x1-BNP_
   /*BNP frame will be send*/	
    bnp_fragment_t bnp_tx_frame;
   
-   bnp_tx_frame.bnp_header.start_flag = bnp_p->bnp_header.start_flag;
+   bnp_tx_frame.bnp_header.start_flag = BNP_HEADER_FLAG;
    bnp_tx_frame.bnp_header.opcode = BNP_CLIENT_HEART_BEAT_REPLY;
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
@@ -128,7 +128,7 @@ void bnp_client_heart_beat_req_func(bnp_fragment_t *bnp_p)           /*-0x1-BNP_
    
    bnp_tx_frame.bnp_end.checksum = check_sum(&bnp_tx_frame);
    
-   bnp_tx_frame.bnp_end.end_flag = bnp_p->bnp_end.end_flag;
+   bnp_tx_frame.bnp_end.end_flag = BNP_END_FLAG;
    
    bnp_tx(&bnp_tx_frame);
    
@@ -140,7 +140,7 @@ void bnp_client_conn_req_func(bnp_fragment_t *bnp_p)		/*-0x2-BNP_CLIENT_CONN*/
   /*BNP frame will be send*/	
    bnp_fragment_t bnp_tx_frame;
   
-   bnp_tx_frame.bnp_header.start_flag = bnp_p->bnp_header.start_flag;
+   bnp_tx_frame.bnp_header.start_flag = BNP_HEADER_FLAG;
    bnp_tx_frame.bnp_header.opcode = BNP_CLIENT_CONNECT_REPLY;
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
@@ -154,7 +154,7 @@ void bnp_client_conn_req_func(bnp_fragment_t *bnp_p)		/*-0x2-BNP_CLIENT_CONN*/
    
    bnp_tx_frame.bnp_end.checksum = check_sum(&bnp_tx_frame);
    
-   bnp_tx_frame.bnp_end.end_flag = bnp_p->bnp_end.end_flag;
+   bnp_tx_frame.bnp_end.end_flag = BNP_END_FLAG;
    
    bnp_tx(&bnp_tx_frame);
 
@@ -191,7 +191,7 @@ void bnp_c_s_disconn_req_func(bnp_fragment_t *bnp_p)		/*-0x3-BNP_C_S_DISCONN*/
   /*BNP frame will be send*/	
    bnp_fragment_t bnp_tx_frame;
   
-   bnp_tx_frame.bnp_header.start_flag = bnp_p->bnp_header.start_flag;
+   bnp_tx_frame.bnp_header.start_flag = BNP_HEADER_FLAG;
    bnp_tx_frame.bnp_header.opcode = BNP_C_S_DISCONNECT_REPLY;
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
@@ -202,7 +202,7 @@ void bnp_c_s_disconn_req_func(bnp_fragment_t *bnp_p)		/*-0x3-BNP_C_S_DISCONN*/
    
    bnp_tx_frame.bnp_end.checksum = check_sum(&bnp_tx_frame);
    
-   bnp_tx_frame.bnp_end.end_flag = bnp_p->bnp_end.end_flag;
+   bnp_tx_frame.bnp_end.end_flag = BNP_END_FLAG;
    
    bnp_tx(&bnp_tx_frame);
    
@@ -222,7 +222,7 @@ static void bnp_send_data_msg_ack(bnp_fragment_t *bnp_p)
    /*BNP frame will be send*/	
    bnp_fragment_t bnp_tx_frame;
   
-   bnp_tx_frame.bnp_header.start_flag = bnp_p->bnp_header.start_flag;
+   bnp_tx_frame.bnp_header.start_flag = BNP_HEADER_FLAG;
    bnp_tx_frame.bnp_header.opcode = BNP_DATA_MSG_ACK;
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
@@ -230,7 +230,7 @@ static void bnp_send_data_msg_ack(bnp_fragment_t *bnp_p)
    
    bnp_tx_frame.bnp_end.checksum = check_sum(&bnp_tx_frame);
    
-   bnp_tx_frame.bnp_end.end_flag = bnp_p->bnp_end.end_flag;
+   bnp_tx_frame.bnp_end.end_flag = BNP_END_FLAG;
    
    bnp_tx(&bnp_tx_frame);
 
@@ -252,7 +252,7 @@ void bnp_data_msg_func(bnp_fragment_t *bnp_p)		/*-0x4-BNP_DATA_MSG*/
     /*BNP frame will be send*/	
    bnp_fragment_t bnp_tx_frame;
   
-   bnp_tx_frame.bnp_header.start_flag = bnp_p->bnp_header.start_flag;
+   bnp_tx_frame.bnp_header.start_flag = BNP_HEADER_FLAG;
    bnp_tx_frame.bnp_header.opcode = BNP_C_S_DISCONNECT_REPLY;
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
@@ -265,7 +265,7 @@ void bnp_data_msg_func(bnp_fragment_t *bnp_p)		/*-0x4-BNP_DATA_MSG*/
    
    bnp_tx_frame.bnp_end.checksum = check_sum(&bnp_tx_frame);
    
-   bnp_tx_frame.bnp_end.end_flag = bnp_p->bnp_end.end_flag;
+   bnp_tx_frame.bnp_end.end_flag = BNP_END_FLAG;
    
    bnp_tx(&bnp_tx_frame);
   
@@ -285,7 +285,7 @@ void bnp_nosupport_opcode_req_func(bnp_fragment_t *bnp_p)		/*-0xE1-BNP_NOSUPPORT
   /*BNP frame will be send*/	
    bnp_fragment_t bnp_tx_frame;
   
-   bnp_tx_frame.bnp_header.start_flag = bnp_p->bnp_header.start_flag;
+   bnp_tx_frame.bnp_header.start_flag = BNP_HEADER_FLAG;
    bnp_tx_frame.bnp_header.opcode = BNP_CLIENT_REQEUST_NOSUPPORT_ACK;
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
@@ -293,7 +293,7 @@ void bnp_nosupport_opcode_req_func(bnp_fragment_t *bnp_p)		/*-0xE1-BNP_NOSUPPORT
    
    bnp_tx_frame.bnp_end.checksum = check_sum(&bnp_tx_frame);
    
-   bnp_tx_frame.bnp_end.end_flag = bnp_p->bnp_end.end_flag;
+   bnp_tx_frame.bnp_end.end_flag = BNP_END_FLAG;
    
    bnp_tx(&bnp_tx_frame);
   
@@ -368,11 +368,11 @@ void bnp_init()
 extern volatile RingQueue_t usb_rx_queue_ptr;
 void bnp_parse_task(void *p)
 {
-  static unsigned int run_count = 0;
+//  static unsigned int run_count = 0;
+//
+//  run_count++;
 
-  run_count++;
-
-  log_debug("[bnp_parse_task] is running: %d", run_count);
+  //log_debug("[bnp_parse_task] is running: %d", run_count);
 
   unsigned char rx_bnp_buffer[250];
   int rx_len =0;
@@ -399,7 +399,11 @@ void bnp_parse_task(void *p)
         
         unsigned short rx_checksum =0;
         rx_checksum += ptr->u8[bnp_end_index -2] ;//低字节在前
-        rx_checksum += (ptr->u8[bnp_end_index -1]<<8 && 0xFF00);//高字节在后
+        rx_checksum += (ptr->u8[bnp_end_index -1]<<8 & 0xFF00);//高字节在后
+        
+        //重新复制
+        ptr->bnp_fragment.bnp_end.checksum = rx_checksum;
+        ptr->bnp_fragment.bnp_end.end_flag = ptr->u8[bnp_end_index];
           
         if(
            (ptr->bnp_fragment.bnp_header.start_flag == BNP_HEADER_FLAG)   //0x7e
@@ -469,7 +473,7 @@ void protocol_init()
   
   bcmp_init();
   
-  set_timer_task(BNP_PARSE_TASK, 5*TIME_BASE_500MS, true, bnp_parse_task, NULL);
+  set_timer_task(BNP_PARSE_TASK, TIME_BASE_500MS, true, bnp_parse_task, NULL);
   
   //set_timer_task(BCMP_PARSE_TASK, 6*TIME_BASE_500MS, true, bcmp_send_task, NULL);
   

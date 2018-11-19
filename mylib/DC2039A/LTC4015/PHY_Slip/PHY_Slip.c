@@ -90,9 +90,9 @@ void phy_slip_assemble_task(void *p)
             else if(ch == END)//结束,推送完整的bnp包
             {            
               m_state = SLIP_FIND_HEADER;
-              bnp_package_len = slip_recv_msg_idx+1;
+              bnp_package_len = slip_recv_msg_idx;
               
-              log_debug("slip rx okay, slip_len: [%d], bnp_len:[%d]", index, bnp_package_len);
+              log_debug("slip rx okay, slip_len: [%d], bnp_len:[%d]", index, slip_recv_msg_idx);
               
               ret = push_to_queue(bnp_rx_queue_ptr, g_rx_bnp_frame.u8, bnp_package_len);
               if(ret != true)
@@ -139,9 +139,9 @@ void phy_slip_assemble_task(void *p)
                   
                   idx =0;
                   memset(usb_send_buf, 0x00, sizeof(usb_send_buf));
-                  
+                  unsigned short bnp_len = recv_len-4;
                   usb_send_buf[idx++] = END;
-                  while (recv_len-- > 0)
+                  while (bnp_len-- > 0)
                   {
                       switch (*((uint8_t *)(ptr->phy_valid_data.u8) + index))//从temp_buf取出一个字节的数据
                       {
@@ -198,7 +198,11 @@ void phy_slip_assemble_task(void *p)
             {
               custom_send_state = CUSTOM_WAIT_RESPONSE;
               start_bnp_timeout_detect();//开启bnp response监测
-            } 
+            }
+            else//no need wait for response
+            {
+              custom_send_state = CUSTOM_ASSEMBLE_DATA;
+            }
           }
            
         break;
