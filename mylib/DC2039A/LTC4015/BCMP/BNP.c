@@ -26,10 +26,17 @@ static unsigned short check_sum (const bnp_fragment_t * bnp_p)
 	
 	unsigned short  sumScratch = 0;
         
-        sumScratch = 
-          bnp_p->bnp_header.opcode 
-            + bnp_p->bnp_header.tx_number
-              + bnp_p->bnp_header.length;
+        sumScratch += bnp_p->bnp_header.opcode;
+        
+        sumScratch += (bnp_p->bnp_header.tx_number>>8 & 0xFF);
+        sumScratch += (bnp_p->bnp_header.tx_number & 0xFF);
+        sumScratch += (bnp_p->bnp_header.length>>8 & 0xFF);
+        sumScratch += (bnp_p->bnp_header.length & 0xFF);
+        
+//        sumScratch = 
+//          bnp_p->bnp_header.opcode 
+//            + bnp_p->bnp_header.tx_number
+//              + bnp_p->bnp_header.length;
         
         unsigned short len = bnp_p->bnp_header.length;
 
