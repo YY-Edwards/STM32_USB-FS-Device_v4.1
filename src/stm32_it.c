@@ -51,6 +51,8 @@
 //static unsigned char PTT_Sta = 1;//默认高电平
 //extern __IO uint32_t packet_sent;  
 extern __IO uint32_t bDeviceState; 
+extern volatile bool timeout_for_once;
+extern void stop_bnp_timeout_detect(void);
 
 //extern volatile unsigned char usart_send_buffer[256];
 
@@ -222,34 +224,15 @@ void USBWakeUp_IRQHandler(void)
 void TIM2_IRQHandler(void)
 {
 
-//  if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
-//  {
-//     check_count++;
-//     if(check_count >= 8)
-//    {
-//      check_count =0;
-//      static uint8_t Keybuf1 = 0xff;
-//      
-//      //PA3
-//      Keybuf1 = ( ( Keybuf1 << 1 ) | GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) );//缓存区左移1位，并将当前值移入最低位
-//
-//      if ( 0x00 == Keybuf1 )//连续8次扫描都为0，即16毫秒内都检测到按下状态，即认为按键按下
-//      {
-//        PTT_Sta = 0;
-//      }
-//      else if ( 0xff == Keybuf1 )//按键弹起
-//      {
-//        PTT_Sta = 1;
-//      }
-//      else//其它情况则说明按键状态尚未稳定，则不对 KeySta 变量值进行更新
-//      //Key1Sta = 1;//default value 
-//      {
-//      }
-//      
-//    } 
-//
-//    TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-//  }
+  if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)//3s
+  {
+    if(timeout_for_once == false)
+      timeout_for_once = true;
+    
+    stop_bnp_timeout_detect();//关闭bnp response监测
+    
+    TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+ }
 
 }
 

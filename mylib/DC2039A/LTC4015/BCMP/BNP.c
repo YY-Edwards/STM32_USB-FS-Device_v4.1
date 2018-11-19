@@ -8,6 +8,7 @@ static volatile bnp_information_t bnp_information;
 static volatile unsigned short server_transaction_id = 1;
 volatile RingQueue_t bnp_rx_queue_ptr = NULL;
 volatile RingQueue_t bnp_tx_queue_ptr = NULL;
+volatile bool bnp_rx_response_flag = false;
 
 /*Defines the callback function is used to handle BCMP*/
 void ( *bcmp_analyse_callback_func)(const bnp_content_data_msg_t) = NULL;
@@ -67,23 +68,40 @@ void bnp_tx(bnp_fragment_t * bnp_tx_p)
 //    bnp_tx_p->bnp_end.checksum = check_sum(&bnp_tx_frame);
 //  }
   
-  unsigned short send_len = 0;
+  unsigned short bnp_len = 0;
   
   phy_fragment_t *ptr = (phy_fragment_t *)bnp_tx_p;
   //传输前需要进行包结构调整(将end_t贴在bcmp的payload之后)：保证字节流
-  send_len = 
+  bnp_len = 
     bnp_tx_p->bnp_header.length 
       +sizeof(bnp_tx_p->bnp_end)
         +sizeof(bnp_tx_p->bnp_header);
   
   //需要验证算法是否正确
-  memcpy(&(ptr->u8[send_len - sizeof(bnp_tx_p->bnp_end)]), (void *)&(bnp_tx_p->bnp_end), sizeof(bnp_tx_p->bnp_end));
+  memcpy(&(ptr->u8[bnp_len - sizeof(bnp_tx_p->bnp_end)]), (void *)&(bnp_tx_p->bnp_end), sizeof(bnp_tx_p->bnp_end));
   
+  unsigned short custom_len = 0;//注意长度
+  
+  custom_bnp_send_data_t custom_send_data;
+  custom_send_data.answer_delay         = 3000;
+  custom_send_data.data_bnp_opcode      = bnp_tx_p->bnp_header.opcode;
+  
+  if(((bnp_tx_p->bnp_header.opcode & 0xF0) == BNP_RESPONSE_PACKAGE)//0xB0
+     ||(bnp_tx_p->bnp_header.opcode == BNP_CLIENT_REQEUST_NOSUPPORT_ACK))//0xE1
+  {
+     custom_send_data.is_data_need_answer  = 0;
+  }
+  else//need response from device
+    custom_send_data.is_data_need_answer   = 1;
+  
+  memcpy(custom_send_data.phy_valid_data.u8, ptr->u8, bnp_len);
+  
+  custom_len = 4 + bnp_len;
   
   if(bnp_tx_queue_ptr != NULL)
   {
     bool ret =false;
-    ret = push_to_queue(bnp_tx_queue_ptr, (void *)ptr, send_len);
+    ret = push_to_queue(bnp_tx_queue_ptr, (void *)&custom_send_data, custom_len);
     if(ret !=true)
     {
       log_warning("bnp_tx_queue_ptr full!");          
@@ -342,12 +360,6 @@ void bnp_init()
   }
   
   
-   bnp_tx_queue_ptr = create_queue(5, sizeof(bnp_fragment_t));
-  if(bnp_tx_queue_ptr == NULL)
-  {
-    return;
-  }
-  
   bnp_information.is_connected = false;
   bnp_information.transaction_id = NULL;
   
@@ -406,7 +418,23 @@ void bnp_parse_task(void *p)
            
            if(bnp_process_list[ptr->bnp_fragment.bnp_header.opcode & 0x0F].bnp_rx_req !=NULL)
            {
-              bnp_process_list[ptr->bnp_fragment.bnp_header.opcode & 0x0F].bnp_rx_req(&ptr->bnp_fragment); 
+              if((ptr->bnp_fragment.bnp_header.opcode & 0xF0) == BNP_RESPONSE_PACKAGE)//ack
+              {
+                bnp_rx_response_flag = true;//成功接收bnp response，关闭超时重发功能            
+              }
+              
+              if(ptr->bnp_fragment.bnp_header.opcode == BNP_C_S_DISCONNECT_REPLY)//disconnect ack
+              {
+                bnp_c_s_disconn_reply_func(&ptr->bnp_fragment);
+              }
+              else if(ptr->bnp_fragment.bnp_header.opcode == BNP_DATA_MSG_ACK)//data ack
+              {
+                bnp_get_data_msg_ack_func(&ptr->bnp_fragment);
+              }
+              else//request
+              {
+                bnp_process_list[ptr->bnp_fragment.bnp_header.opcode & 0x0F].bnp_rx_req(&ptr->bnp_fragment); 
+              }
            }
            
          }

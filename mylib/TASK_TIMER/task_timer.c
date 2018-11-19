@@ -8,6 +8,7 @@
 
 #pragma pack(1)
 
+static bool timer2_enabled = true;
   
 typedef struct
 {       
@@ -53,6 +54,48 @@ typedef struct
  }
  
  
+static void TIM2_Int_Init(uint16_t arr,uint16_t psc)
+{
+  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+  NVIC_InitTypeDef NVIC_InitStructure;
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE); //①时钟 TIM2 使能
+  //定时器 TIM2 初始化
+  TIM_TimeBaseStructure.TIM_Period = arr; //设置自动重装载寄存器周期的值
+  TIM_TimeBaseStructure.TIM_Prescaler =psc; //设置时钟频率除数的预分频值
+  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1; //设置时钟分割
+  
+  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; //TIM 向上计数
+  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure); //②初始化 TIM2
+  
+  TIM_ClearITPendingBit(TIM2,TIM_IT_Update);
+  
+  TIM_ITConfig(TIM2,TIM_IT_Update,ENABLE ); //③允许更新中断
+  //中断优先级 NVIC 设置
+  NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn; //TIM2 中断
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1; //先占优先级 1 级
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1; //从优先级 1级
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ 通道被使能
+  NVIC_Init(&NVIC_InitStructure); //④初始化 NVIC 寄存器
+  
+  //TIM_Cmd(TIM2, ENABLE); //⑤使能 TIM2
+  
+}
+
+ 
+void start_bnp_timeout_detect(void)
+{
+  if(timer2_enabled == true)return;
+ TIM_Cmd(TIM2, ENABLE); //⑤使能 TIM2
+ timer2_enabled = true;
+}
+
+void stop_bnp_timeout_detect()
+{
+ TIM_Cmd(TIM2, DISABLE); //⑤失能 TIM2
+ timer2_enabled = false;
+}
+
+
  
 //通用定时器 3 中断初始化
 
@@ -146,9 +189,14 @@ void task_init()
   task_reset();
 #if defined(STM32L1XX_MD) 
   
+   TIM2_Int_Init((TASK_TIEMR_BASE_MS*3000-1),3199);//bnp timeout:3s 
+   
    TIM3_Int_Init((TASK_TIEMR_BASE_MS*10-1),3199);//定时输出log,或者做任务调度的基准时钟  
     //Tout= ((arr+1)*( psc+1))/Tclk=(99+1)*( 3199+1))/32=10ms
 #else    
+   
+   TIM2_Int_Init(29999,7199);//bnp timeout:3s 
+   
    TIM3_Int_Init(99,7199); //10Khz 的计数频率，计数到 500 为 50ms
    //Tout= ((799+1)*( 7199+1))/72=500000us=80ms
 #endif 

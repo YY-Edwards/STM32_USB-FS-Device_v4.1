@@ -12,9 +12,15 @@ extern "C" {
 #include <string.h>
 #include "task_timer.h"
   
-#define BNP_HEADER_FLAG             (char)0x7E    
-#define BNP_END_FLAG                (char)0x3E
+#define BNP_HEADER_FLAG             (unsigned char)0x7E    
+#define BNP_END_FLAG                (unsigned char)0x3E
+#define BNP_RESPONSE_PACKAGE        0xB0    
+#define BNP_COMMAND_PACKAGE         0x00
+  
 #define DEFAULT_VALUE	            0x0000  
+  
+#define PHY_MAX_RESEND_COUNTS         3
+#define PHY_MAX_DELAY_TIME            3000 //MS    
   
 #pragma pack(1)
   
@@ -146,8 +152,7 @@ typedef union {
     bnp_end_t        bnp_end;           // 3  bytes
   } bnp_fragment_t;
     
-  
-  
+   
   typedef struct
 {	
     /*BNP status*/

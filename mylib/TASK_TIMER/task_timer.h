@@ -16,6 +16,10 @@ void task_process();
 void task_init();
 void start_timer_task_schedule();
 void stop_timer_task_schedule();
+void start_bnp_timeout_detect();
+void stop_bnp_timeout_detect(void);
+
+
 void set_timer_task(unsigned char       timer_id, 
                     unsigned int        delay, 
                     unsigned char       rearm, 
