@@ -242,7 +242,7 @@ void logger_init()
 //  logger_msg_queue_ptr->data_size               = 128;
 //  logger_msg_queue_ptr->queue_point             = NULL;
   
-  logger_msg_queue_ptr = create_queue(10, 128);
+  logger_msg_queue_ptr = create_queue(15, 128);
   if(logger_msg_queue_ptr == NULL)
   {
     return;

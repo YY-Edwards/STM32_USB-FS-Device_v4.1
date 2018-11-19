@@ -50,12 +50,14 @@ void phy_slip_assemble_task(void *p)
     
     static SLIP_parser_state_enum m_state = SLIP_FIND_HEADER;
     static int slip_recv_msg_idx = 0;
+    static int byte_count = 0;
     int bnp_package_len = 0;
     int index =0;
     uint8_t ch =0;
     uint8_t nextch =0;
     while(0 < recv_len--)//字节流解析
     {
+      byte_count++;
       ch = rx_usb_buf[index++];//从buffer中取出一个字节的数据，进行解析
       switch(m_state)
       {
@@ -70,6 +72,7 @@ void phy_slip_assemble_task(void *p)
         case SLIP_READ_DATA:
             if(ch == ESC)
             {
+              byte_count++;
               nextch = rx_usb_buf[index++];//从buffer中取出下一个字节的数据，进行解析
               if(nextch == ESC_END)//转译
               {
@@ -92,7 +95,9 @@ void phy_slip_assemble_task(void *p)
               m_state = SLIP_FIND_HEADER;
               bnp_package_len = slip_recv_msg_idx;
               
-              log_debug("slip rx okay, slip_len: [%d], bnp_len:[%d]", index, slip_recv_msg_idx);
+              log_debug("slip rx okay, slip_len: [%d], bnp_len:[%d]", byte_count, slip_recv_msg_idx);
+              
+              byte_count = 0;//reset 
               
               ret = push_to_queue(bnp_rx_queue_ptr, g_rx_bnp_frame.u8, bnp_package_len);
               if(ret != true)

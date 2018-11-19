@@ -444,12 +444,17 @@ void bnp_parse_task(void *p)
          }
         else
         {
-          log_warning("bnp rx err! start_flag: [0x%x], tx_number: [0x%x], start_flag: [0x%x], checksum: [0x%x], checksum_value: [0x%x] ", 
-                    ptr->bnp_fragment.bnp_header.start_flag,
-                    ptr->bnp_fragment.bnp_header.tx_number,
-                    ptr->u8[bnp_end_index],
-                    rx_checksum,
-                    checksum_value);
+          log_warning("bnp rx err! ");
+          for(unsigned short i =0;i<rx_len;i++)
+          {
+            log_warning("data[%d]:[0x%2x]",i, ptr->u8[i]);
+          }
+//          log_warning("bnp rx err! sf:[0x%x], tx_numb:[0x%x], ef:[0x%x], rx_check:[0x%x], c_s:[0x%x]", 
+//                    ptr->bnp_fragment.bnp_header.start_flag,
+//                    ptr->bnp_fragment.bnp_header.tx_number,
+//                    ptr->u8[bnp_end_index],
+//                    rx_checksum,
+//                    checksum_value);
         }
         
        }
