@@ -51,7 +51,7 @@ static void bcmp_battery_info_req_response(const bcmp_fragment_t *bcmp_rx_frame_
   
  /*bcmp frame will be sent*/
   bcmp_fragment_t bcmp_frame;
-  bcmp_frame.bcmp_opcode = BCMP_REPLY | ALERT_INFO;
+  bcmp_frame.bcmp_opcode = BCMP_REPLY | BATTERY_INFO;
    
   //Ç¿ÖÆ×ª»»
   bcmp_battery_info_reply_t *ptr =  (bcmp_battery_info_reply_t *)(bcmp_frame.u8);
@@ -303,6 +303,6 @@ void bcmp_init(void)
    g_bat_info.battery_state    = ALERT_INFO_RESULT_NOTHING;
    g_bat_info.alert_identifier = BAT_IDLE_SUSPEND;
    
-   set_timer_task(BCMP_BRDCAST_TASK, 7*TIME_BASE_500MS, true, bcmp_battery_info_broadcast_task, NULL);
+   //set_timer_task(BCMP_BRDCAST_TASK, 20*TIME_BASE_500MS, true, bcmp_battery_info_broadcast_task, NULL);
 
 }

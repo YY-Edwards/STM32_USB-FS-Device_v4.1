@@ -365,7 +365,7 @@ void bnp_parse_task(void *p)
           
         if(
            (ptr->bnp_fragment.bnp_header.start_flag == BNP_HEADER_FLAG)   //0x7e
-           && (ptr->bnp_fragment.bnp_header.tx_number > 0x8fff)
+           //&& (ptr->bnp_fragment.bnp_header.tx_number > 0x8fff)
            && (ptr->u8[bnp_end_index] == BNP_END_FLAG)                    //0x3e
            && (checksum_value == rx_checksum)     //check bnp
            )

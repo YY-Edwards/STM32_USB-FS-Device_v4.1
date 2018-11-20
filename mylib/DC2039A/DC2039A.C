@@ -47,10 +47,10 @@ extern void set_timer_task(unsigned char       timer_id,
 void charger_monitor_task(void *p)
 {
   
-  static int t = 0;
-  t++;
-  log_debug("[charger_monitor_task] is running :%d", t);
-  //DC2039A_Run(p);
+  //static int t = 0;
+  //t++;
+  //log_debug("[charger_monitor_task] is running :%d", t);
+  DC2039A_Run(p);
 
 }
 void DC2039A_Init(void)
@@ -120,7 +120,7 @@ void DC2039A_Init(void)
     CAT5140_Optional_Handle();
     
     //3s
-    set_timer_task(BATTERY_MONITOR_TASK, 6*TIME_BASE_500MS, true, charger_monitor_task, NULL);
+    set_timer_task(BATTERY_MONITOR_TASK, 18*TIME_BASE_500MS, true, charger_monitor_task, NULL);
   
 }
 void ADC_GPIO_Configuration(void)
@@ -667,6 +667,7 @@ static void charger_measure_data_func(void *p)
    //Read Qcount
     LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
     current_battery_capacity = ((float)(value-16384)/32768.0)*100;//%
+    current_battery_capacity = 13568;
     g_bat_info.bat_currently_capacity = (unsigned int)(current_battery_capacity * 1000);
     log_info("bat capacity: %d, %f %%. ", value, current_battery_capacity);
     
@@ -729,9 +730,12 @@ static void charger_measure_data_func(void *p)
     
      //read cell count as set by CELLS pins 
     int  bat_cell_count= 0;
+    int  bat_chemistry= 0;
+    LTC4015_read_register(chip, LTC4015_CHEM_BF, &value);    
+    bat_chemistry = value;
     LTC4015_read_register(chip, LTC4015_CELL_COUNT_PINS_BF, &value);    
-    bat_cell_count = LTC4015_CELL_COUNT_PINS_BF;
-    log_info("BAT CELL: %d ", bat_cell_count);
+    bat_cell_count = value;
+    log_info("BAT TYPE,CELL: %d, %d ", bat_chemistry, bat_cell_count);
     
     //Read VBATSENSE/cellcount：特指batsens pin
     LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
@@ -747,7 +751,7 @@ static void charger_measure_data_func(void *p)
     //初始化设置的值。根据电池化学类型、充电器状态、温度、的不同而不同。
     LTC4015_read_register(chip, LTC4015_VCHARGE_DAC_BF, &value);
     bat_charge_vcc = ((float)value/80.0+3.8125);
-    g_bat_info.VCHARGER = (signed short)bat_charge_vcc * 1000 * bat_cell_count;//mv
+    g_bat_info.VCHARGER = (signed short)(bat_charge_vcc * 1000 * bat_cell_count);//mv
     log_info("BAT_CHARGE_VCC/CELL: %f V . ", bat_charge_vcc); 
     
     //calculate ISYS(estimated)
@@ -756,9 +760,9 @@ static void charger_measure_data_func(void *p)
     g_bat_info.ISYS *= 1000;//放大：ma
         
     //read die temperature
-    LTC4015_read_register(chip, LTC4015_VCHARGE_DAC_BF, &value);
+    LTC4015_read_register(chip, LTC4015_DIE_TEMP_BF, &value);
     die_temp = (float)(value-12010)/45.6;//℃
-    g_bat_info.DIE = (signed short)die_temp*100;
+    g_bat_info.DIE = (signed short)(die_temp*100);
     log_info("DIE_TEMP: %f T. ", die_temp);
   
 

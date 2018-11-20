@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=815981662
+Checksum=-1340953715
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -121,9 +121,7 @@ Bp2=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.107.7" 0 0 1 "" 0 "" 0
 Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.32.7" 0 0 1 "" 0 "" 0
 Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.423.3" 0 0 1 "" 0 "" 0
 Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\LTC4015\PHY_Slip\PHY_Slip.c}.218.13" 0 0 1 "" 0 "" 0
-Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\LTC4015\PHY_Slip\PHY_Slip.c}.204.15" 0 0 1 "" 0 "" 0
-Bp7=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\LTC4015\BCMP\BNP.c}.454.11" 0 0 1 "" 0 "" 0
-Count=8
+Count=6
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
