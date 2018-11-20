@@ -4,7 +4,7 @@
 #include "BCMP.h"
 #include "PHY_Slip.h"
 
-static volatile bnp_information_t bnp_information;
+volatile bnp_information_t bnp_information;
 static volatile unsigned short server_transaction_id = 1;
 volatile RingQueue_t bnp_rx_queue_ptr = NULL;
 volatile RingQueue_t bnp_tx_queue_ptr = NULL;
@@ -323,55 +323,6 @@ static const volatile BNP_process_list_t bnp_process_list[]=
  
 };
 
-
-
-void bnp_init()
-{
-  
-//   if(usb_rx_queue_ptr!=NULL)
-//  {
-//   for (unsigned int i = 0; i < (usb_rx_queue_ptr->queue_deep); i++)
-//    {
-//      if(((usb_rx_queue_ptr->queue_point + i)->data)!= NULL)
-//      {
-//        free((usb_rx_queue_ptr->queue_point + i)->data);
-//        (usb_rx_queue_ptr->queue_point + i)->data = NULL;
-//      }
-//    }
-//     free(usb_rx_queue_ptr);
-//     usb_rx_queue_ptr =NULL;
-//  }
-//  
-//  usb_rx_queue_ptr = malloc(sizeof(dyn_ring_queue_t));
-//  if(usb_rx_queue_ptr ==NULL)
-//  {
-//    //printf("malloc ble_msg_queue_ptr failure\r\n");
-//    return ;
-//  }
-//  usb_rx_queue_ptr->head            = 0;
-//  usb_rx_queue_ptr->tail            = 0;
-//  usb_rx_queue_ptr->queue_deep      = 20;
-//  usb_rx_queue_ptr->data_size       = 64;
-//  usb_rx_queue_ptr->queue_point     = NULL;
-//  
-//  
-//  bool ret = init_queue(usb_rx_queue_ptr);
-//  
-//  if(ret == false)return;
-  
-  
-  bnp_rx_queue_ptr = create_queue(5, sizeof(bnp_fragment_t));
-  if(bnp_rx_queue_ptr == NULL)
-  {
-    return;
-  }
-  
-  
-  bnp_information.is_connected = false;
-  bnp_information.transaction_id = NULL;
-  
-  bnp_set_bcmp_analyse_callback(bcmp_parse_func);
-}
 extern volatile RingQueue_t usb_rx_queue_ptr;
 void bnp_parse_task(void *p)
 {
@@ -476,6 +427,57 @@ extern void set_timer_task(unsigned char       timer_id,
 
 extern void phy_slip_init();
 
+void bnp_init()
+{
+  
+//   if(usb_rx_queue_ptr!=NULL)
+//  {
+//   for (unsigned int i = 0; i < (usb_rx_queue_ptr->queue_deep); i++)
+//    {
+//      if(((usb_rx_queue_ptr->queue_point + i)->data)!= NULL)
+//      {
+//        free((usb_rx_queue_ptr->queue_point + i)->data);
+//        (usb_rx_queue_ptr->queue_point + i)->data = NULL;
+//      }
+//    }
+//     free(usb_rx_queue_ptr);
+//     usb_rx_queue_ptr =NULL;
+//  }
+//  
+//  usb_rx_queue_ptr = malloc(sizeof(dyn_ring_queue_t));
+//  if(usb_rx_queue_ptr ==NULL)
+//  {
+//    //printf("malloc ble_msg_queue_ptr failure\r\n");
+//    return ;
+//  }
+//  usb_rx_queue_ptr->head            = 0;
+//  usb_rx_queue_ptr->tail            = 0;
+//  usb_rx_queue_ptr->queue_deep      = 20;
+//  usb_rx_queue_ptr->data_size       = 64;
+//  usb_rx_queue_ptr->queue_point     = NULL;
+//  
+//  
+//  bool ret = init_queue(usb_rx_queue_ptr);
+//  
+//  if(ret == false)return;
+  
+  
+  bnp_rx_queue_ptr = create_queue(5, sizeof(bnp_fragment_t));
+  if(bnp_rx_queue_ptr == NULL)
+  {
+    return;
+  }
+  
+  
+  bnp_information.is_connected = false;
+  bnp_information.transaction_id = NULL;
+  
+  bnp_set_bcmp_analyse_callback(bcmp_parse_func);
+  
+  set_timer_task(BNP_PARSE_TASK, TIME_BASE_10MS*5, true, bnp_parse_task, NULL);
+  
+}
+
 void protocol_init()
 {
   
@@ -484,10 +486,6 @@ void protocol_init()
   bnp_init();
   
   bcmp_init();
-  
-  set_timer_task(BNP_PARSE_TASK, TIME_BASE_500MS, true, bnp_parse_task, NULL);
-  
-  //set_timer_task(BCMP_PARSE_TASK, 6*TIME_BASE_500MS, true, bcmp_send_task, NULL);
   
   log_debug("protocol init has already been completed.");
   

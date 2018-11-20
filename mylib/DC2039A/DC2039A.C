@@ -1,41 +1,23 @@
 #include "DC2039A.h"
 
 
-#if defined(STM32L1XX_MD)
-
-#define SMBALERT_IN_PIN              PBin(14)
-#define U5NWP_OUT_PIN                PBout(8) 
-#define DVCC_OUT_PIN                 PBout(12) 
-#define DR_ADDRESS                  ((uint32_t)0x40012458) //ADC1 DR寄存器基地址
-
-#else
-
-#define SYSTEM_CLOCK 72000000
-#define DR_ADDRESS                  ((uint32_t)0x4001244C) //ADC1 DR寄存器基地址
-#define TP1_OUT_PIN                  PAout(2)   
-#define TP2_IN_PIN                   PAin(3)  
-#define SMBALERT_IN_PIN              PAin(4)
-#define U5NWP_OUT_PIN                PAout(5) 
-#define NEQ_OUT_PIN                  PAout(6) 
-#define DVCC_OUT_PIN                 PAout(6) 
-
-#endif
-
-
-
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 bool ltc4015_powered = false;
 bool No_VIN_Flag = false;
+static float charger_efficency = 0.925;
 
 __IO uint16_t ADCConvertedValue;     // ADC为12位模数转换器，只有ADCConvertedValue的低12位有效
 __IO LTC4015_charger_state_t charger_state;
 __IO LTC4015_charge_status_t charge_status;
 __IO LTC4015_system_status_t system_status;
+extern volatile bcmp_battery_info_brdcast_t g_bat_info;
 
 static void DC2039A_Config_Param(void);
 static void DC2039A_Run(void *);
+static void charger_measure_data_func(void *);
+static void charger_monitor_alert_func(void *);
 void DC2039A_Init(void);
 static void ADC_GPIO_Configuration(void);
 static uint16_t INTVCC_ADC_Read(void);
@@ -303,18 +285,24 @@ void DC2039A_Config_Param(void)
     memset((void*)&charger_state, 0x00, sizeof(LTC4015_charger_state_t));
     memset((void*)&charge_status, 0x00, sizeof(LTC4015_charge_status_t));
     memset((void*)&system_status, 0x00, sizeof(LTC4015_system_status_t));
+    
+    memset((void*)&g_bat_info, 0x00, sizeof(bcmp_battery_info_brdcast_t));//clear buff
+    
+    g_bat_info.battery_state    = ALERT_INFO_RESULT_NOTHING;
+    g_bat_info.alert_identifier = BAT_IDLE_SUSPEND;
 
     //Set min UVCL ;输入电压至少13V，才能开启充电功能
     LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(13)); // Initialize UVCL Lo Limit to 13V
     
-    //Set max VCHARGE_SETTING ；设置单节电池的满电电压值
+    //Set max VCHARGE_SETTING ；设置单节电池的满电电压值,是否是31，验证一下
+    //是一个目标值
+    //影响恒压充电
     LTC4015_write_register(chip, LTC4015_VCHARGE_SETTING_BF, LTC4015_VCHARGE_LIION(4.2)); //4.2v/cell
-    
-    
+       
     //Set max ICHARGE_TARGE ；设置充电电流的目标值
     LTC4015_write_register(chip, LTC4015_ICHARGE_TARGET_BF, LTC4015_ICHARGE(4.0));//4.0A
     
-     //set max input current  ；设置输入电流的最大值 
+     //set max input current  ；设置输入电流的最大值目标值 
     LTC4015_write_register(chip, LTC4015_IIN_LIMIT_SETTING_BF, LTC4015_IINLIM(5.0)); // 5.0A, Initialize IIN Limit to 5A
    
 //For Li-Ion batteries, if en_c_over_x_term=1 (0 by default), C/x charge termination occurs after the battery reaches the
@@ -370,52 +358,65 @@ void DC2039A_Config_Param(void)
      //设置最大充电时间为2小时：7200sec
      LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, LTC4015_MAX_CHARGE_TIME_BF_PRESET__4HOURS);//大容量的充电时间更长
      
-    //设置输入电压门限；10v
+    
+    
+     /**********设置用户关心的告警类型:以下都是有符号数************/
+     
+    //设置输入电压低门限；10v
     LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(10)); // Initialize VIN Lo Limit to 10V
     //开启输入电压门限低告警功能
     LTC4015_write_register(chip, LTC4015_EN_VIN_LO_ALERT_BF, true); // Initialize VIN Lo Limit Alert to On
+    
+    //VIN HI
+    LTC4015_write_register(chip, LTC4015_VIN_HI_ALERT_LIMIT, LTC4015_VIN_FORMAT(15)); // Initialize VIN Hi Limit to 15V
+    LTC4015_write_register(chip, LTC4015_EN_VIN_HI_ALERT_BF, true); // Initialize VIN Hi Limit Alert to On
+    
+    //需要根据电池类型做选择
+    //VBAT HI=> 22105*192.264uv = 4.25v
+    LTC4015_write_register(chip, LTC4015_VBAT_HI_ALERT_LIMIT, LTC4015_VBAT_LITHIUM_FORMAT(4.25)); // Initialize VBAT Hi Limit to 4.25V
+    LTC4015_write_register(chip, LTC4015_EN_VBAT_HI_ALERT_BF, true); // Initialize VBAT Hi Limit Alert to On    
+    //VBAT LO
+    LTC4015_write_register(chip, LTC4015_VBAT_LO_ALERT_LIMIT, LTC4015_VBAT_LITHIUM_FORMAT(3.5)); // Initialize VBAT Lo Limit to 3.5V
+    LTC4015_write_register(chip, LTC4015_EN_VBAT_LO_ALERT_BF, true); // Initialize VBAT Lo Limit Alert to On
+    
+    
+    
+    //VSYS HI
+    LTC4015_write_register(chip, LTC4015_VSYS_HI_ALERT_LIMIT, LTC4015_VSYS_FORMAT(24)); // Initialize VSYS Hi Limit to 24V
+    LTC4015_write_register(chip, LTC4015_EN_VSYS_HI_ALERT_BF, true); // Initialize VSYS Hi Limit Alert to On
+    //VSYS LO
+    LTC4015_write_register(chip, LTC4015_VSYS_LO_ALERT_LIMIT, LTC4015_VSYS_FORMAT(10)); // Initialize VSYS Lo Limit to 10V
+    LTC4015_write_register(chip, LTC4015_EN_VSYS_LO_ALERT_BF, true); // Initialize VSYS Lo Limit Alert to On
+    
+    
+    //IIN HI
+    LTC4015_write_register(chip, LTC4015_IIN_HI_ALERT_LIMIT, LTC4015_IIN_FORMAT(10)); // Initialize IIN Hi Limit to 10A
+    LTC4015_write_register(chip, LTC4015_EN_IIN_HI_ALERT_BF, true); // Initialize IIN Hi Limit Alert to On
+    
+    //IBAT LO,赋值时也可以看着是放电电流，跟ISYS（评估电流）有待观察。
+    LTC4015_write_register(chip, LTC4015_IBAT_LO_ALERT_LIMIT, LTC4015_IBAT_FORMAT(1)); // Initialize IBAT Lo Limit to ±1A
+    LTC4015_write_register(chip, LTC4015_EN_IBAT_LO_ALERT_BF, true); // Initialize IBAT Lo Limit Alert to On
+    
+    
+    //DIE HI
+    LTC4015_write_register(chip, LTC4015_DIE_TEMP_HI_ALERT_LIMIT, LTC4015_DIE_TEMP_FORMAT(60)); // Initialize DIE Hi Limit to 60℃
+    LTC4015_write_register(chip, LTC4015_EN_DIE_TEMP_HI_ALERT_BF, true); // Initialize DIE Hi Limit Alert to On
+    
+     
     
     LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false);
     
     return;
 }
 
-void DC2039A_Run(void *p)
+
+static void charger_monitor_alert_func(void *p)
 {
     uint16_t   value = 0;
     uint8_t    ara_address = 0; 
     uint8_t    read_limit = 100;
     int        result = 0;
-    float input_power_vcc = 0.0;
-    float vsys_vcc = 0.0;
-    float input_power_current = 0.0;
-    float bat_charge_current = 0.0;
-    float actual_charge_current = 0.0;
-    float batsens_cellcount_vcc = 0.0;
-    float bat_filt_vcc = 0.0;
-    float die_temp = 0.0;
-    float Rntc_value = 0.0;
-    float current_battery_capacity = 0.0;
-    int   charging_times= 0;//sec
-    
-    static bool first_termination_flag= false;
-    bool ltc4015_powered_last = ltc4015_powered;
-
-    // Read the INTVCC A/D value to know if part cycled power
-    value = INTVCC_ADC_Read();
-    ltc4015_powered = (value > 2500);//v？>2.5v
-    
-    // If power is cycled re-init.
-    if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Param();
-    
-    if(ltc4015_powered == false)
-    {
-      log_warning("LTC4015 is poweroff!");
-      //first_termination_flag = false;
-      return;
-    }
-    
-        
+       
     //Read charger state
     LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state);
     
@@ -439,12 +440,13 @@ void DC2039A_Run(void *p)
       int ms_delay_count =0;
       do
       {
-        delay_ms(200);
+        delay_ms(20);
         ms_delay_count++;
       }
       while(ms_delay_count<5);
       if(!SMBALERT_IN_PIN)
       {
+        g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
         do
         {
             // Clear the SMBAlert and get the address responding to the ARA.
@@ -467,23 +469,25 @@ void DC2039A_Run(void *p)
                   log_warning("QCOUNT_LO_ALERT(no vin): true! reset charge and  charging again."); 
                    //关闭库伦低告警功能
                   LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
-                   //使能库伦高告警功能
-                  //LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
                   
                   //allow the battery to charge again.
                   LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
                                                       
                 }
-                if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
-                {
-                  LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).
-                }
+//                if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
+//                {
+//                  LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).
+//                }
               }
             
              read_limit--;// Don't allow to read forever,100 times at most.
              
           } while(!SMBALERT_IN_PIN && !read_limit);    
        }
+      else
+      {
+        g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
+      }
     }
     else//有输入电源
     {
@@ -491,44 +495,24 @@ void DC2039A_Run(void *p)
         No_VIN_Flag = false;
         
         if((charger_state.c_over_x_term == true) || (charger_state.timer_term == true)) 
-           //&&(first_termination_flag == false))//第一次充满
         {
-          //if(first_termination_flag == false)
-            {
                      
-                 LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49153);//overwritten to 49152:100%
-                  //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-                 first_termination_flag =true;
-                 
-                           //49152
-                 LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49152);
-                 
-                 //使能库伦高告警功能
-                 LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
-                 log_warning("termination_flag: true, reset qcount to 49153.");
-          }
-//          else
-//          {
-//            log_warning("termination_flag: true(again!).");
-//          }
+           LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 49153);//overwritten to 49152:100%
+            //LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
+           //first_termination_flag =true;
+           
+                     //49152
+           LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49152);
+           
+           //使能库伦高告警功能
+           LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+           log_warning("termination_flag: true, reset qcount to 49153.");
+
         }
-        
-        if(charger_state.max_charge_time_fault == 1)
-        {
-          log_warning("max_charge_time_fault: true.");
-          //clear fault
-          LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, false);
-          //reset max_charge_time
-          LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, LTC4015_MAX_CHARGE_TIME_BF_PRESET__4HOURS);
-        }
-        
-         //Read charge time
-        LTC4015_read_register(chip, LTC4015_MAX_CHARGE_TIMER_BF, &value);
-        charging_times = value;//sec
-        log_info("charging time: %d sec.", charging_times);
-        
+             
         if(!SMBALERT_IN_PIN)//有告警
         {
+            g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
             read_limit = 100;
             do
             {              
@@ -565,16 +549,16 @@ void DC2039A_Run(void *p)
                        //关闭库伦低告警功能
                       LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
                        //使能库伦高告警功能
-                      //LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+                      LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
                       
                       //allow the battery to charge again.
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
                                           
                     }
-                    if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
-                    {
-                      LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).
-                    }
+//                    if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
+//                    {
+//                      LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).
+//                    }
                     //else
 //                    {
 //                      //need to clear the Alert                   
@@ -583,79 +567,24 @@ void DC2039A_Run(void *p)
                 read_limit--; // Don't allow to read forever,100 times at most.
 
             } while(!SMBALERT_IN_PIN && !read_limit);       
-        }  
+        } 
+        else
+        {
+          g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
+        }
         
-    }  
-    
-    //Read Qcount
-    LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-    current_battery_capacity = ((float)(value-16384)/32768.0)*100;//%
-    log_info("bat capacity: %d, %f %%. ", value, current_battery_capacity);
-    
-      
-     //Read NTC_RATIO
-    //This algorithm is suitable for NTCS0402E3103FLT
-    LTC4015_read_register(chip, LTC4015_NTC_RATIO_BF, &value);
-    Rntc_value = ((float)(10000*value))/(21845.0-value);
-    log_info("Rntc: %f R. ", Rntc_value);
-    
-    //Read actual charge current
-    LTC4015_read_register(chip, LTC4015_ICHARGE_DAC_BF, &value);
-    actual_charge_current = (value+1)/4;//A
-    log_info("max charge current: %f A . ", actual_charge_current);
-    
-    if(No_VIN_Flag == false)
-    {
-      //Read VIN
-      LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
-      input_power_vcc = ((float)value)*1.648/1000;//v
-      log_info("VIN: %f V . ", input_power_vcc);
-      
-       //Read IIN
-      LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
-      input_power_current = ((float)value)*((1.46487/3)*0.001);//v
-      log_info("IIN: %f A . ", input_power_current);
-      
-      if(actual_charge_current != 0)
-      {
-        //Read Bat charge current
-        LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
-        bat_charge_current = ((float)value)*((1.46487/4)*0.001);//A
-        log_info("IBAT: %f A . ", bat_charge_current);
-      }
+        
+        if(charger_state.max_charge_time_fault == 1)
+        {
+          log_warning("max_charge_time_fault: true.");
+          //clear fault
+          LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, false);
+          //reset max_charge_time
+          LTC4015_write_register(chip, LTC4015_MAX_CHARGE_TIME_BF, LTC4015_MAX_CHARGE_TIME_BF_PRESET__4HOURS);
+        }
+        
     }
-    
-    //Read VSYS
-    LTC4015_read_register(chip, LTC4015_VSYS_BF, &value);
-    vsys_vcc = ((float)value)*1.648/1000;//v
-    log_info("VSYS: %f V . ", vsys_vcc);
-    
-    
-  //When a Li-Ion battery charge cycle begins, the LTC4015
-  //first determines if the battery is deeply discharged. If
-  //the battery voltage is below 2.85V per cell (VBAT_FILT
-  //below 14822) and BATSENS pin is above 2.6V then the
-  //LTC4015 begins charging by applying a preconditioning
-  //charge equal to ICHARGE_TARGET/10 (rounded down
-  //to the next LSB), and reporting precharge = 1. When the
-  //battery voltage exceeds 2.9V per cell (VBAT_FILT above
-  //15082), the LTC4015 proceeds to the constant-current/
-  //constant-voltage charging phase (cc_cv_charge = 1).
-    
-    //Read VBATSENSE/cellcount：特指batsens pin
-    LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
-    batsens_cellcount_vcc = ((float)value*192.264/1000000);
-    log_info("VBAT/CELL: %f V . ", batsens_cellcount_vcc);
-    
-    //Read battery voltage of filtered(per cell)
-    LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
-    bat_filt_vcc = ((float)value*192.264/1000000);
-    log_info("VBAT_FILT/CELL: %f V . ", bat_filt_vcc);
-    
-    //read die temperature
-    LTC4015_read_register(chip, LTC4015_DIE_TEMP_BF, &value);
-    die_temp = (float)(value-12010)/45.6;//℃
-    log_info("DIE_TEMP: %f T. ", die_temp);
+         
 
     LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
     if(charger_state.cc_cv_charge == 1)
@@ -672,6 +601,8 @@ void DC2039A_Run(void *p)
       {
         log_warning("the IIN or VIN is controled by setting");
       }
+      
+      g_bat_info.battery_state = BAT_CHARGING;
     }
     else if(charger_state.c_over_x_term == 1)
     {
@@ -679,7 +610,15 @@ void DC2039A_Run(void *p)
     }
     else if(charger_state.charger_suspended == 1)
     {
-        log_warning("Charger is in charger suspended state!");
+      log_warning("Charger is in charger suspended state!");
+      if(g_bat_info.ISYS >= 100)//100ma
+      {
+        g_bat_info.battery_state = BAT_DISCHARGING;
+      }
+      else
+      {
+        g_bat_info.battery_state = BAT_IDLE_SUSPEND;
+      }
     }
     else if(charger_state.bat_missing_fault == 1 || charger_state.bat_short_fault == 1)
     {
@@ -694,6 +633,165 @@ void DC2039A_Run(void *p)
     
     log_info("\r\n");
     return;
+  
+}
+
+
+
+static void charger_measure_data_func(void *p)
+{
+  
+  
+    uint16_t   value = 0;
+
+    
+    float input_power_vcc = 0.0;
+    float vsys_vcc = 0.0;
+    float input_power_current = 0.0;
+    float actual_bat_current = 0.0;//实际的电池电流（正值是充电电流，负值是放电电流）
+    float max_bat_charge_current = 0.0;//最大的充电电流
+    float batsens_cellcount_vcc = 0.0;//电池电压
+    float bat_filt_vcc = 0.0;//过滤后的电池电压
+    float bat_charge_vcc = 0.0;//电池的充电电压
+    float die_temp = 0.0;
+    float Rntc_value = 0.0;
+    float current_battery_capacity = 0.0;
+    int   charging_times= 0;//sec
+  
+    
+    //Read charge time
+    LTC4015_read_register(chip, LTC4015_MAX_CHARGE_TIMER_BF, &value);
+    charging_times = value;//sec
+    log_info("charging time: %d sec.", charging_times);
+    
+   //Read Qcount
+    LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
+    current_battery_capacity = ((float)(value-16384)/32768.0)*100;//%
+    g_bat_info.bat_currently_capacity = (unsigned int)(current_battery_capacity * 1000);
+    log_info("bat capacity: %d, %f %%. ", value, current_battery_capacity);
+    
+      
+     //Read NTC_RATIO
+    //This algorithm is suitable for NTCS0402E3103FLT
+    LTC4015_read_register(chip, LTC4015_NTC_RATIO_BF, &value);
+    Rntc_value = ((float)(10000*value))/(21845.0-value);
+    g_bat_info.NTC = (unsigned int)(Rntc_value);//需要查表
+    log_info("Rntc: %f R. ", Rntc_value);
+    
+    //Read max bat charge current
+    LTC4015_read_register(chip, LTC4015_ICHARGE_DAC_BF, &value);
+    max_bat_charge_current = (value+1)/4;//A
+    log_info("max charge current: %f A . ", max_bat_charge_current);
+    
+    if(No_VIN_Flag == false)
+    {
+      //Read VIN
+      LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
+      input_power_vcc = ((float)value)*1.648/1000;//v
+      g_bat_info.VIN = (signed short)(input_power_vcc*1000);
+      log_info("VIN: %f V . ", input_power_vcc);
+      
+       //Read IIN
+      LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
+      input_power_current = ((float)value)*((1.46487/3)*0.001);//A
+      g_bat_info.IIN = (signed short)(input_power_current*1000);     
+      log_info("IIN: %f A . ", input_power_current);
+      
+      if(max_bat_charge_current != 0)
+      {
+        //Read Bat charge current
+        LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
+        actual_bat_current = ((float)((signed short)value)*((1.46487/4)*0.001));//A     
+        //有方向的
+        g_bat_info.ICHARGER = (signed short)(actual_bat_current*1000);
+        log_info("IBAT: %f A . ", actual_bat_current);
+      }
+     
+    }
+    
+    //Read VSYS
+    LTC4015_read_register(chip, LTC4015_VSYS_BF, &value);
+    vsys_vcc = ((float)value)*1.648/1000;//v
+    g_bat_info.VSYS = (signed short)(vsys_vcc*1000);
+    log_info("VSYS: %f V . ", vsys_vcc);
+    
+     
+  //When a Li-Ion battery charge cycle begins, the LTC4015
+  //first determines if the battery is deeply discharged. If
+  //the battery voltage is below 2.85V per cell (VBAT_FILT
+  //below 14822) and BATSENS pin is above 2.6V then the
+  //LTC4015 begins charging by applying a preconditioning
+  //charge equal to ICHARGE_TARGET/10 (rounded down
+  //to the next LSB), and reporting precharge = 1. When the
+  //battery voltage exceeds 2.9V per cell (VBAT_FILT above
+  //15082), the LTC4015 proceeds to the constant-current/
+  //constant-voltage charging phase (cc_cv_charge = 1).
+    
+     //read cell count as set by CELLS pins 
+    int  bat_cell_count= 0;
+    LTC4015_read_register(chip, LTC4015_CELL_COUNT_PINS_BF, &value);    
+    bat_cell_count = LTC4015_CELL_COUNT_PINS_BF;
+    log_info("BAT CELL: %d ", bat_cell_count);
+    
+    //Read VBATSENSE/cellcount：特指batsens pin
+    LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
+    batsens_cellcount_vcc = ((float)value*192.264/1000000);
+    log_info("VBAT/CELL: %f V . ", batsens_cellcount_vcc);
+    
+    //Read battery voltage of filtered(per cell)
+    LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
+    bat_filt_vcc = ((float)value*192.264/1000000);
+    log_info("VBAT_FILT/CELL: %f V . ", bat_filt_vcc); 
+
+    //Read charge vcc of bat
+    //初始化设置的值。根据电池化学类型、充电器状态、温度、的不同而不同。
+    LTC4015_read_register(chip, LTC4015_VCHARGE_DAC_BF, &value);
+    bat_charge_vcc = ((float)value/80.0+3.8125);
+    g_bat_info.VCHARGER = (signed short)bat_charge_vcc * 1000 * bat_cell_count;//mv
+    log_info("BAT_CHARGE_VCC/CELL: %f V . ", bat_charge_vcc); 
+    
+    //calculate ISYS(estimated)
+    g_bat_info.ISYS = 
+     (signed short) (charger_efficency*((input_power_vcc*input_power_current) - ((bat_filt_vcc*bat_cell_count*actual_bat_current)/charger_efficency)));
+    g_bat_info.ISYS *= 1000;//放大：ma
+        
+    //read die temperature
+    LTC4015_read_register(chip, LTC4015_VCHARGE_DAC_BF, &value);
+    die_temp = (float)(value-12010)/45.6;//℃
+    g_bat_info.DIE = (signed short)die_temp*100;
+    log_info("DIE_TEMP: %f T. ", die_temp);
+  
+
+}
+
+
+void DC2039A_Run(void *p)
+{
+    uint16_t   value = 0;
+    
+    //static bool first_termination_flag= false;
+    bool ltc4015_powered_last = ltc4015_powered;
+
+    // Read the INTVCC A/D value to know if part cycled power
+    value = INTVCC_ADC_Read();
+    ltc4015_powered = (value > 2500);//v？>2.5v
+    
+    // If power is cycled re-init.
+    if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Param();
+    
+    if(ltc4015_powered == false)//充电器未工作
+    {
+      log_warning("LTC4015 is poweroff!");
+      g_bat_info.battery_state = BAT_ABNORMAL;
+      return;
+    }
+    else  
+    {     
+      charger_monitor_alert_func(NULL);//1.监控告警信息
+      
+      charger_measure_data_func(NULL);//2.根据状态，测量数据
+    
+    }
 }
 
 

@@ -53,8 +53,8 @@ Payload is Battery information
   {
     signed short              VIN;//输入电压，单位mv
     signed short              IIN;//输入电流，单位ma
-    signed short              VBAT;//单节电池电压，单位mv
-    signed short              IBAT;//充电电流，单位ma
+    signed short              VCHARGER;//电池充电电压，单位mv
+    signed short              ICHARGER;//电池充电电流，单位ma
     signed short              VSYS;//负载端电压，单位mv
     signed short              ISYS;//负载输出电流（评估值），单位ma
 
@@ -71,7 +71,7 @@ Payload is Battery information
   typedef struct
   {
     unsigned char                       result;
-    bcmp_battery_info_brdcast_t         detailed_info;        
+    bcmp_battery_info_brdcast_t          detailed_info;        
   
   } bcmp_battery_info_reply_t;
    
@@ -160,6 +160,15 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
     LIMIT_ALERT                                  = 0X02,
      
   }bcmp_alert_type_enum;
+
+  typedef enum
+  {
+    BAT_CHARGING                                     = 0X00,
+    BAT_DISCHARGING                                  = 0X01,
+    BAT_IDLE_SUSPEND                                 = 0X02,
+    BAT_ABNORMAL                                     = 0X03,
+    
+  }bcmp_battery_state_enum;
   
   
      typedef struct
@@ -186,7 +195,7 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
   {
     unsigned char                       result;
     unsigned char                       number;
-    bcmp_alert_detailed_info_t          alert_detailed_info[15];  //15>=number      
+    bcmp_alert_detailed_info_t           alert_detailed_info[15];  //15>=number      
   
   } bcmp_alert_info_reply_t;
   

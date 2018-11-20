@@ -3344,7 +3344,7 @@ Generated on: 2016-01-08
  * |:-----------------------:|:---:|:------------------:|:------------------:|:----------------:|:----------------:|:---------------:|:---------------:|:----------------:|:----------------:|:---------------:|:----------------:|:--------------------:|:---------------:|:---------------------:|:---------------------:|
  * | MEAS_SYS_VALID_ALERT_BF | n/a | QCOUNT_LO_ALERT_BF | QCOUNT_HI_ALERT_BF | VBAT_LO_ALERT_BF | VBAT_HI_ALERT_BF | VIN_LO_ALERT_BF | VIN_HI_ALERT_BF | VSYS_LO_ALERT_BF | VSYS_HI_ALERT_BF | IIN_HI_ALERT_BF | IBAT_LO_ALERT_BF | DIE_TEMP_HI_ALERT_BF | BSR_HI_ALERT_BF | NTC_RATIO_HI_ALERT_BF | NTC_RATIO_LO_ALERT_BF |
  *
- * Limit alert register.<br />Individual bits are enabled by EN_LIMIT_ALERTS.<br />Writing 1 to any bit clears that alert.<br />Once set, alert bits remain high until cleared or disabled.
+ * Limit alert register.<br />Individual bits are enabled by EN_LIMIT_ALERTS.<br />Writing 0 to any bit clears that alert.<br />Once set, alert bits remain high until cleared or disabled.
  *   - CommandCode: 54
  *   - Contains Bit Fields:
  *     + @ref LTC4015_MEAS_SYS_VALID_ALERT_BF "MEAS_SYS_VALID_ALERT_BF" : Indicates that measurement system results have become valid.

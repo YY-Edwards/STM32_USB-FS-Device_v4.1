@@ -156,7 +156,7 @@
 
 #define SLIP_ASSEMBLE_TASK              1//send or receive
 #define BNP_PARSE_TASK                  2//recv and parse
-#define BCMP_PARSE_TASK                 3//recv and parse
+#define BCMP_BRDCAST_TASK               3//broadcast in cycle:3s
 
 #define BATTERY_MONITOR_TASK            4//measure
 
