@@ -260,13 +260,10 @@ void bnp_data_msg_func(bnp_fragment_t *bnp_p)		/*-0x4-BNP_DATA_MSG*/
    bnp_fragment_t bnp_tx_frame;
   
    bnp_tx_frame.bnp_header.start_flag = BNP_HEADER_FLAG;
-   bnp_tx_frame.bnp_header.opcode = BNP_C_S_DISCONNECT_REPLY;
+   bnp_tx_frame.bnp_header.opcode = BNP_CLIENT_CONNECT_REPLY;
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
-   if(bnp_information.is_connected)
-    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = SUCCESS_NO_PROBLEM;
-   else
-    bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = PRO_UNCONNECTED;
+   bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = PRO_UNCONNECTED;
    
    bnp_tx_frame.bnp_header.length = 1;
    
@@ -365,7 +362,6 @@ void bnp_parse_task(void *p)
           
         if(
            (ptr->bnp_fragment.bnp_header.start_flag == BNP_HEADER_FLAG)   //0x7e
-           //&& (ptr->bnp_fragment.bnp_header.tx_number > 0x8fff)
            && (ptr->u8[bnp_end_index] == BNP_END_FLAG)                    //0x3e
            && (checksum_value == rx_checksum)     //check bnp
            )

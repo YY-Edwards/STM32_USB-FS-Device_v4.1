@@ -300,9 +300,9 @@ void bcmp_init(void)
 {
    memset((void*)&g_bat_info, 0x00, sizeof(bcmp_battery_info_brdcast_t));//clear buff
    
-   g_bat_info.battery_state    = ALERT_INFO_RESULT_NOTHING;
-   g_bat_info.alert_identifier = BAT_IDLE_SUSPEND;
+   g_bat_info.battery_state    = BAT_IDLE_SUSPEND;
+   g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
    
-   //set_timer_task(BCMP_BRDCAST_TASK, 20*TIME_BASE_500MS, true, bcmp_battery_info_broadcast_task, NULL);
+   set_timer_task(BCMP_BRDCAST_TASK, 20*TIME_BASE_500MS, true, bcmp_battery_info_broadcast_task, NULL);
 
 }

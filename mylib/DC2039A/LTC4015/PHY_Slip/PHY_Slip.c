@@ -46,7 +46,7 @@ void phy_slip_assemble_task(void *p)
   bool ret = take_from_queue(usb_rx_queue_ptr, &rx_usb_buf[0], &recv_len, true);
   if(ret == true)//recv and assemble
   {
-    log_debug("usb rx slip len: [%d] ", recv_len);
+    //log_debug("usb rx slip len: [%d] ", recv_len);
     
     static SLIP_parser_state_enum m_state = SLIP_FIND_HEADER;
     static int slip_recv_msg_idx = 0;
@@ -95,7 +95,7 @@ void phy_slip_assemble_task(void *p)
               m_state = SLIP_FIND_HEADER;
               bnp_package_len = slip_recv_msg_idx;
               
-              log_debug("slip rx okay, slip_len: [%d], bnp_len:[%d]", byte_count, slip_recv_msg_idx);
+              //log_debug("slip rx okay, slip_len: [%d], bnp_len:[%d]", byte_count, slip_recv_msg_idx);
               
               byte_count = 0;//reset 
               
@@ -138,8 +138,7 @@ void phy_slip_assemble_task(void *p)
               memset(temp_buf, 0x00, sizeof(temp_buf));//clear buf
               bool ret = take_from_queue(bnp_tx_queue_ptr, (void*)&temp_buf[0], &recv_len, true);
               if(ret == true)//assemble
-              {               
-                  log_debug("bnp send a msg.");
+              {                             
                   uint16_t index =0;
                   
                   idx =0;
@@ -176,6 +175,8 @@ void phy_slip_assemble_task(void *p)
       case CUSTOM_WAIT_FOR_TX:
           {         
             unsigned short remained_bytes = idx;
+            
+            log_debug("bnp send a msg:[0x%2x]", ptr->data_bnp_opcode);
             do
             {
               if(remained_bytes > VIRTUAL_COM_PORT_DATA_SIZE) 
@@ -226,7 +227,7 @@ void phy_slip_assemble_task(void *p)
               {
                 timeout_for_once = false;
                 resend_count++;
-                log_warning("device timeout :[%d].", resend_count);   
+                log_warning("device timeout :[%d]. resend bnp", resend_count);   
                 custom_send_state = CUSTOM_WAIT_FOR_TX;//resend bnp
               }          
             }

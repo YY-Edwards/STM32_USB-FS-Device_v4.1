@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1340953715
+Checksum=-299637126
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -59,8 +59,6 @@ Fmt7=bnp_header_t-opcode	4	0
 Fmt8=bnp_header_t-start_flag	4	0
 Fmt9=bnp_header_t-tx_number	4	0
 Fmt10=dyn_mydata_t-len	4	0
-Fmt11=struct <Unnamed 41>-data_bnp_opcode	4	0
-Fmt12=struct <Unnamed 41>-is_data_need_answer	4	0
 [array_types]
 Fmt0=uint8_t[1]	4	0
 Fmt1=uint8_t[200]	4	0
@@ -120,8 +118,7 @@ Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.452.1" 0 0 1 "" 0 "" 0
 Bp2=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.107.7" 0 0 1 "" 0 "" 0
 Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.32.7" 0 0 1 "" 0 "" 0
 Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.423.3" 0 0 1 "" 0 "" 0
-Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\LTC4015\PHY_Slip\PHY_Slip.c}.218.13" 0 0 1 "" 0 "" 0
-Count=6
+Count=5
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
