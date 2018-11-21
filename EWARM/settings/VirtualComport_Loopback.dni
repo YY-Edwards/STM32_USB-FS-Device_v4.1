@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=611645920
+Checksum=-259318004
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -117,9 +117,9 @@ Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\SMBus\SMBus.c}.218.11" 0 0 1 "
 Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.452.1" 0 0 1 "" 0 "" 0
 Bp2=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\main.c}.107.7" 0 0 1 "" 0 "" 0
 Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\hw_config.c}.423.3" 0 0 1 "" 0 "" 0
-Bp4=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\DC2039A.C}.457.17" 0 0 1 "" 0 "" 0
-Bp5=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\DC2039A.C}.531.21" 0 0 1 "" 0 "" 0
-Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.32.7" 0 0 1 "" 0 "" 0
+Bp4=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\DC2039A.C}.535.21" 0 0 1 "" 0 "" 0
+Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\myqueue.c}.32.7" 0 0 1 "" 0 "" 0
+Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\mylib\DC2039A\LTC4015\BCMP\BCMP.c}.189.11" 0 0 1 "" 0 "" 0
 Count=7
 [Log file]
 LoggingEnabled=_ 0

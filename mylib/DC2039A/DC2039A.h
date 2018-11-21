@@ -15,10 +15,11 @@ extern "C" {
 #include <string.h>
 #include "task_timer.h"
 #include "BCMP.h"  
+#include "math.h"  
  
 //将浮点数x四舍五入为int16_t
 #define ROUND_TO_SHORT(x)   ((signed short)(x)+0.5)>(x)? ((signed short)(x)):((signed short)(x)+1)  
-#define ROUND_TO_INT(x)   ((signed int)(x)+0.5)>(x)? ((signed int)(x)):((signed int)(x)+1) 
+#define ROUND_TO_INT(x)   ((signed int)(x)+0.5)>(x)? ((signed int)(x)):((signed int)(x)+1)  
   
 #if defined(STM32L1XX_MD)
 

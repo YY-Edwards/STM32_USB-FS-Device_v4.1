@@ -6,7 +6,11 @@
 /* Private variables ---------------------------------------------------------*/
 bool ltc4015_powered = false;
 bool No_VIN_Flag = false;
-static double charger_efficency = 0.925;
+const double charger_efficency = 0.925;
+const double Rp = 10;//kΩ
+const double T2 = (273.15+25.0);//
+const double Bx = 3380;//kΩ,NCP18XH103F0SRB
+const double Ka = 273.15;//
 
 __IO uint16_t ADCConvertedValue;     // ADC为12位模数转换器，只有ADCConvertedValue的低12位有效
 __IO LTC4015_charger_state_t charger_state;
@@ -687,10 +691,15 @@ static void charger_measure_data_func(void *p)
       
      //Read NTC_RATIO
     //This algorithm is suitable for NTCS0402E3103FLT
+    double ntc_temp =0.0;
     LTC4015_read_register(chip, LTC4015_NTC_RATIO_BF, &value);
     Rntc_value = ((double)(10000*value))/(21845.0-value);
-    g_bat_info.NTC = ROUND_TO_SHORT(Rntc_value);//需要查表
-    log_info("Rntc: %f R. ", Rntc_value);
+    
+    //函数 log(x) 表示是以e为底的自然对数，即 ln(x)
+    ntc_temp = (1/(log(Rntc_value/1000/Rp)/Bx + (1/T2)))-273.15+0.5;
+    
+    g_bat_info.NTC = ROUND_TO_SHORT(ntc_temp*100);
+    log_info("Tntc: %f T.", ntc_temp);
     
     //Read max bat charge current
     LTC4015_read_register(chip, LTC4015_ICHARGE_DAC_BF, &value);

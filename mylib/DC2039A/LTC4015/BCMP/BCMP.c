@@ -100,7 +100,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
           ptr->alert_detailed_info[alert_count].id          = VIN_LO_ALERT_LIMIT; 
 
           LTC4015_read_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, &limit);   
-          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.648);
+          ptr->alert_detailed_info[alert_count].value       = ROUND_TO_SHORT(((double)limit)*1.648);
           alert_count++;
           value = (~LTC4015_VIN_LO_ALERT_BF_MASK)&value;
         }           
@@ -111,7 +111,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
           ptr->alert_detailed_info[alert_count].id          = VIN_HI_ALERT_LIMIT; 
 
           LTC4015_read_register(chip, LTC4015_VIN_HI_ALERT_LIMIT, &limit);   
-          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.648);
+          ptr->alert_detailed_info[alert_count].value       = ROUND_TO_SHORT(((double)limit)*1.648);
           alert_count++;    
           value = (~LTC4015_VIN_HI_ALERT_BF_MASK)&value;
         }
@@ -122,7 +122,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
           ptr->alert_detailed_info[alert_count].id          = VBAT_HI_ALERT_LIMIT; 
 
           LTC4015_read_register(chip, LTC4015_VBAT_HI_ALERT_LIMIT, &limit);   
-          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*192.264*1000);
+          ptr->alert_detailed_info[alert_count].value       = ROUND_TO_SHORT(((double)limit)*192.264*1000);
 
           alert_count++; 
           value = (~LTC4015_VBAT_HI_ALERT_BF_MASK)&value;
@@ -134,7 +134,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
           ptr->alert_detailed_info[alert_count].id          = VBAT_LO_ALERT_LIMIT; 
 
           LTC4015_read_register(chip, LTC4015_VBAT_LO_ALERT_LIMIT, &limit);   
-          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*192.264*1000);
+          ptr->alert_detailed_info[alert_count].value       = ROUND_TO_SHORT(((double)limit)*192.264*1000);
 
 
           alert_count++; 
@@ -148,7 +148,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
           ptr->alert_detailed_info[alert_count].id          = VSYS_LO_ALERT_LIMIT; 
 
           LTC4015_read_register(chip, LTC4015_VSYS_LO_ALERT_LIMIT, &limit);   
-          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.648);
+          ptr->alert_detailed_info[alert_count].value       = ROUND_TO_SHORT(((double)limit)*1.648);
 
 
           alert_count++; 
@@ -162,7 +162,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
           ptr->alert_detailed_info[alert_count].id          = VSYS_HI_ALERT_LIMIT; 
 
           LTC4015_read_register(chip, LTC4015_VSYS_HI_ALERT_LIMIT, &limit);   
-          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.648);
+          ptr->alert_detailed_info[alert_count].value       = ROUND_TO_SHORT(((double)limit)*1.648);
 
 
           alert_count++; 
@@ -177,7 +177,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
           ptr->alert_detailed_info[alert_count].id          = IIN_HI_ALERT_LIMIT; 
 
           LTC4015_read_register(chip, LTC4015_IIN_HI_ALERT_LIMIT, &limit);   
-          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.46487/4);
+          ptr->alert_detailed_info[alert_count].value       = ROUND_TO_SHORT(((double)limit)*1.46487/4);
 
           alert_count++; 
           value = (~LTC4015_IIN_HI_ALERT_BF_MASK)&value;
@@ -190,7 +190,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
           ptr->alert_detailed_info[alert_count].id          = IBAT_LO_ALERT_LIMIT; 
 
           LTC4015_read_register(chip, LTC4015_IBAT_LO_ALERT_LIMIT, &limit);   
-          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.46487/4);
+          ptr->alert_detailed_info[alert_count].value       = ROUND_TO_SHORT(((double)((signed short)limit))*1.46487/4);
 
 
           alert_count++; 
