@@ -288,8 +288,8 @@ void DC2039A_Config_Param(void)
     
     memset((void*)&g_bat_info, 0x00, sizeof(bcmp_battery_info_brdcast_t));//clear buff
     
-    g_bat_info.battery_state    = ALERT_INFO_RESULT_NOTHING;
-    g_bat_info.alert_identifier = BAT_IDLE_SUSPEND;
+    g_bat_info.battery_state    = BAT_IDLE_SUSPEND;
+    g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
 
     //Set min UVCL ;输入电压至少13V，才能开启充电功能
     LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(13)); // Initialize UVCL Lo Limit to 13V
@@ -414,7 +414,7 @@ static void charger_monitor_alert_func(void *p)
 {
     uint16_t   value = 0;
     uint8_t    ara_address = 0; 
-    uint8_t    read_limit = 100;
+    uint8_t    read_limit = 10;
     int        result = 0;
        
     //Read charger state
@@ -432,8 +432,7 @@ static void charger_monitor_alert_func(void *p)
       No_VIN_Flag = true;
       //系统有12ms的预热时间，当测量结果有效时，会有提示，通过nSMBALERT   
       //Enable measurement valid alert；使能测量有效提示
-      LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, true);
-      
+      LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, true);   
       //Enable measurement on；强制打开测量功能
       LTC4015_write_register(chip, LTC4015_FORCE_MEAS_SYS_ON_BF, true);
       
@@ -445,8 +444,7 @@ static void charger_monitor_alert_func(void *p)
       }
       while(ms_delay_count<5);
       if(!SMBALERT_IN_PIN)
-      {
-        g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
+      {      
         do
         {
             // Clear the SMBAlert and get the address responding to the ARA.
@@ -464,6 +462,7 @@ static void charger_monitor_alert_func(void *p)
                   LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, false); 
                   LTC4015_write_register(chip, LTC4015_FORCE_MEAS_SYS_ON_BF, false);
                 }
+                
                 if((LTC4015_QCOUNT_LO_ALERT_BF_MASK & value) !=0)//库伦低告警
                 {  
                   log_warning("QCOUNT_LO_ALERT(no vin): true! reset charge and  charging again."); 
@@ -474,20 +473,12 @@ static void charger_monitor_alert_func(void *p)
                   LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
                                                       
                 }
-//                if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
-//                {
-//                  LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).
-//                }
               }
             
              read_limit--;// Don't allow to read forever,100 times at most.
              
           } while(!SMBALERT_IN_PIN && !read_limit);    
        }
-      else
-      {
-        g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
-      }
     }
     else//有输入电源
     {
@@ -512,7 +503,6 @@ static void charger_monitor_alert_func(void *p)
              
         if(!SMBALERT_IN_PIN)//有告警
         {
-            g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
             read_limit = 100;
             do
             {              
@@ -543,6 +533,7 @@ static void charger_monitor_alert_func(void *p)
                       log_info("EN_QCOUNT_HIGH_ALERT:   fasle. ");
                         
                     }
+                                     
                     if((LTC4015_QCOUNT_LO_ALERT_BF_MASK & value) !=0)//库伦低告警
                     {
                       log_warning("QCOUNT_LO_ALERT: true! reset charge and allow the battery to charge again.");                    
@@ -555,25 +546,12 @@ static void charger_monitor_alert_func(void *p)
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
                                           
                     }
-//                    if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)
-//                    {
-//                      LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).
-//                    }
-                    //else
-//                    {
-//                      //need to clear the Alert                   
-//                    }
                 }
                 read_limit--; // Don't allow to read forever,100 times at most.
 
             } while(!SMBALERT_IN_PIN && !read_limit);       
         } 
-        else
-        {
-          g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
-        }
-        
-        
+       
         if(charger_state.max_charge_time_fault == 1)
         {
           log_warning("max_charge_time_fault: true.");
@@ -584,7 +562,27 @@ static void charger_monitor_alert_func(void *p)
         }
         
     }
-         
+        
+    
+    if(!SMBALERT_IN_PIN)//有告警
+    {
+      // Clear the SMBAlert and get the address responding to the ARA.
+      result = SMBus_ARA_Read(&ara_address, 0);    
+      // Read what caused the alerts and clear if LTC4015
+      // so that it will be re-enabled.
+       if((ara_address == LTC4015_ADDR_68) && (result == 0));
+      {
+        LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
+        g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
+        log_warning("SMBAlert: [0x%x].", value);
+      }
+    }
+    else
+    {
+      g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
+    }
+
+                    
 
     LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
     if(charger_state.cc_cv_charge == 1)

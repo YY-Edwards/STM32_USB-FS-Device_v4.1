@@ -85,7 +85,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
 
   if(!SMBALERT_IN_PIN)//�и澯
     {
-        g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
+        
         unsigned char read_limit = 10;
         uint8_t    ara_address = 0; 
         int        result = 0;
@@ -98,6 +98,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
             // so that it will be re-enabled.
             if((ara_address == LTC4015_ADDR_68) && (result == 0));
             {
+                g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
                 LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
                 unsigned short  limit =0;
                 if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)//VIN_LO
