@@ -6,7 +6,7 @@
 /* Private variables ---------------------------------------------------------*/
 bool ltc4015_powered = false;
 bool No_VIN_Flag = false;
-static float charger_efficency = 0.925;
+static double charger_efficency = 0.925;
 
 __IO uint16_t ADCConvertedValue;     // ADC为12位模数转换器，只有ADCConvertedValue的低12位有效
 __IO LTC4015_charger_state_t charger_state;
@@ -292,7 +292,7 @@ void DC2039A_Config_Param(void)
     g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
 
     //Set min UVCL ;输入电压至少13V，才能开启充电功能
-    LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(13)); // Initialize UVCL Lo Limit to 13V
+    LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(12)); // Initialize UVCL Lo Limit to 12V
     
     //Set max VCHARGE_SETTING ；设置单节电池的满电电压值,是否是31，验证一下
     //是一个目标值
@@ -337,9 +337,9 @@ void DC2039A_Config_Param(void)
      LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 60);
      
          
-    float vcc_per_bat = 0.0;
+    double vcc_per_bat = 0.0;
     LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
-    vcc_per_bat = ((float)value*192.264/1000000);
+    vcc_per_bat = ((double)value*192.264/1000000);
     unsigned short acount_value_temp = 0 ;
     LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &acount_value_temp);
     
@@ -363,12 +363,12 @@ void DC2039A_Config_Param(void)
      /**********设置用户关心的告警类型:以下都是有符号数************/
      
     //设置输入电压低门限；10v
-    LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(10)); // Initialize VIN Lo Limit to 10V
+    LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(12)); // Initialize VIN Lo Limit to 13V
     //开启输入电压门限低告警功能
     LTC4015_write_register(chip, LTC4015_EN_VIN_LO_ALERT_BF, true); // Initialize VIN Lo Limit Alert to On
     
     //VIN HI
-    LTC4015_write_register(chip, LTC4015_VIN_HI_ALERT_LIMIT, LTC4015_VIN_FORMAT(15)); // Initialize VIN Hi Limit to 15V
+    LTC4015_write_register(chip, LTC4015_VIN_HI_ALERT_LIMIT, LTC4015_VIN_FORMAT(13)); // Initialize VIN Hi Limit to 15V
     LTC4015_write_register(chip, LTC4015_EN_VIN_HI_ALERT_BF, true); // Initialize VIN Hi Limit Alert to On
     
     //需要根据电池类型做选择
@@ -413,6 +413,7 @@ void DC2039A_Config_Param(void)
 static void charger_monitor_alert_func(void *p)
 {
     uint16_t   value = 0;
+    uint16_t   alerts_bits = 0;
     uint8_t    ara_address = 0; 
     uint8_t    read_limit = 10;
     int        result = 0;
@@ -461,6 +462,8 @@ static void charger_monitor_alert_func(void *p)
                   //close meas
                   LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, false); 
                   LTC4015_write_register(chip, LTC4015_FORCE_MEAS_SYS_ON_BF, false);
+                  
+                  alerts_bits = ((~LTC4015_MEAS_SYS_VALID_ALERT_BF_MASK)&value);
                 }
                 
                 if((LTC4015_QCOUNT_LO_ALERT_BF_MASK & value) !=0)//库伦低告警
@@ -471,7 +474,15 @@ static void charger_monitor_alert_func(void *p)
                   
                   //allow the battery to charge again.
                   LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
+                  
+                  alerts_bits = ((~LTC4015_QCOUNT_LO_ALERT_BF_MASK)&value);
                                                       
+                }
+                
+                if(alerts_bits != 0)
+                {
+                  g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
+                  log_warning("SMBAlerts bits:[0x%x]", alerts_bits);
                 }
               }
             
@@ -479,6 +490,10 @@ static void charger_monitor_alert_func(void *p)
              
           } while(!SMBALERT_IN_PIN && !read_limit);    
        }
+      else
+      {
+        g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
+      }
     }
     else//有输入电源
     {
@@ -503,7 +518,7 @@ static void charger_monitor_alert_func(void *p)
              
         if(!SMBALERT_IN_PIN)//有告警
         {
-            read_limit = 100;
+            read_limit = 10;
             do
             {              
                 // Clear the SMBAlert and get the address responding to the ARA.
@@ -531,6 +546,8 @@ static void charger_monitor_alert_func(void *p)
                       
                       log_info("EN_QCOUNT_LOW_ALERT(49135):    true. ");
                       log_info("EN_QCOUNT_HIGH_ALERT:   fasle. ");
+                      
+                      alerts_bits = ((~LTC4015_QCOUNT_HI_ALERT_BF_MASK)&value);
                         
                     }
                                      
@@ -544,13 +561,28 @@ static void charger_monitor_alert_func(void *p)
                       
                       //allow the battery to charge again.
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
-                                          
+                      
+                      alerts_bits = ((~LTC4015_QCOUNT_LO_ALERT_BF_MASK)&value);                    
                     }
+                    
+                     if(alerts_bits != 0)
+                    {
+                      g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
+                      log_warning("SMBAlerts bits:[0x%x]", alerts_bits);
+                    }       
+                    
+                    
                 }
                 read_limit--; // Don't allow to read forever,100 times at most.
 
             } while(!SMBALERT_IN_PIN && !read_limit);       
-        } 
+        }
+        else
+        {
+          
+          g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
+        
+        }
        
         if(charger_state.max_charge_time_fault == 1)
         {
@@ -562,27 +594,7 @@ static void charger_monitor_alert_func(void *p)
         }
         
     }
-        
-    
-    if(!SMBALERT_IN_PIN)//有告警
-    {
-      // Clear the SMBAlert and get the address responding to the ARA.
-      result = SMBus_ARA_Read(&ara_address, 0);    
-      // Read what caused the alerts and clear if LTC4015
-      // so that it will be re-enabled.
-       if((ara_address == LTC4015_ADDR_68) && (result == 0));
-      {
-        LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
-        g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
-        log_warning("SMBAlert: [0x%x].", value);
-      }
-    }
-    else
-    {
-      g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
-    }
-
-                    
+                             
 
     LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
     if(charger_state.cc_cv_charge == 1)
@@ -643,19 +655,22 @@ static void charger_measure_data_func(void *p)
     uint16_t   value = 0;
 
     
-    float input_power_vcc = 0.0;
-    float vsys_vcc = 0.0;
-    float input_power_current = 0.0;
-    float actual_bat_current = 0.0;//实际的电池电流（正值是充电电流，负值是放电电流）
-    float max_bat_charge_current = 0.0;//最大的充电电流
-    float batsens_cellcount_vcc = 0.0;//电池电压
-    float bat_filt_vcc = 0.0;//过滤后的电池电压
-    float bat_charge_vcc = 0.0;//电池的充电电压
-    float die_temp = 0.0;
-    float Rntc_value = 0.0;
-    float current_battery_capacity = 0.0;
-    int   charging_times= 0;//sec
-  
+    double input_power_vcc = 0.0;
+    double vsys_vcc = 0.0;
+    double input_power_current = 0.0;
+    double actual_bat_current = 0.0;//实际的电池电流（正值是充电电流，负值是放电电流）
+    double max_bat_charge_current = 0.0;//最大的充电电流
+    double batsens_cellcount_vcc = 0.0;//电池电压
+    double bat_filt_vcc = 0.0;//过滤后的电池电压
+    double bat_charge_vcc = 0.0;//电池的充电电压
+    double die_temp = 0.0;
+    double Rntc_value = 0.0;
+    double current_battery_capacity = 0.0;
+    int    charging_times= 0;//sec  
+    
+
+    //int_a = ROUND_TO_SHORT(d_a);
+    
     
     //Read charge time
     LTC4015_read_register(chip, LTC4015_MAX_CHARGE_TIMER_BF, &value);
@@ -664,17 +679,17 @@ static void charger_measure_data_func(void *p)
     
    //Read Qcount
     LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-    current_battery_capacity = ((float)(value-16384)/32768.0)*100;//%
+    current_battery_capacity = ((double)(value-16384)/32768.0)*100;//%
     current_battery_capacity = 13568;
-    g_bat_info.bat_currently_capacity = (unsigned int)(current_battery_capacity * 1000);
+    g_bat_info.bat_currently_capacity = ROUND_TO_INT(current_battery_capacity*1000);
     log_info("bat capacity: %d, %f %%. ", value, current_battery_capacity);
     
       
      //Read NTC_RATIO
     //This algorithm is suitable for NTCS0402E3103FLT
     LTC4015_read_register(chip, LTC4015_NTC_RATIO_BF, &value);
-    Rntc_value = ((float)(10000*value))/(21845.0-value);
-    g_bat_info.NTC = (unsigned int)(Rntc_value);//需要查表
+    Rntc_value = ((double)(10000*value))/(21845.0-value);
+    g_bat_info.NTC = ROUND_TO_SHORT(Rntc_value);//需要查表
     log_info("Rntc: %f R. ", Rntc_value);
     
     //Read max bat charge current
@@ -682,27 +697,27 @@ static void charger_measure_data_func(void *p)
     max_bat_charge_current = (value+1)/4;//A
     log_info("max charge current: %f A . ", max_bat_charge_current);
     
-    if(No_VIN_Flag == false)
+    //if(No_VIN_Flag == false)
     {
       //Read VIN
       LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
-      input_power_vcc = ((float)value)*1.648/1000;//v
-      g_bat_info.VIN = (signed short)(input_power_vcc*1000);
+      input_power_vcc = ((double)(signed short)value)*1.648/1000;//v
+      g_bat_info.VIN = ROUND_TO_SHORT(input_power_vcc*1000);
       log_info("VIN: %f V . ", input_power_vcc);
       
        //Read IIN
       LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
-      input_power_current = ((float)value)*((1.46487/3)*0.001);//A
-      g_bat_info.IIN = (signed short)(input_power_current*1000);     
+      input_power_current = ((double)(signed short)value)*((1.46487/3)*0.001);//A
+      g_bat_info.IIN = ROUND_TO_SHORT(input_power_current*1000);     
       log_info("IIN: %f A . ", input_power_current);
       
-      if(max_bat_charge_current != 0)
+      //if(max_bat_charge_current != 0)
       {
         //Read Bat charge current
         LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
-        actual_bat_current = ((float)((signed short)value)*((1.46487/4)*0.001));//A     
+        actual_bat_current = ((double)((signed short)value)*((1.46487/4)*0.001));//A     
         //有方向的
-        g_bat_info.ICHARGER = (signed short)(actual_bat_current*1000);
+        g_bat_info.ICHARGER = ROUND_TO_SHORT(actual_bat_current*1000);
         log_info("IBAT: %f A . ", actual_bat_current);
       }
      
@@ -710,8 +725,8 @@ static void charger_measure_data_func(void *p)
     
     //Read VSYS
     LTC4015_read_register(chip, LTC4015_VSYS_BF, &value);
-    vsys_vcc = ((float)value)*1.648/1000;//v
-    g_bat_info.VSYS = (signed short)(vsys_vcc*1000);
+    vsys_vcc = ((double)(signed short)value)*1.648/1000;//v
+    g_bat_info.VSYS = ROUND_TO_SHORT(vsys_vcc*1000);
     log_info("VSYS: %f V . ", vsys_vcc);
     
      
@@ -737,30 +752,33 @@ static void charger_measure_data_func(void *p)
     
     //Read VBATSENSE/cellcount：特指batsens pin
     LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
-    batsens_cellcount_vcc = ((float)value*192.264/1000000);
+    batsens_cellcount_vcc = ((double)(signed short)value*192.264/1000000);
     log_info("VBAT/CELL: %f V . ", batsens_cellcount_vcc);
     
     //Read battery voltage of filtered(per cell)
     LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
-    bat_filt_vcc = ((float)value*192.264/1000000);
+    bat_filt_vcc = ((double)(signed short)value*192.264/1000000);
     log_info("VBAT_FILT/CELL: %f V . ", bat_filt_vcc); 
 
     //Read charge vcc of bat
     //初始化设置的值。根据电池化学类型、充电器状态、温度、的不同而不同。
     LTC4015_read_register(chip, LTC4015_VCHARGE_DAC_BF, &value);
-    bat_charge_vcc = ((float)value/80.0+3.8125);
-    g_bat_info.VCHARGER = (signed short)(bat_charge_vcc * 1000 * bat_cell_count);//mv
+    bat_charge_vcc = ((double)(signed short)value/80.0+3.8125);
+    g_bat_info.VCHARGER = ROUND_TO_SHORT(bat_charge_vcc * 1000 * bat_cell_count);//mv
     log_info("BAT_CHARGE_VCC/CELL: %f V . ", bat_charge_vcc); 
     
     //calculate ISYS(estimated)
-    g_bat_info.ISYS = 
-     (signed short) (charger_efficency*((input_power_vcc*input_power_current) - ((bat_filt_vcc*bat_cell_count*actual_bat_current)/charger_efficency)));
-    g_bat_info.ISYS *= 1000;//放大：ma
+    double i_sys = 0.0;
+    i_sys = (((input_power_vcc*input_power_current) - ((bat_filt_vcc*bat_cell_count*actual_bat_current)/charger_efficency))/vsys_vcc);
+    log_info("ISYS: %f A. ", i_sys);
+    i_sys *=1000;  //放大：ma
+    g_bat_info.ISYS = ROUND_TO_SHORT(i_sys);
+    
         
     //read die temperature
     LTC4015_read_register(chip, LTC4015_DIE_TEMP_BF, &value);
-    die_temp = (float)(value-12010)/45.6;//℃
-    g_bat_info.DIE = (signed short)(die_temp*100);
+    die_temp = (double)((signed short)value-12010)/45.6;//℃
+    g_bat_info.DIE = ROUND_TO_SHORT(die_temp*100);
     log_info("DIE_TEMP: %f T. ", die_temp);
   
 

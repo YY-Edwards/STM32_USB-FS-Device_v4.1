@@ -83,154 +83,150 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
   //强制转换
   bcmp_alert_info_reply_t *ptr =  (bcmp_alert_info_reply_t *)(bcmp_frame.u8);
 
-  if(!SMBALERT_IN_PIN)//有告警
-    {
-        
-        unsigned char read_limit = 10;
-        uint8_t    ara_address = 0; 
-        int        result = 0;
-        do
-        {              
-            // Clear the SMBAlert and get the address responding to the ARA.
-            result = SMBus_ARA_Read(&ara_address, 0);
-            
-            // Read what caused the alerts and clear if LTC4015
-            // so that it will be re-enabled.
-            if((ara_address == LTC4015_ADDR_68) && (result == 0));
-            {
-                g_bat_info.alert_identifier = ALERT_INFO_RESULT_HAPPEND;
-                LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
-                unsigned short  limit =0;
-                if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)//VIN_LO
-                {
-                  LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).                 
-                  ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
-                  ptr->alert_detailed_info[alert_count].id          = VIN_LO_ALERT_LIMIT; 
+ 
+  int result = 0;
+              
+  LTC4015_read_register(chip, LTC4015_LIMIT_ALERTS, &value); // Read to see what caused alert
+  if(value != 0)
+  {  
 
-                  LTC4015_read_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, &limit);   
-                  ptr->alert_detailed_info[alert_count].value       = (signed short)(((float)limit)*1.648);
-                  alert_count++;
-                }           
-                if((LTC4015_VIN_HI_ALERT_BF_MASK & value) !=0)//VIN_HI
-                {
-                   LTC4015_write_register(chip, LTC4015_VIN_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
-                   ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
-                   ptr->alert_detailed_info[alert_count].id          = VIN_HI_ALERT_LIMIT; 
+    unsigned short  limit =0;
+      do
+      {
+        if((LTC4015_VIN_LO_ALERT_BF_MASK & value) !=0)//VIN_LO
+        {
+          LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).                 
+          ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
+          ptr->alert_detailed_info[alert_count].id          = VIN_LO_ALERT_LIMIT; 
 
-                   LTC4015_read_register(chip, LTC4015_VIN_HI_ALERT_LIMIT, &limit);   
-                   ptr->alert_detailed_info[alert_count].value       = (signed short)(((float)limit)*1.648);
-                   alert_count++;                   
-                }
-                if((LTC4015_VBAT_HI_ALERT_BF_MASK & value) !=0)
-                {
-                  LTC4015_write_register(chip, LTC4015_VBAT_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
-                  ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
-                  ptr->alert_detailed_info[alert_count].id          = VBAT_HI_ALERT_LIMIT; 
+          LTC4015_read_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, &limit);   
+          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.648);
+          alert_count++;
+          value = (~LTC4015_VIN_LO_ALERT_BF_MASK)&value;
+        }           
+        else if((LTC4015_VIN_HI_ALERT_BF_MASK & value) !=0)//VIN_HI
+        {
+          LTC4015_write_register(chip, LTC4015_VIN_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
+          ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
+          ptr->alert_detailed_info[alert_count].id          = VIN_HI_ALERT_LIMIT; 
 
-                  LTC4015_read_register(chip, LTC4015_VBAT_HI_ALERT_LIMIT, &limit);   
-                  ptr->alert_detailed_info[alert_count].value       = (signed short)(((float)limit)*192.264*1000);
-                                   
-                  alert_count++; 
-                }
-                  if((LTC4015_VBAT_LO_ALERT_BF_MASK & value) !=0)
-                {
-                  LTC4015_write_register(chip, LTC4015_VBAT_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
-                  ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
-                  ptr->alert_detailed_info[alert_count].id          = VBAT_LO_ALERT_LIMIT; 
+          LTC4015_read_register(chip, LTC4015_VIN_HI_ALERT_LIMIT, &limit);   
+          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.648);
+          alert_count++;    
+          value = (~LTC4015_VIN_HI_ALERT_BF_MASK)&value;
+        }
+        else if((LTC4015_VBAT_HI_ALERT_BF_MASK & value) !=0)
+        {
+          LTC4015_write_register(chip, LTC4015_VBAT_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
+          ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
+          ptr->alert_detailed_info[alert_count].id          = VBAT_HI_ALERT_LIMIT; 
 
-                  LTC4015_read_register(chip, LTC4015_VBAT_LO_ALERT_LIMIT, &limit);   
-                  ptr->alert_detailed_info[alert_count].value       = (signed short)(((float)limit)*192.264*1000);
-                  
-                  
-                  alert_count++; 
-                }
-                  if((LTC4015_VSYS_LO_ALERT_BF_MASK & value) !=0)
-                {
-                  LTC4015_write_register(chip, LTC4015_VSYS_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
-                  
-                  ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
-                  ptr->alert_detailed_info[alert_count].id          = VSYS_LO_ALERT_LIMIT; 
+          LTC4015_read_register(chip, LTC4015_VBAT_HI_ALERT_LIMIT, &limit);   
+          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*192.264*1000);
 
-                  LTC4015_read_register(chip, LTC4015_VSYS_LO_ALERT_LIMIT, &limit);   
-                  ptr->alert_detailed_info[alert_count].value       = (signed short)(((float)limit)*1.648);
-                  
-                                 
-                  alert_count++; 
-                }
-                  if((LTC4015_VSYS_HI_ALERT_BF_MASK & value) !=0)
-                {
-                  LTC4015_write_register(chip, LTC4015_VSYS_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
-                  
-                  ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
-                  ptr->alert_detailed_info[alert_count].id          = VSYS_HI_ALERT_LIMIT; 
+          alert_count++; 
+          value = (~LTC4015_VBAT_HI_ALERT_BF_MASK)&value;
+        }
+        else if((LTC4015_VBAT_LO_ALERT_BF_MASK & value) !=0)
+        {
+          LTC4015_write_register(chip, LTC4015_VBAT_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
+          ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
+          ptr->alert_detailed_info[alert_count].id          = VBAT_LO_ALERT_LIMIT; 
 
-                  LTC4015_read_register(chip, LTC4015_VSYS_HI_ALERT_LIMIT, &limit);   
-                  ptr->alert_detailed_info[alert_count].value       = (signed short)(((float)limit)*1.648);
-                  
-                  
-                  alert_count++; 
-                }
-                
-                  if((LTC4015_IIN_HI_ALERT_BF_MASK & value) !=0)
-                {
-                  LTC4015_write_register(chip, LTC4015_IIN_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
-                  
-                  ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
-                  ptr->alert_detailed_info[alert_count].id          = IIN_HI_ALERT_LIMIT; 
+          LTC4015_read_register(chip, LTC4015_VBAT_LO_ALERT_LIMIT, &limit);   
+          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*192.264*1000);
 
-                  LTC4015_read_register(chip, LTC4015_IIN_HI_ALERT_LIMIT, &limit);   
-                  ptr->alert_detailed_info[alert_count].value       = (signed short)(((float)limit)*1.46487/4);
-                  
-                  alert_count++; 
-                }
-                  if((LTC4015_IBAT_LO_ALERT_BF_MASK & value) !=0)
-                {
-                  LTC4015_write_register(chip, LTC4015_IBAT_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
-                  
-                  ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
-                  ptr->alert_detailed_info[alert_count].id          = IBAT_LO_ALERT_LIMIT; 
 
-                  LTC4015_read_register(chip, LTC4015_IBAT_LO_ALERT_LIMIT, &limit);   
-                  ptr->alert_detailed_info[alert_count].value       = (signed short)(((float)limit)*1.46487/4);
-                  
-                  
-                  alert_count++; 
-                }
-                  if((LTC4015_DIE_TEMP_HI_ALERT_BF_MASK & value) !=0)
-                {
-                  LTC4015_write_register(chip, LTC4015_DIE_TEMP_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
-                  
-                  ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
-                  ptr->alert_detailed_info[alert_count].id          = DIE_TEMP_HI_ALERT_LIMIT; 
+          alert_count++; 
+          value = (~LTC4015_VBAT_LO_ALERT_BF_MASK)&value;
+        }
+        else if((LTC4015_VSYS_LO_ALERT_BF_MASK & value) !=0)
+        {
+          LTC4015_write_register(chip, LTC4015_VSYS_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
 
-                  LTC4015_read_register(chip, LTC4015_DIE_TEMP_HI_ALERT_LIMIT, &limit);   
-                  ptr->alert_detailed_info[alert_count].value       = (signed short)((float)(value-12010)/45.6*100);
-                                 
-                  alert_count++; 
-                }
-                else
-                {
-                  //need to clear the Alert                   
-                }
-            }
-            read_limit--; // Don't allow to read forever,10 times at most.
+          ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
+          ptr->alert_detailed_info[alert_count].id          = VSYS_LO_ALERT_LIMIT; 
 
-        } while(!SMBALERT_IN_PIN && !read_limit); 
-        
-           
-        ptr->result = ALERT_INFO_RESULT_HAPPEND;
-        
-        ptr->number = alert_count;
-    } 
-    else
-    {
-        g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
-        ptr->result = ALERT_INFO_RESULT_NOTHING;
-        ptr->number = 0;
-    }
+          LTC4015_read_register(chip, LTC4015_VSYS_LO_ALERT_LIMIT, &limit);   
+          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.648);
+
+
+          alert_count++; 
+          value = (~LTC4015_VSYS_LO_ALERT_BF_MASK)&value;
+        }
+        else if((LTC4015_VSYS_HI_ALERT_BF_MASK & value) !=0)
+        {
+          LTC4015_write_register(chip, LTC4015_VSYS_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
+
+          ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
+          ptr->alert_detailed_info[alert_count].id          = VSYS_HI_ALERT_LIMIT; 
+
+          LTC4015_read_register(chip, LTC4015_VSYS_HI_ALERT_LIMIT, &limit);   
+          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.648);
+
+
+          alert_count++; 
+          value = (~LTC4015_VSYS_HI_ALERT_BF_MASK)&value;
+        }
+
+        else if((LTC4015_IIN_HI_ALERT_BF_MASK & value) !=0)
+        {
+          LTC4015_write_register(chip, LTC4015_IIN_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
+
+          ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
+          ptr->alert_detailed_info[alert_count].id          = IIN_HI_ALERT_LIMIT; 
+
+          LTC4015_read_register(chip, LTC4015_IIN_HI_ALERT_LIMIT, &limit);   
+          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.46487/4);
+
+          alert_count++; 
+          value = (~LTC4015_IIN_HI_ALERT_BF_MASK)&value;
+        }
+        else if((LTC4015_IBAT_LO_ALERT_BF_MASK & value) !=0)
+        {
+          LTC4015_write_register(chip, LTC4015_IBAT_LO_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
+
+          ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
+          ptr->alert_detailed_info[alert_count].id          = IBAT_LO_ALERT_LIMIT; 
+
+          LTC4015_read_register(chip, LTC4015_IBAT_LO_ALERT_LIMIT, &limit);   
+          ptr->alert_detailed_info[alert_count].value       = (signed short)(((double)limit)*1.46487/4);
+
+
+          alert_count++; 
+          value = (~LTC4015_IBAT_LO_ALERT_BF_MASK)&value;
+        }
+        else if((LTC4015_DIE_TEMP_HI_ALERT_BF_MASK & value) !=0)
+        {
+          LTC4015_write_register(chip, LTC4015_DIE_TEMP_HI_ALERT_BF, false);  // Clear the Alert (this code only enabled one).     
+
+          ptr->alert_detailed_info[alert_count].type        = LIMIT_ALERT;
+          ptr->alert_detailed_info[alert_count].id          = DIE_TEMP_HI_ALERT_LIMIT; 
+
+          LTC4015_read_register(chip, LTC4015_DIE_TEMP_HI_ALERT_LIMIT, &limit);   
+          ptr->alert_detailed_info[alert_count].value       = (signed short)((double)(value-12010)/45.6*100);
+
+          alert_count++; 
+          value = (~LTC4015_DIE_TEMP_HI_ALERT_BF_MASK)&value;
+        }
   
+      }while(value!=0);
+    
+      ptr->result = SUCCESS_NO_PROBLEM;
+
+      ptr->number = alert_count;
   
-    bcmp_tx(&bcmp_frame, 2 + ((ptr->number)*sizeof(bcmp_alert_detailed_info_t)));
+  }
+  else
+  {
+  //need to clear the Alert    
+    
+    g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
+    ptr->result = SUCCESS_NO_PROBLEM;
+    ptr->number = 0;
+  }
+  
+  bcmp_tx(&bcmp_frame, 2 + ((ptr->number)*sizeof(bcmp_alert_detailed_info_t)));
 
 }
 

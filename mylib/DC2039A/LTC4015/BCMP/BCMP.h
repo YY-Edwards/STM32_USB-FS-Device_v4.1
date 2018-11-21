@@ -173,7 +173,7 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
   
      typedef struct
   {
-    unsigned short            type;//bcmp_alert_type_enum
+    unsigned char            type;//bcmp_alert_type_enum
     unsigned short            id;//bcmp_alert_id_enum
     
     /*

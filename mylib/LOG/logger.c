@@ -242,7 +242,7 @@ void logger_init()
 //  logger_msg_queue_ptr->data_size               = 128;
 //  logger_msg_queue_ptr->queue_point             = NULL;
   
-  logger_msg_queue_ptr = create_queue(15, 128);
+  logger_msg_queue_ptr = create_queue(17, 128);
   if(logger_msg_queue_ptr == NULL)
   {
     return;
@@ -251,7 +251,7 @@ void logger_init()
 
   logger_output_peripheral_init();
   
-  set_timer_task(LOGGER_TASK, TIME_BASE_100MS, true, usart_output_log_task, (void *)usart_send_buffer);
+  set_timer_task(LOGGER_TASK, TIME_BASE_10MS*3, true, usart_output_log_task, (void *)usart_send_buffer);
   
 }
 
@@ -259,9 +259,10 @@ void logger_add_msg_to_queue(const char* psz_level,
                                 const char* psz_file,
                                 int line_no,
                                 const char* psz_funcsig,
-                                char *psz_fmt, ...)
+                                const char *psz_fmt, ...)
 {
-
+        
+        
   	char msg[256] = { 0 };
 	//C语言中解决变参问题的一组宏,所在头文件：#include <stdarg.h>,用于获取不确定个数的参数 
 	va_list vArgList;
