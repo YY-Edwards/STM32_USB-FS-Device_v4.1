@@ -719,7 +719,7 @@ static void charger_measure_data_func(void *p)
     //Read max bat charge current
     LTC4015_read_register(chip, LTC4015_ICHARGE_DAC_BF, &value);
     max_bat_charge_current = (value+1)/4;//A
-    log_info("max charge current: %f A . ", max_bat_charge_current);
+    //log_info("max charge current: %f A . ", max_bat_charge_current);
     
     //if(No_VIN_Flag == false)
     {
@@ -772,12 +772,12 @@ static void charger_measure_data_func(void *p)
     bat_chemistry = value;
     LTC4015_read_register(chip, LTC4015_CELL_COUNT_PINS_BF, &value);    
     bat_cell_count = value;
-    log_info("BAT TYPE,CELL: %d, %d ", bat_chemistry, bat_cell_count);
+    //log_info("BAT TYPE,CELL: %d, %d ", bat_chemistry, bat_cell_count);
     
     //Read VBATSENSE/cellcount£∫Ãÿ÷∏batsens pin
     LTC4015_read_register(chip, LTC4015_VBAT_BF, &value);
     batsens_cellcount_vcc = ((double)(signed short)value*192.264/1000000);
-    log_info("VBAT/CELL: %f V . ", batsens_cellcount_vcc);
+    //log_info("VBAT/CELL: %f V . ", batsens_cellcount_vcc);
     
     //Read battery voltage of filtered(per cell)
     LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
@@ -789,7 +789,7 @@ static void charger_measure_data_func(void *p)
     LTC4015_read_register(chip, LTC4015_VCHARGE_DAC_BF, &value);
     bat_charge_vcc = ((double)(signed short)value/80.0+3.8125);
     g_bat_info.VCHARGER = (int16_t)round(bat_charge_vcc * 1000 * bat_cell_count);//mv
-    log_info("BAT_CHARGE_VCC/CELL: %f V . ", bat_charge_vcc); 
+    //log_info("BAT_CHARGE_VCC/CELL: %f V . ", bat_charge_vcc); 
     
     //calculate ISYS(estimated)
     double i_sys = 0.0;
@@ -804,7 +804,25 @@ static void charger_measure_data_func(void *p)
     die_temp = (double)((signed short)value-12010)/45.6;//°Ê
     g_bat_info.DIE = (int16_t)round(die_temp*100);
     log_info("DIE_TEMP: %f T. ", die_temp);
-  
+    
+    g_bat_info.discharge_time = 
+      (unsigned int)round((current_battery_capacity/(i_sys/1000))*60);
+    
+    log_info("discharge_time: %d minutes. ", g_bat_info.discharge_time);
+    
+    double e_i_charge = 0;
+    if(actual_bat_current < 0.8)
+    {
+      e_i_charge = 0.8;//A
+    }
+    else
+    {
+      e_i_charge = actual_bat_current;
+    }
+    g_bat_info.remained_charge_time = 
+      (unsigned int)round((battery_total_capacity - current_battery_capacity)/e_i_charge*60);
+    
+    log_info("remained_charge_time: %d minutes. ", g_bat_info.remained_charge_time);
 
 }
 
