@@ -7,6 +7,8 @@
 bool ltc4015_powered = false;
 bool No_VIN_Flag = false;
 const double charger_efficency = 0.925;
+const double battery_total_capacity = 16.8;//Ah
+const double Kqc=8333.33;//hz
 const double Rp = 10;//kΩ
 const double T2 = (273.15+25.0);//
 const double Bx = 3380;//kΩ,NCP18XH103F0SRB
@@ -291,6 +293,7 @@ void DC2039A_Config_Param(void)
     memset((void*)&system_status, 0x00, sizeof(LTC4015_system_status_t));
     
     memset((void*)&g_bat_info, 0x00, sizeof(bcmp_battery_info_brdcast_t));//clear buff
+    g_bat_info.bat_total_capacity = (unsigned int)round(battery_total_capacity*1000);
     
     g_bat_info.battery_state    = BAT_IDLE_SUSPEND;
     g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
@@ -338,7 +341,8 @@ void DC2039A_Config_Param(void)
     
      //设置库伦的放大因子
     //set QCOUNT_PRESCALE_FACTOR
-     LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, 60);
+    unsigned int factor = (unsigned int)round(battery_total_capacity*3600/65535*Kqc*LTC4015_RSNSB*2);    
+    LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, factor);
      
          
     double vcc_per_bat = 0.0;
@@ -672,9 +676,18 @@ static void charger_measure_data_func(void *p)
     double current_battery_capacity = 0.0;
     int    charging_times= 0;//sec  
     
-
-    //int_a = ROUND_TO_SHORT(d_a);
     
+//    double d_a = 1.9;
+//    int int_a = 0;
+//    int_a = round(d_a);
+//    d_a = 1.4;
+//    int_a = round(d_a);
+//    d_a = -1.9;
+//    int_a = round(d_a);
+//    d_a = -1.4;
+//    int_a = round(d_a);
+    
+   
     
     //Read charge time
     LTC4015_read_register(chip, LTC4015_MAX_CHARGE_TIMER_BF, &value);
@@ -682,11 +695,13 @@ static void charger_measure_data_func(void *p)
     log_info("charging time: %d sec.", charging_times);
     
    //Read Qcount
+    double capacity_percent =0.0;
     LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-    current_battery_capacity = ((double)(value-16384)/32768.0)*100;//%
-    current_battery_capacity = 13568;
-    g_bat_info.bat_currently_capacity = ROUND_TO_INT(current_battery_capacity*1000);
-    log_info("bat capacity: %d, %f %%. ", value, current_battery_capacity);
+    capacity_percent = ((double)(value-16384)/32768.0)*100;//%
+    current_battery_capacity = capacity_percent/100*battery_total_capacity;   
+    
+    g_bat_info.bat_currently_capacity = (uint32_t)round(current_battery_capacity*1000);
+    log_info("bat capacity: %d, %f Ah, %f %%. ", value, current_battery_capacity, capacity_percent);
     
       
      //Read NTC_RATIO
@@ -698,7 +713,7 @@ static void charger_measure_data_func(void *p)
     //函数 log(x) 表示是以e为底的自然对数，即 ln(x)
     ntc_temp = (1/(log(Rntc_value/1000/Rp)/Bx + (1/T2)))-273.15+0.5;
     
-    g_bat_info.NTC = ROUND_TO_SHORT(ntc_temp*100);
+    g_bat_info.NTC = (int16_t)round(ntc_temp*100);
     log_info("Tntc: %f T.", ntc_temp);
     
     //Read max bat charge current
@@ -711,13 +726,13 @@ static void charger_measure_data_func(void *p)
       //Read VIN
       LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
       input_power_vcc = ((double)(signed short)value)*1.648/1000;//v
-      g_bat_info.VIN = ROUND_TO_SHORT(input_power_vcc*1000);
+      g_bat_info.VIN = (int16_t)round(input_power_vcc*1000);
       log_info("VIN: %f V . ", input_power_vcc);
       
        //Read IIN
       LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
       input_power_current = ((double)(signed short)value)*((1.46487/3)*0.001);//A
-      g_bat_info.IIN = ROUND_TO_SHORT(input_power_current*1000);     
+      g_bat_info.IIN = (int16_t)round(input_power_current*1000);     
       log_info("IIN: %f A . ", input_power_current);
       
       //if(max_bat_charge_current != 0)
@@ -726,7 +741,7 @@ static void charger_measure_data_func(void *p)
         LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
         actual_bat_current = ((double)((signed short)value)*((1.46487/4)*0.001));//A     
         //有方向的
-        g_bat_info.ICHARGER = ROUND_TO_SHORT(actual_bat_current*1000);
+        g_bat_info.ICHARGER = (int16_t)round(actual_bat_current*1000);
         log_info("IBAT: %f A . ", actual_bat_current);
       }
      
@@ -735,7 +750,7 @@ static void charger_measure_data_func(void *p)
     //Read VSYS
     LTC4015_read_register(chip, LTC4015_VSYS_BF, &value);
     vsys_vcc = ((double)(signed short)value)*1.648/1000;//v
-    g_bat_info.VSYS = ROUND_TO_SHORT(vsys_vcc*1000);
+    g_bat_info.VSYS = (int16_t)round(vsys_vcc*1000);
     log_info("VSYS: %f V . ", vsys_vcc);
     
      
@@ -773,7 +788,7 @@ static void charger_measure_data_func(void *p)
     //初始化设置的值。根据电池化学类型、充电器状态、温度、的不同而不同。
     LTC4015_read_register(chip, LTC4015_VCHARGE_DAC_BF, &value);
     bat_charge_vcc = ((double)(signed short)value/80.0+3.8125);
-    g_bat_info.VCHARGER = ROUND_TO_SHORT(bat_charge_vcc * 1000 * bat_cell_count);//mv
+    g_bat_info.VCHARGER = (int16_t)round(bat_charge_vcc * 1000 * bat_cell_count);//mv
     log_info("BAT_CHARGE_VCC/CELL: %f V . ", bat_charge_vcc); 
     
     //calculate ISYS(estimated)
@@ -781,13 +796,13 @@ static void charger_measure_data_func(void *p)
     i_sys = (((input_power_vcc*input_power_current) - ((bat_filt_vcc*bat_cell_count*actual_bat_current)/charger_efficency))/vsys_vcc);
     log_info("ISYS: %f A. ", i_sys);
     i_sys *=1000;  //放大：ma
-    g_bat_info.ISYS = ROUND_TO_SHORT(i_sys);
+    g_bat_info.ISYS = (int16_t)round(i_sys);
     
         
     //read die temperature
     LTC4015_read_register(chip, LTC4015_DIE_TEMP_BF, &value);
     die_temp = (double)((signed short)value-12010)/45.6;//℃
-    g_bat_info.DIE = ROUND_TO_SHORT(die_temp*100);
+    g_bat_info.DIE = (int16_t)round(die_temp*100);
     log_info("DIE_TEMP: %f T. ", die_temp);
   
 

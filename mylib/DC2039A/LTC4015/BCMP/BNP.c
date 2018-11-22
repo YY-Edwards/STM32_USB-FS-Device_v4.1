@@ -425,39 +425,7 @@ extern void phy_slip_init();
 
 void bnp_init()
 {
-  
-//   if(usb_rx_queue_ptr!=NULL)
-//  {
-//   for (unsigned int i = 0; i < (usb_rx_queue_ptr->queue_deep); i++)
-//    {
-//      if(((usb_rx_queue_ptr->queue_point + i)->data)!= NULL)
-//      {
-//        free((usb_rx_queue_ptr->queue_point + i)->data);
-//        (usb_rx_queue_ptr->queue_point + i)->data = NULL;
-//      }
-//    }
-//     free(usb_rx_queue_ptr);
-//     usb_rx_queue_ptr =NULL;
-//  }
-//  
-//  usb_rx_queue_ptr = malloc(sizeof(dyn_ring_queue_t));
-//  if(usb_rx_queue_ptr ==NULL)
-//  {
-//    //printf("malloc ble_msg_queue_ptr failure\r\n");
-//    return ;
-//  }
-//  usb_rx_queue_ptr->head            = 0;
-//  usb_rx_queue_ptr->tail            = 0;
-//  usb_rx_queue_ptr->queue_deep      = 20;
-//  usb_rx_queue_ptr->data_size       = 64;
-//  usb_rx_queue_ptr->queue_point     = NULL;
-//  
-//  
-//  bool ret = init_queue(usb_rx_queue_ptr);
-//  
-//  if(ret == false)return;
-  
-  
+
   bnp_rx_queue_ptr = create_queue(5, sizeof(bnp_fragment_t));
   if(bnp_rx_queue_ptr == NULL)
   {

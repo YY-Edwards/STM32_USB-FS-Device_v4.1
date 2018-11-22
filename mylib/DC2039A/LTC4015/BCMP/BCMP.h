@@ -9,7 +9,7 @@ extern "C" {
 #include "LTC4015.h"  
 #include <stdint.h>
 #include <stddef.h>
-#include <string.h>
+#include <string.h> 
   
   
   
@@ -58,7 +58,7 @@ Payload is Battery information
     signed short              VSYS;//负载端电压，单位mv
     signed short              ISYS;//负载输出电流（评估值），单位ma
 
-    unsigned int                bat_total_capcity;
+    unsigned int                bat_total_capacity;
     unsigned int                bat_currently_capacity;
     //unsigned char               qcount_percent;//库伦百分比数值（0~100）
     signed short                NTC;//电池温度，单位℃
