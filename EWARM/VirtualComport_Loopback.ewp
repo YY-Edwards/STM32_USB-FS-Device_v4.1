@@ -3169,6 +3169,7 @@
           <state>$PROJ_DIR$\..\mylib\DC2039A\LTC4015</state>
           <state>$PROJ_DIR$\..\mylib\DC2039A</state>
           <state>$PROJ_DIR$\..\mylib\TASK_TIMER</state>
+          <state>$PROJ_DIR$\..\mylib\EEPROM</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -8957,6 +8958,15 @@
         </file>
         <file>
           <name>$PROJ_DIR$\..\mylib\DC2039A\DC2039A.h</name>
+        </file>
+      </group>
+      <group>
+        <name>EEPROM</name>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\EEPROM\stmflash.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\mylib\EEPROM\stmflash.h</name>
         </file>
       </group>
       <group>
