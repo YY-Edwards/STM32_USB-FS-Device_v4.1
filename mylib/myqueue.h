@@ -24,8 +24,8 @@ typedef struct
 
 typedef struct
 {
+   int   len ;
   char  *data;
-  int   len ;
 }dyn_mydata_t;
 
 typedef struct
@@ -39,12 +39,11 @@ typedef struct
 
 typedef struct
 {
-
-    dyn_mydata_t *queue_point;
     unsigned short head;
     unsigned short tail;
     unsigned short data_size;
     unsigned short queue_deep;
+    dyn_mydata_t *queue_point;
    
 } dyn_ring_queue_t;
 

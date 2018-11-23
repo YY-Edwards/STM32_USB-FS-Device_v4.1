@@ -9,7 +9,7 @@ extern "C" {
 #include "LTC4015.h"  
 #include <stdint.h>
 #include <stddef.h>
-#include <string.h>
+#include <string.h> 
   
   
   
@@ -51,20 +51,21 @@ Payload is Battery information
   
     typedef struct
   {
-    signed short              VIN;//输入电压，单位mv
-    signed short              IIN;//输入电流，单位ma
-    signed short              VCHARGER;//电池充电电压，单位mv
-    signed short              ICHARGER;//电池充电电流，单位ma
-    signed short              VSYS;//负载端电压，单位mv
-    signed short              ISYS;//负载输出电流（评估值），单位ma
+    signed short              VIN;//输入电压，单位v，1000：1
+    signed short              IIN;//输入电流，单位a，1000：1
+    signed short              VCHARGER;//电池充电电压，单位v，1000：1
+    signed short              ICHARGER;//电池充电电流，单位a，1000：1
+    signed short              VSYS;//负载端电压，单位v，1000：1
+    signed short              ISYS;//负载输出电流（评估值），单位a，1000：1
 
-    unsigned int                bat_total_capcity;
-    unsigned int                bat_currently_capacity;
-    //unsigned char               qcount_percent;//库伦百分比数值（0~100）
-    signed short                NTC;//电池温度，单位℃
-    signed short                DIE;//模具(主控芯片)温度，单位℃
+    unsigned int                bat_total_capacity;//，1000：1
+    unsigned int                bat_currently_capacity;//，1000：1
+    signed short                NTC;//电池温度，单位℃，100：1
+    signed short                DIE;//模具(主控芯片)温度，单位℃，100：1
     unsigned char               battery_state;
     unsigned char               alert_identifier;
+    unsigned int              discharge_time;//minute,预估放电时间，1：1
+    unsigned int              remained_charge_time;//minute,充满剩余时间，1：1
     
   } bcmp_battery_info_brdcast_t;
   
