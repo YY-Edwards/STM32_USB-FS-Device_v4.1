@@ -10,7 +10,13 @@ extern "C" {
 #include "stdio.h"
 #include <stdarg.h>
   
+#define EEPROM_BASE_ADDR    0x08080000      //(0x08080000 ~ 0x08080FFF) 4Kbye
+
+#define EEPROM_BYTE_SIZE	0x0FFF  
   
+void eeprom_read_nbyte(unsigned short raddr, unsigned char* buf,  unsigned short read_len);
+
+bool eeprom_write_nbyte(unsigned short waddr, unsigned char* buf,  unsigned short write_len);
   
     
   

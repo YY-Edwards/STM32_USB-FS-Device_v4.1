@@ -1,10 +1,6 @@
 
 #include "stmflash.h"
 
-#define EEPROM_BASE_ADDR    0x08080000      //(0x08080000 ~ 0x08080FFF) 4Kbye
-
-#define EEPROM_BYTE_SIZE	0x0FFF
-
 
 //addr:读地址，没有特殊要求？任意地址都可以读，应该
 void eeprom_read_nbyte(unsigned short raddr, unsigned char* buf,  unsigned short read_len)
@@ -21,7 +17,7 @@ void eeprom_read_nbyte(unsigned short raddr, unsigned char* buf,  unsigned short
 bool eeprom_write_nbyte(unsigned short waddr, unsigned char* buf,  unsigned short write_len)
 {
   //测试是否需要先关闭中断，以免引起CPU异常
-  FLASH_Status status_ = FLASH_BUSY;
+  FLASH_Status status_ = FLASH_COMPLETE;
   
   unsigned int t_addr;
   t_addr = EEPROM_BASE_ADDR + waddr;
