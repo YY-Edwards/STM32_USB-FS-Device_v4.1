@@ -101,6 +101,9 @@ Process of notice requesting and cancelling is shown in following Figure Process
     IIN_HI_ALERT_LIMIT                          = 0XA007,
     IBAT_LO_ALERT_LIMIT                         = 0XA008,
     DIE_TEMP_HI_ALERT_LIMIT                     = 0XA009,
+    BAT_TEMP_HI_ALERT_LIMIT                     = 0XA00C,
+    
+    
     
     CONSTANT_VOLTAGE_ALERT                      = 0xB000,
     CONSTANT_CURRENT_ALERT	                = 0xB001,
@@ -109,6 +112,15 @@ Process of notice requesting and cancelling is shown in following Figure Process
       
     BAT_SHORT_FAULT_ALERT	                = 0xC000,
     BAT_MISSING_FAULT_ALERT	                = 0xC001,
+    MAX_CHARGE_TIME_FAULT_ALERT                 = 0xC002,
+    MAX_CV_TIME_ALERT                           = 0xC004,
+    BAT_NTC_PAUSE_ALERT                         = 0xC005,
+    CC_CV_CHARGE_ALERT                          = 0xC006,
+    PRECHARGE_ALERT                             = 0xC007,
+    CHARGER_SUSPENDED_ALER                      = 0xC008,
+    ABSORT_CHARGE_ALERT                         = 0xC009,
+    EQUALIZE_CHARGE_ALERT                       = 0xC00A,
+      
       
   }bcmp_alert_id_enum;
   
@@ -153,6 +165,7 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
   
    #define ALERT_INFO_RESULT_NOTHING 0x00
    #define ALERT_INFO_RESULT_HAPPEND 0x01
+   #define MAX_ALERT_COUNT              15
   
   typedef enum
   {
@@ -196,12 +209,58 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
   {
     unsigned char                       result;
     unsigned char                       number;
-    bcmp_alert_detailed_info_t           alert_detailed_info[15];  //15>=number      
+    bcmp_alert_detailed_info_t           alert_detailed_info[MAX_ALERT_COUNT];  //15>=number      
   
   } bcmp_alert_info_reply_t;
   
   
+  
+  
+    /*
+Configure Charger settings: 0x0004.
+Request:0x0004;
+Request to configure the charger setting;	
+Opcode [2] + UVCL [2] + JEITA [1] + VCHARGECELL [2] + ICHARGECELL [2] + IINLIM[2] + MCVTIME[2] 
+  + MCHARGETIME[2] + BATCAPACITY[4] + CHARGESTATUSALERTS[2] + CHARGERSTATEALERTS[2]
+  + {Id [2] + Operation [1] + Value [2]} [10]
+  
+Rely:0x8004:
+Reply the request of configuration;
+Payload is empty
 
+
+  */
+  
+     #define CONFIG_CHARGER_SETTINGS    0x004
+     #define LIMIT_CONFIG_COUNT         10
+  
+    typedef struct
+  {
+    unsigned short                      id;
+    unsigned char                       operation;
+    unsigned short                      value;
+  } bcmp_limit_config_t;
+  
+  
+      typedef struct
+  {
+    unsigned short                      uvcl;
+    unsigned char                       jeita;
+    unsigned short                      vcharge_cell;
+    unsigned short                      icharge_cell;
+    unsigned short                      iinlim;
+    unsigned short                      max_cv_time;
+    unsigned short                      max_charge_time;
+    unsigned int                        bat_capacity;
+    LTC4015_charge_status_t              charge_status;
+    LTC4015_charger_state_t              charger_state;
+    bcmp_limit_config_t                  limits[LIMIT_CONFIG_COUNT];
+    
+  } bcmp_config_req_t;
+  
+
+  
+  typedef bcmp_config_req_t charger_settings_t;
   
 typedef struct
 {

@@ -1,5 +1,5 @@
 #include "DC2039A.h"
-
+#include "stmflash.h"
 
 
 /* Private macro -------------------------------------------------------------*/
@@ -9,9 +9,10 @@ bool No_VIN_Flag = false;
 const double charger_efficency = 0.925;
 const double battery_total_capacity = 16.8;//Ah
 const double Kqc=8333.33;//hz
-const double Rp = 10;//kΩ
+const double Rntcbias=10000;//Ω
+const double Rp = 100000;//Ω
 const double T2 = (273.15+25.0);//
-const double Bx = 3380;//kΩ,NCP18XH103F0SRB
+const double Bx = 3380;//,NCP18XH103F0SRB
 const double Ka = 273.15;//
 
 __IO uint16_t ADCConvertedValue;     // ADC为12位模数转换器，只有ADCConvertedValue的低12位有效
@@ -20,7 +21,6 @@ __IO LTC4015_charge_status_t charge_status;
 __IO LTC4015_system_status_t system_status;
 extern volatile bcmp_battery_info_brdcast_t g_bat_info;
 
-static void DC2039A_Config_Param(void);
 static void DC2039A_Run(void *);
 static void charger_measure_data_func(void *);
 static void charger_monitor_alert_func(void *);
@@ -282,35 +282,39 @@ void ADC_GPIO_Configuration(void)
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Local Functions
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void DC2039A_Config_Param(void)
+void DC2039A_Config_Param(charger_settings_t *settings_ptr)
 {   
     uint16_t value =0;
     
-    log_info("init LTC4015 setting.");
+    log_info("reset LTC4015 settings.");
     
     memset((void*)&charger_state, 0x00, sizeof(LTC4015_charger_state_t));
     memset((void*)&charge_status, 0x00, sizeof(LTC4015_charge_status_t));
     memset((void*)&system_status, 0x00, sizeof(LTC4015_system_status_t));
     
     memset((void*)&g_bat_info, 0x00, sizeof(bcmp_battery_info_brdcast_t));//clear buff
-    g_bat_info.bat_total_capacity = (unsigned int)round(battery_total_capacity*1000);
+    
+    g_bat_info.bat_total_capacity = settings_ptr->bat_capacity;
     
     g_bat_info.battery_state    = BAT_IDLE_SUSPEND;
     g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
 
     //Set min UVCL ;输入电压至少13V，才能开启充电功能
-    LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(12)); // Initialize UVCL Lo Limit to 12V
+    LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(((double)(settings_ptr->uvcl)/1000))); // Initialize UVCL Lo Limit to 12V
     
     //Set max VCHARGE_SETTING ；设置单节电池的满电电压值,是否是31，验证一下
     //是一个目标值
     //影响恒压充电
-    LTC4015_write_register(chip, LTC4015_VCHARGE_SETTING_BF, LTC4015_VCHARGE_LIION(4.2)); //4.2v/cell
-       
-    //Set max ICHARGE_TARGE ；设置充电电流的目标值
-    LTC4015_write_register(chip, LTC4015_ICHARGE_TARGET_BF, LTC4015_ICHARGE(4.0));//4.0A
+    if(settings_ptr->jeita == 0x00)//disabled JEITA
+    {
+      LTC4015_write_register(chip, LTC4015_VCHARGE_SETTING_BF, LTC4015_VCHARGE_LIION(((double)(settings_ptr->vcharge_cell)/1000))); //4.2v/cell
+         
+      //Set max ICHARGE_TARGE ；设置充电电流的目标值
+      LTC4015_write_register(chip, LTC4015_ICHARGE_TARGET_BF, LTC4015_ICHARGE(((double)(settings_ptr->icharge_cell)/1000)));//4.0A
+    }
     
      //set max input current  ；设置输入电流的最大值目标值 
-    LTC4015_write_register(chip, LTC4015_IIN_LIMIT_SETTING_BF, LTC4015_IINLIM(5.0)); // 5.0A, Initialize IIN Limit to 5A
+    LTC4015_write_register(chip, LTC4015_IIN_LIMIT_SETTING_BF, LTC4015_IINLIM(((double)(settings_ptr->iinlim)/1000))); // 5.0A, Initialize IIN Limit to 5A
    
 //For Li-Ion batteries, if en_c_over_x_term=1 (0 by default), C/x charge termination occurs after the battery reaches the
 //charge voltage level and IBAT drops below C_OVER_X_THRESHOLD. See the section C/x Termination.
@@ -341,7 +345,7 @@ void DC2039A_Config_Param(void)
     
      //设置库伦的放大因子
     //set QCOUNT_PRESCALE_FACTOR
-    unsigned int factor = (unsigned int)round(battery_total_capacity*3600/65535*Kqc*LTC4015_RSNSB*2);    
+    unsigned int factor = (unsigned int)round((double)(settings_ptr->bat_capacity/1000)*3600/65535*Kqc*LTC4015_RSNSB*2);    
     LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, factor);
      
          
@@ -369,54 +373,131 @@ void DC2039A_Config_Param(void)
     
     
      /**********设置用户关心的告警类型:以下都是有符号数************/
-     
-    //设置输入电压低门限；10v
-    LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(12)); // Initialize VIN Lo Limit to 13V
-    //开启输入电压门限低告警功能
-    LTC4015_write_register(chip, LTC4015_EN_VIN_LO_ALERT_BF, true); // Initialize VIN Lo Limit Alert to On
-    
-    //VIN HI
-    LTC4015_write_register(chip, LTC4015_VIN_HI_ALERT_LIMIT, LTC4015_VIN_FORMAT(13)); // Initialize VIN Hi Limit to 15V
-    LTC4015_write_register(chip, LTC4015_EN_VIN_HI_ALERT_BF, true); // Initialize VIN Hi Limit Alert to On
-    
-    //需要根据电池类型做选择
-    //VBAT HI=> 22105*192.264uv = 4.25v
-    LTC4015_write_register(chip, LTC4015_VBAT_HI_ALERT_LIMIT, LTC4015_VBAT_LITHIUM_FORMAT(4.25)); // Initialize VBAT Hi Limit to 4.25V
-    LTC4015_write_register(chip, LTC4015_EN_VBAT_HI_ALERT_BF, true); // Initialize VBAT Hi Limit Alert to On    
-    //VBAT LO
-    LTC4015_write_register(chip, LTC4015_VBAT_LO_ALERT_LIMIT, LTC4015_VBAT_LITHIUM_FORMAT(3.5)); // Initialize VBAT Lo Limit to 3.5V
-    LTC4015_write_register(chip, LTC4015_EN_VBAT_LO_ALERT_BF, true); // Initialize VBAT Lo Limit Alert to On
-    
-    
-    
-    //VSYS HI
-    LTC4015_write_register(chip, LTC4015_VSYS_HI_ALERT_LIMIT, LTC4015_VSYS_FORMAT(24)); // Initialize VSYS Hi Limit to 24V
-    LTC4015_write_register(chip, LTC4015_EN_VSYS_HI_ALERT_BF, true); // Initialize VSYS Hi Limit Alert to On
-    //VSYS LO
-    LTC4015_write_register(chip, LTC4015_VSYS_LO_ALERT_LIMIT, LTC4015_VSYS_FORMAT(10)); // Initialize VSYS Lo Limit to 10V
-    LTC4015_write_register(chip, LTC4015_EN_VSYS_LO_ALERT_BF, true); // Initialize VSYS Lo Limit Alert to On
-    
-    
-    //IIN HI
-    LTC4015_write_register(chip, LTC4015_IIN_HI_ALERT_LIMIT, LTC4015_IIN_FORMAT(10)); // Initialize IIN Hi Limit to 10A
-    LTC4015_write_register(chip, LTC4015_EN_IIN_HI_ALERT_BF, true); // Initialize IIN Hi Limit Alert to On
-    
-    //IBAT LO,赋值时也可以看着是放电电流，跟ISYS（评估电流）有待观察。
-    LTC4015_write_register(chip, LTC4015_IBAT_LO_ALERT_LIMIT, LTC4015_IBAT_FORMAT(1)); // Initialize IBAT Lo Limit to ±1A
-    LTC4015_write_register(chip, LTC4015_EN_IBAT_LO_ALERT_BF, true); // Initialize IBAT Lo Limit Alert to On
-    
-    
-    //DIE HI
-    LTC4015_write_register(chip, LTC4015_DIE_TEMP_HI_ALERT_LIMIT, LTC4015_DIE_TEMP_FORMAT(60)); // Initialize DIE Hi Limit to 60℃
-    LTC4015_write_register(chip, LTC4015_EN_DIE_TEMP_HI_ALERT_BF, true); // Initialize DIE Hi Limit Alert to On
-    
-     
+     unsigned char limit_obj_count = LIMIT_CONFIG_COUNT;
+     unsigned char idx =0;
+     double dou_value = 0.0;
+     double Rt= 0.0;//Ω
+     do
+     {
+       switch(settings_ptr->limits[idx].id)
+       {        
+          case VIN_LO_ALERT_LIMIT:
+                
+                dou_value = ((double)(settings_ptr->limits[idx].value)/1000);
+              //设置输入电压低门限；10v
+                LTC4015_write_register(chip, LTC4015_VIN_LO_ALERT_LIMIT, LTC4015_VIN_FORMAT(dou_value)); // Initialize VIN Lo Limit to 13V
+                //开启输入电压门限低告警功能
+                LTC4015_write_register(chip, LTC4015_EN_VIN_LO_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize VIN Lo Limit Alert to On           
+                    
+            break;
+            
+          case VIN_HI_ALERT_LIMIT:
+            
+                dou_value = ((double)(settings_ptr->limits[idx].value)/1000);
+                LTC4015_write_register(chip, LTC4015_VIN_HI_ALERT_LIMIT, LTC4015_VIN_FORMAT(dou_value)); // Initialize VIN Hi Limit to 15V
+                LTC4015_write_register(chip, LTC4015_EN_VIN_HI_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize VIN Hi Limit Alert to On
+                                
+             break;
+             
+          case VBAT_HI_ALERT_LIMIT:
+            
+                dou_value = ((double)(settings_ptr->limits[idx].value)/1000);
+                  //VBAT HI=> 22105*192.264uv = 4.25v
+                LTC4015_write_register(chip, LTC4015_VBAT_HI_ALERT_LIMIT, LTC4015_VBAT_LITHIUM_FORMAT(dou_value)); // Initialize VBAT Hi Limit to 4.25V
+                LTC4015_write_register(chip, LTC4015_EN_VBAT_HI_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize VBAT Hi Limit Alert to On    
+                    
+             break;
+             
+             
+          case VBAT_LO_ALERT_LIMIT:
+            
+                dou_value = ((double)(settings_ptr->limits[idx].value)/1000);
+                  //VBAT LO
+                LTC4015_write_register(chip, LTC4015_VBAT_LO_ALERT_LIMIT, LTC4015_VBAT_LITHIUM_FORMAT(dou_value)); // Initialize VBAT Lo Limit to 3.5V
+                LTC4015_write_register(chip, LTC4015_EN_VBAT_LO_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize VBAT Lo Limit Alert to On
+                       
+             break;
+             
+          case VSYS_HI_ALERT_LIMIT:
+            
+                dou_value = ((double)(settings_ptr->limits[idx].value)/1000);  
+                //VSYS HI
+                LTC4015_write_register(chip, LTC4015_VSYS_HI_ALERT_LIMIT, LTC4015_VSYS_FORMAT(dou_value)); // Initialize VSYS Hi Limit to 24V
+                LTC4015_write_register(chip, LTC4015_EN_VSYS_HI_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize VSYS Hi Limit Alert to On
+
+                        
+            
+             break;
+             
+          case VSYS_LO_ALERT_LIMIT:
+            
+                dou_value = ((double)(settings_ptr->limits[idx].value)/1000);  
+                 //VSYS LO
+                LTC4015_write_register(chip, LTC4015_VSYS_LO_ALERT_LIMIT, LTC4015_VSYS_FORMAT(dou_value)); // Initialize VSYS Lo Limit to 10V
+                LTC4015_write_register(chip, LTC4015_EN_VSYS_LO_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize VSYS Lo Limit Alert to On
+                
+             break;
+             
+          case IIN_HI_ALERT_LIMIT:
+            
+                dou_value = ((double)(settings_ptr->limits[idx].value)/1000);     
+                //IIN HI
+                LTC4015_write_register(chip, LTC4015_IIN_HI_ALERT_LIMIT, LTC4015_IIN_FORMAT(dou_value)); // Initialize IIN Hi Limit to 10A
+                LTC4015_write_register(chip, LTC4015_EN_IIN_HI_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize IIN Hi Limit Alert to On
+             
+                      
+            
+             break;
+             
+          case IBAT_LO_ALERT_LIMIT:
+                
+                dou_value = ((double)(settings_ptr->limits[idx].value)/1000); 
+                 //IBAT LO,赋值时也可以看着是放电电流，跟ISYS（评估电流）有待观察。
+                LTC4015_write_register(chip, LTC4015_IBAT_LO_ALERT_LIMIT, LTC4015_IBAT_FORMAT(dou_value)); // Initialize IBAT Lo Limit to ±1A
+                LTC4015_write_register(chip, LTC4015_EN_IBAT_LO_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize IBAT Lo Limit Alert to On
+                                      
+             break;
+             
+          case DIE_TEMP_HI_ALERT_LIMIT:
+            
+                dou_value = ((double)(settings_ptr->limits[idx].value)/100);              
+                //DIE HI
+                LTC4015_write_register(chip, LTC4015_DIE_TEMP_HI_ALERT_LIMIT, LTC4015_DIE_TEMP_FORMAT(dou_value)); // Initialize DIE Hi Limit to 60℃
+                LTC4015_write_register(chip, LTC4015_EN_DIE_TEMP_HI_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize DIE Hi Limit Alert to On
+                                                 
+             break;
+             
+          case BAT_TEMP_HI_ALERT_LIMIT:
+            
+                dou_value = ((double)(settings_ptr->limits[idx].value)/100);  
+                Rt =Rp* pow(2.718,(Bx*(1/(Ka+dou_value)-1/T2)));//Rt=R*e^[B*(1/T1-1/T2)]
+                dou_value = round(21845*Rt/(Rt+Rntcbias));// NTC_RATIO
+                //BAT TEMP HI
+                LTC4015_write_register(chip, LTC4015_NTC_RATIO_LO_ALERT_LIMIT, (uint16_t)dou_value); // Initialize DIE Hi Limit to 60℃
+                LTC4015_write_register(chip, LTC4015_EN_NTC_RATIO_LO_ALERT_BF, settings_ptr->limits[idx].operation); // Initialize DIE Hi Limit Alert to On
+                                      
+             break;
+             
+             
+          default:                      
+            break;
+               
+       }
+       
+      idx++; 
+      limit_obj_count--;
+     }while(limit_obj_count>0);
+         
     
     LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false);
     
     return;
 }
 
+void read_charger_configuration(void*p, unsigned short length)
+{
+  eeprom_read_nbyte(0, (unsigned char* )p, length);
+}
 
 static void charger_monitor_alert_func(void *p)
 {
@@ -605,22 +686,24 @@ static void charger_monitor_alert_func(void *p)
                              
 
     LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state); 
-    if(charger_state.cc_cv_charge == 1)
+    if((charger_state.cc_cv_charge == 1) || (charger_state.precharge == 1))
     {
       if(charge_status.constant_current == 1)
       {
-        log_info("Charger is in cc state by cc-cv");
+        log_info("Charger is in cc state of cc-cv");
       }
       else if(charge_status.constant_voltage == 1)
       {
-        log_info("Charger is in cv state by cc-cv");
+        log_info("Charger is in cv state of cc-cv");
+      }
+      else if(charger_state.precharge)
+      {
+        log_info("Charger is in precharge state ");
       }
       else
       {
         log_warning("the IIN or VIN is controled by setting");
       }
-      
-      g_bat_info.battery_state = BAT_CHARGING;
     }
     else if(charger_state.c_over_x_term == 1)
     {
@@ -629,18 +712,11 @@ static void charger_monitor_alert_func(void *p)
     else if(charger_state.charger_suspended == 1)
     {
       log_warning("Charger is in charger suspended state!");
-      if(g_bat_info.ISYS >= 100)//100ma
-      {
-        g_bat_info.battery_state = BAT_DISCHARGING;
-      }
-      else
-      {
-        g_bat_info.battery_state = BAT_IDLE_SUSPEND;
-      }
     }
     else if(charger_state.bat_missing_fault == 1 || charger_state.bat_short_fault == 1)
     {
       log_warning("Charger is in battery error state!");
+      g_bat_info.battery_state = BAT_ABNORMAL;
     }
     else
     {
@@ -649,7 +725,24 @@ static void charger_monitor_alert_func(void *p)
       log_warning("System  status value_hex: 0x%4X", system_status);
     }
     
-    log_info("\r\n");
+    
+    if(g_bat_info.ICHARGER > 0)
+    {
+      g_bat_info.battery_state = BAT_CHARGING;
+    }
+    else//<0
+    {
+       if(abs(g_bat_info.ICHARGER) >= 100)//-100ma
+      {
+        g_bat_info.battery_state = BAT_DISCHARGING;
+      }
+      else
+      {
+        g_bat_info.battery_state = BAT_IDLE_SUSPEND;
+      }
+    }
+    
+    //log_info("\r\n");
     return;
   
 }
@@ -676,19 +769,6 @@ static void charger_measure_data_func(void *p)
     double current_battery_capacity = 0.0;
     int    charging_times= 0;//sec  
     
-    
-//    double d_a = 1.9;
-//    int int_a = 0;
-//    int_a = round(d_a);
-//    d_a = 1.4;
-//    int_a = round(d_a);
-//    d_a = -1.9;
-//    int_a = round(d_a);
-//    d_a = -1.4;
-//    int_a = round(d_a);
-    
-   
-    
     //Read charge time
     LTC4015_read_register(chip, LTC4015_MAX_CHARGE_TIMER_BF, &value);
     charging_times = value;//sec
@@ -708,10 +788,10 @@ static void charger_measure_data_func(void *p)
     //This algorithm is suitable for NTCS0402E3103FLT
     double ntc_temp =0.0;
     LTC4015_read_register(chip, LTC4015_NTC_RATIO_BF, &value);
-    Rntc_value = ((double)(10000*value))/(21845.0-value);
+    Rntc_value = ((double)(Rntcbias*value))/(21845.0-value);
     
     //函数 log(x) 表示是以e为底的自然对数，即 ln(x)
-    ntc_temp = (1/(log(Rntc_value/1000/Rp)/Bx + (1/T2)))-273.15+0.5;
+    ntc_temp = (1/(log(Rntc_value/Rp)/Bx + (1/T2)))-273.15+0.5;
     
     g_bat_info.NTC = (int16_t)round(ntc_temp*100);
     log_info("Tntc: %f T.", ntc_temp);
@@ -839,7 +919,13 @@ void DC2039A_Run(void *p)
     ltc4015_powered = (value > 2500);//v？>2.5v
     
     // If power is cycled re-init.
-    if((ltc4015_powered_last == false) && (ltc4015_powered == true)) DC2039A_Config_Param();
+    if((ltc4015_powered_last == false) && (ltc4015_powered == true))
+    {
+      charger_settings_t settings;
+      memset(&settings, 0x00, sizeof(charger_settings_t));
+      read_charger_configuration((void*)&settings, sizeof(charger_settings_t));
+      //DC2039A_Config_Param(&settings);
+    }
     
     if(ltc4015_powered == false)//充电器未工作
     {
@@ -849,9 +935,9 @@ void DC2039A_Run(void *p)
     }
     else  
     {     
-      charger_monitor_alert_func(NULL);//1.监控告警信息
+      charger_measure_data_func(NULL);//1.测量数据
       
-      charger_measure_data_func(NULL);//2.根据状态，测量数据
+      charger_monitor_alert_func(NULL);//2.根据数据，监控告警信息
     
     }
 }

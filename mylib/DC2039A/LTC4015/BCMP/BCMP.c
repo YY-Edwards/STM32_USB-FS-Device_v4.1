@@ -2,6 +2,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "BCMP.h"
 #include "DC2039A.h"
+#include "stmflash.h"
 
 
 volatile bcmp_battery_info_brdcast_t g_bat_info;
@@ -231,6 +232,39 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
 }
 
 
+//void read_charger_configuration()
+//{
+//  eeprom_read_nbyte();
+//}
+
+static bool save_charger_configuration(charger_settings_t * ptr)
+{
+  bool ret = false;
+  ret = eeprom_write_nbyte(0, (unsigned char *)ptr, sizeof(charger_settings_t));
+  return ret;
+}
+
+static void bcmp_config_charger_settings_req_response(const bcmp_fragment_t *bcmp_rx_frame_p)
+{
+  
+   /*bcmp frame will be sent*/
+  bcmp_fragment_t bcmp_frame;
+  bcmp_frame.bcmp_opcode = BCMP_REPLY | CONFIG_CHARGER_SETTINGS;
+  bcmp_frame.u8[0]       = SUCCESS_NO_PROBLEM; 
+  /*send bcmp frame*/
+  bcmp_tx( &bcmp_frame, 1);
+  
+  charger_settings_t * ptr = ( charger_settings_t * )bcmp_rx_frame_p->u8;//类型强制转换
+  //save in eeprom
+  save_charger_configuration(ptr);
+    
+  //update setting of charger 
+  DC2039A_Config_Param(ptr);
+
+}
+
+
+
 static const volatile BCMP_process_list_t bcmp_process_list[]=
 {
   /*BCMP_REQEUST RESPONSE,         BCMP_REPLY,             BCMP_BROADCAST*/
@@ -238,7 +272,7 @@ static const volatile BCMP_process_list_t bcmp_process_list[]=
   {bcmp_battery_info_req_response                },
   {bcmp_alert_and_notice_config_req_response     },
   {bcmp_get_alert_info_req_response                },
-  {              NULL                   },
+  {bcmp_config_charger_settings_req_response       },
   {              NULL                   },
     
 };

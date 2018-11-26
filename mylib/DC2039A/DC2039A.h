@@ -40,6 +40,7 @@ extern "C" {
   
   
 void DC2039A_Init(void);  
+void DC2039A_Config_Param(charger_settings_t *settings_ptr);
   
   
   

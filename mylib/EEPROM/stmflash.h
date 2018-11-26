@@ -10,9 +10,10 @@ extern "C" {
 #include "stdio.h"
 #include <stdarg.h>
   
+void eeprom_read_nbyte(unsigned short raddr, unsigned char* buf,  unsigned short read_len);
+bool eeprom_write_nbyte(unsigned short waddr, unsigned char* buf,  unsigned short write_len);
+
   
-  
-    
   
 #ifdef __cplusplus
 }
