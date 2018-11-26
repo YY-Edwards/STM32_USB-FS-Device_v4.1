@@ -126,7 +126,7 @@ void bnp_client_heart_beat_req_func(bnp_fragment_t *bnp_p)           /*-0x1-BNP_
    bnp_tx_frame.bnp_header.opcode = BNP_CLIENT_HEART_BEAT_REPLY;
    bnp_tx_frame.bnp_header.tx_number = bnp_p->bnp_header.tx_number;
    
-   if(bnp_information.is_connected)
+   if(bnp_information.is_connected == true)
     bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = SUCCESS_NO_PROBLEM;
    else
     bnp_tx_frame.bnp_data.bnp_content_client_heart_reply.result = PRO_UNCONNECTED;
@@ -248,7 +248,7 @@ void bnp_data_msg_func(bnp_fragment_t *bnp_p)		/*-0x4-BNP_DATA_MSG*/
 {
    bnp_send_data_msg_ack(bnp_p);//repley ack
    
-  if(bnp_information.is_connected)
+  if(bnp_information.is_connected == true)
   {  
    if(bcmp_analyse_callback_func != NULL)
    /*exec bcmp function*/
@@ -438,7 +438,7 @@ void bnp_init()
   
   bnp_set_bcmp_analyse_callback(bcmp_parse_func);
   
-  set_timer_task(BNP_PARSE_TASK, TIME_BASE_10MS*5, true, bnp_parse_task, NULL);
+  set_timer_task(BNP_PARSE_TASK, TIME_BASE_10MS*4, true, bnp_parse_task, NULL);
   
 }
 

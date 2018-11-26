@@ -10,7 +10,7 @@ const double charger_efficency = 0.925;
 const double battery_total_capacity = 16.8;//Ah
 const double Kqc=8333.33;//hz
 const double Rntcbias=10000;//Ω
-const double Rp = 100000;//Ω
+const double Rp = 10000;//Ω
 const double T2 = (273.15+25.0);//
 const double Bx = 3380;//,NCP18XH103F0SRB
 const double Ka = 273.15;//
@@ -56,6 +56,59 @@ void charger_monitor_task(void *p)
   //static int t = 0;
   //t++;
   //log_debug("[charger_monitor_task] is running :%d", t);
+//  charger_settings_t settings;
+//  settings.uvcl                 = 12000;//mv
+//  settings.jeita                = 0;
+//  settings.vcharge_cell         = 4200;//mv
+//  settings.icharge_cell         = 5000;//ma
+//  settings.iinlim               = 5000;//ma
+//  settings.max_cv_time          = 1800;//sec
+//  settings.max_charge_time      = 14400;//sec
+//  settings.bat_capacity         = 16800;//mah
+//  int idx =0;
+//  settings.limits[idx].id         = VBAT_LO_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 3500;
+//  idx++;
+//  settings.limits[idx].id         = VBAT_HI_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 4200;
+//  idx++;
+//  settings.limits[idx].id         = VIN_LO_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 12000;
+//   idx++;
+//  settings.limits[idx].id         = VIN_HI_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 15000;
+//   idx++;
+//  settings.limits[idx].id         = VSYS_LO_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 10000;
+//   idx++;
+//  settings.limits[idx].id         = VSYS_HI_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 24000;
+//   idx++;
+//  settings.limits[idx].id         = IIN_HI_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 5500;
+//   idx++;
+//  settings.limits[idx].id         = IBAT_LO_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 1000;
+//   idx++;
+//  settings.limits[idx].id         = DIE_TEMP_HI_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 6000;
+//   idx++;
+//  settings.limits[idx].id         = BAT_TEMP_HI_ALERT_LIMIT;
+//  settings.limits[idx].operation  = 0x01;
+//  settings.limits[idx].value      = 6000;
+//  
+//  
+//  save_charger_configuration(&settings);
+  
   DC2039A_Run(p);
 
 }
@@ -345,7 +398,7 @@ void DC2039A_Config_Param(charger_settings_t *settings_ptr)
     
      //设置库伦的放大因子
     //set QCOUNT_PRESCALE_FACTOR
-    unsigned int factor = (unsigned int)round((double)(settings_ptr->bat_capacity/1000)*3600/65535*Kqc*LTC4015_RSNSB*2);    
+    unsigned int factor = (unsigned int)round(((double)settings_ptr->bat_capacity/1000)*3600/65535*Kqc*LTC4015_RSNSB*2);    
     LTC4015_write_register(chip, LTC4015_QCOUNT_PRESCALE_FACTOR_BF, factor);
      
          
@@ -924,7 +977,8 @@ void DC2039A_Run(void *p)
       charger_settings_t settings;
       memset(&settings, 0x00, sizeof(charger_settings_t));
       read_charger_configuration((void*)&settings, sizeof(charger_settings_t));
-      //DC2039A_Config_Param(&settings);
+      //read_charger_configuration((void*)&settings, sizeof(charger_settings_t));
+      DC2039A_Config_Param(&settings);
     }
     
     if(ltc4015_powered == false)//充电器未工作

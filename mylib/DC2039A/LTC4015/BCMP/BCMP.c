@@ -13,6 +13,7 @@ volatile bcmp_battery_info_brdcast_t g_bat_info;
 
 static void bcmp_tx( const bcmp_fragment_t * bcmp_p, unsigned char payload_len)
 {
+  
 
    /*BNP frame will be send*/	
    bnp_fragment_t bnp_tx_frame;
@@ -237,7 +238,7 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
 //  eeprom_read_nbyte();
 //}
 
-static bool save_charger_configuration(charger_settings_t * ptr)
+bool save_charger_configuration(charger_settings_t * ptr)
 {
   bool ret = false;
   ret = eeprom_write_nbyte(0, (unsigned char *)ptr, sizeof(charger_settings_t));

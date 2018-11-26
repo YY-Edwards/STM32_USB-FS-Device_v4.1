@@ -238,7 +238,7 @@ void logger_init()
 
   logger_output_peripheral_init();
   
-  set_timer_task(LOGGER_TASK, TIME_BASE_10MS*3, true, usart_output_log_task, (void *)usart_send_buffer);
+  set_timer_task(LOGGER_TASK, TIME_BASE_10MS*2, true, usart_output_log_task, (void *)usart_send_buffer);
   
 }
 

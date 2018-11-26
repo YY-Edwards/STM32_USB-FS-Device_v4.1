@@ -2,7 +2,7 @@
 #include "usb_conf.h"
 #include "usb_regs.h"
 #include "usb_desc.h"
-
+extern volatile bnp_information_t bnp_information;
 volatile RingQueue_t  usb_rx_queue_ptr = NULL;
 volatile RingQueue_t  slip_usb_send_queue_ptr = NULL;
 
@@ -233,7 +233,8 @@ void phy_slip_assemble_task(void *p)
             }
             else
             {
-              log_warning("device no response!");
+              log_warning("device no response! disconnect the device");
+              bnp_information.is_connected = false;
               timeout_for_once = false;
               resend_count = 0;
               stop_bnp_timeout_detect();//¹Ø±Õbnp response¼à²â
