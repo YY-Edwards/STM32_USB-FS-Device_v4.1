@@ -48,7 +48,7 @@
 #include "DC2039A.h"
 #include "logger.h"
 #include "task_timer.h"    
-#include "stmflash.h"
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -428,26 +428,6 @@ static void usb_virtual_comport_init()
 
 void hardware_init()
 {
-  
-//  unsigned char read_buff[20]={0};
-//  unsigned char write_buff[20]={0};
-//  bool ret =false;
-//  memset(write_buff, 0x37, 20);
-//  
-//  eeprom_read_nbyte(0, read_buff, 10);
-//  
-//  ret = eeprom_write_nbyte(0, write_buff, 5);
-//  
-//  eeprom_read_nbyte(0, read_buff, 10);
-//  
-//  memset(write_buff, 0x19, 20);
-//  
-//  eeprom_read_nbyte(0, read_buff, 10);
-//  
-//  ret = eeprom_write_nbyte(0, write_buff, 5);
-  
-  
-  
   
   task_init();//初始化调度任务,后续可以通过set_timer_task()接口添加任务
   
