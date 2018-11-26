@@ -1,10 +1,6 @@
 
 #include "stmflash.h"
 
-#define EEPROM_BASE_ADDR    0x08080000      //(0x08080000 ~ 0x08080FFF) 4Kbye
-
-#define EEPROM_BYTE_SIZE	0x0FFF
-
 
 
 //addr:读地址，没有特殊要求？任意地址都可以读，应该
