@@ -411,7 +411,8 @@ uint32_t CDC_Receive_DATA(void)
 
 static void NVIC_Configuration(void)
 {
-
+  
+    NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x2800);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	//设置NVIC中断分组2:2位抢占优先级，2位响应优先级
 
 }
@@ -428,10 +429,10 @@ static void usb_virtual_comport_init()
 
 void hardware_init()
 {
+    
+  NVIC_Configuration();//设置中断向量以及优先级分组
   
   task_init();//初始化调度任务,后续可以通过set_timer_task()接口添加任务
-  
-  NVIC_Configuration();//设置中断优先级分组
   
   logger_init();//logger 初始化
   
