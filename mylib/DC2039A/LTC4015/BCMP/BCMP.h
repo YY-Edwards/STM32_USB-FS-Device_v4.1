@@ -209,12 +209,12 @@ Opcode [1] + Result [2] + Number [1] + {Type [1] + Id [2] + Value [2]} [Number]
   {
     unsigned char                       result;
     unsigned char                       number;
-    bcmp_alert_detailed_info_t           alert_detailed_info[MAX_ALERT_COUNT];  //15>=number      
+    bcmp_alert_detailed_info_t           alert_obj[MAX_ALERT_COUNT];  //15>=number      
   
   } bcmp_alert_info_reply_t;
   
   
-  
+  typedef bcmp_alert_info_reply_t g_alerts_t;
   
     /*
 Configure Charger settings: 0x0004.

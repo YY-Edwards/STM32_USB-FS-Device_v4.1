@@ -199,12 +199,14 @@ void CAT5140_Optional_Handle()
 {
   uint8_t r_value = 0;
   uint8_t w_value = 0;
+  
   MakeCAT5140Volatile();
   CAT5140_Read_Handle(CAT5140Addr, CAT5140Register0, &r_value);
   w_value = 0x19;
   CAT5140_Write_Handle(CAT5140Addr, CAT5140Register0, w_value);
-  
+  r_value = 0;
   CAT5140_Read_Handle(CAT5140Addr, CAT5140Register0, &r_value);
+  MakeCAT5140Permanent();
 //  w_value = 0x7A;
 //  CAT5140_Write_Handle(CAT5140Addr, CAT5140Register0, w_value);
 //  

@@ -412,7 +412,7 @@ uint32_t CDC_Receive_DATA(void)
 static void NVIC_Configuration(void)
 {
   
-    NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x2800);
+    //NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x2800);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	//设置NVIC中断分组2:2位抢占优先级，2位响应优先级
 
 }
