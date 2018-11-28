@@ -55,9 +55,9 @@ const uint8_t Virtual_Com_Port_DeviceDescriptor[] =
     0x00,   /* bDeviceProtocol */
     0x40,   /* bMaxPacketSize0 *///端点0最大包长度
     0x73,
-    0x19,   /* idVendor = 0x1272 *///可以用于区别不同的USB设备
-    0x18,
-    0x20,   /* idProduct = 0x8004 */
+    0x19,   /* idVendor = 0x1973 *///供应商ID
+    0x19,
+    0x20,   /* idProduct = 0x2019 *///可以用于区别不同的USB设备：PTT(2018),Charger(2019)
     0x00,
     0x02,   /* bcdDevice = 2.00 */
     1,              /* Index of string descriptor describing manufacturer */
@@ -199,11 +199,12 @@ const uint8_t Virtual_Com_Port_StringProduct[VIRTUAL_COM_PORT_SIZ_STRING_PRODUCT
   {
     VIRTUAL_COM_PORT_SIZ_STRING_PRODUCT,          /* bLength */
     USB_STRING_DESCRIPTOR_TYPE,        /* bDescriptorType */
-    /* Product name: "JH Virtual COM Port" */
+    /* Product name: "JH Charger" */
    /* 'S', 0, 'T', 0, 'M', 0, '3', 0, '2', 0, ' ', 0, 'V', 0, 'i', 0,*/
-    'J', 0, 'H', 0, ' ', 0, 'V', 0, 'i', 0, 'r', 0, 't', 0, 'u', 0,
-    'a', 0, 'l', 0, ' ', 0, 'C', 0, 'O', 0, 'M', 0, ' ', 0, 'P', 0 ,
-    'o', 0,'r', 0, 't', 0
+    'J', 0, 'H', 0, ' ', 0, 'C', 0, 'h', 0, 'a', 0, 'r', 0, 'g', 0,
+   'e', 0, 'r', 0
+    //', 0, 'C', 0, 'O', 0, 'M', 0, ' ', 0, 'P', 0 ,
+//    'o', 0,'r', 0, 't', 0
   };
 
 //最好每个产品的序列号不一致
@@ -212,7 +213,7 @@ uint8_t Virtual_Com_Port_StringSerial[VIRTUAL_COM_PORT_SIZ_STRING_SERIAL] =
     VIRTUAL_COM_PORT_SIZ_STRING_SERIAL,           /* bLength */
     USB_STRING_DESCRIPTOR_TYPE,                   /* bDescriptorType */
     /*'S', 0, 'T', 0, 'M', 0, '3', 0, '2', 0*/
-    'J', 0, 'H', 0, 'A', 0, 'p', 0, 'p', 0, '0', 0, '0', 0, '1', 0
+    'J', 0, 'H', 0, 'A', 0, 'p', 0, 'p', 0, '0', 0, '0', 0, '2', 0
   };
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
