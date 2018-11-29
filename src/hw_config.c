@@ -412,7 +412,7 @@ uint32_t CDC_Receive_DATA(void)
 static void NVIC_Configuration(void)
 {
   
-    //NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x2800);
+    //NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x2800); 启用IAP功能时需要重置中断向量表
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	//设置NVIC中断分组2:2位抢占优先级，2位响应优先级
 
 }
@@ -429,7 +429,19 @@ static void usb_virtual_comport_init()
 
 void hardware_init()
 {
-    
+  #if defined(STM32L1XX_MD)
+  
+    delay_init(32);
+  //同时启用有冲突。
+  //SYSCLK = 32M
+  //SysTick_Config(32000000 / 500);//2ms
+  
+#else
+   delay_init(72);//延时功能初始化
+   //SysTick_Config(SYSTEM_CLOCK / 500);//2ms
+#endif  
+  
+  
   NVIC_Configuration();//设置中断向量以及优先级分组
   
   task_init();//初始化调度任务,后续可以通过set_timer_task()接口添加任务

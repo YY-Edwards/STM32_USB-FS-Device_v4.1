@@ -1,11 +1,13 @@
 #include "logger.h"
 
+#define MAX_LOG_BUFF 128
 
 volatile RingQueue_t logger_msg_queue_ptr = NULL;
 static volatile unsigned int logger_count = 0;
 
-volatile unsigned char usart_send_buffer[256]= {0};
+volatile unsigned char usart_send_buffer[MAX_LOG_BUFF]= {0};
 static volatile bool DMA_ALLOW_SEND_FLAG  = true;
+
 
 DMA_InitTypeDef DMA_InitStructure;        //DMA初始化结构体声明：全局
 
@@ -184,7 +186,7 @@ void usart_output_log_task(void *p)//将参数传递进去
         ret = logger_output_msg(p, &msg_len);
         if(ret == true)//读取数据成功
         {
-          if(msg_len >256)msg_len =256;
+          //if(msg_len >256)msg_len =256;
           
           DMA_ALLOW_SEND_FLAG = false;
           
@@ -229,7 +231,7 @@ extern void set_timer_task(unsigned char       timer_id,
 void logger_init()
 {
   
-  logger_msg_queue_ptr = create_queue(17, 128);
+  logger_msg_queue_ptr = create_queue(17, MAX_LOG_BUFF);
   if(logger_msg_queue_ptr == NULL)
   {
     return;

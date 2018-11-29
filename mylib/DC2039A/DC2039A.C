@@ -7,7 +7,7 @@
 bool ltc4015_powered = false;
 bool No_VIN_Flag = false;
 const double charger_efficency = 0.925;
-const double battery_total_capacity = 16.8;//Ah
+//const double battery_total_capacity = 16.8;//Ah
 const double Kqc=8333.33;//hz
 const double Rntcbias=10000;//¦¸
 const double Rp = 10000;//¦¸
@@ -1011,8 +1011,8 @@ static void charger_measure_data_func(void *p)
     double capacity_percent =0.0;
     LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
     capacity_percent = ((double)(value-16384)/32768.0)*100;//%
-    current_battery_capacity = capacity_percent/100*battery_total_capacity;   
-    
+    current_battery_capacity = capacity_percent/100*((double)(g_bat_info.bat_total_capacity)/1000);   
+       
     g_bat_info.bat_currently_capacity = (uint32_t)round(current_battery_capacity*1000);
     log_info("bat capacity: %d, %f Ah, %f %%. ", value, current_battery_capacity, capacity_percent);
     
@@ -1133,7 +1133,7 @@ static void charger_measure_data_func(void *p)
       e_i_charge = actual_bat_current;
     }
     g_bat_info.remained_charge_time = 
-      (unsigned int)round((battery_total_capacity - current_battery_capacity)/e_i_charge*60);
+      (unsigned int)round(((double)(g_bat_info.bat_total_capacity)/1000 - current_battery_capacity)/e_i_charge*60);
     
     log_info("remained_charge_time: %d minutes. ", g_bat_info.remained_charge_time);
 
