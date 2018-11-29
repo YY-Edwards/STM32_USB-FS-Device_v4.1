@@ -159,8 +159,9 @@
 #define BCMP_BRDCAST_TASK               3//broadcast in cycle:3s
 
 #define BATTERY_MONITOR_TASK            4//measure
+#define BATTERY_QCOUNT_RECORD_TASK      5//record
 
-#define BNP_SEND_TASK                   5//send
+#define BNP_SEND_TASK                   6//send
 
 
 #define UNDEFINED_TASK                  1    

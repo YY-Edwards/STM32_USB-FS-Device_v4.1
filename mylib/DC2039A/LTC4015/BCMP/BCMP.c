@@ -9,6 +9,7 @@ extern const double Rp;//Ω
 extern const double T2;//
 extern const double Bx;//,NCP18XH103F0SRB
 extern volatile g_alerts_t g_alerts;
+extern bool save_charger_configuration(void*p, unsigned short length);
 
 volatile bcmp_battery_info_brdcast_t g_bat_info;
 //void bcmp_battery_info_reply()
@@ -277,12 +278,6 @@ static void bcmp_get_alert_info_req_response(const bcmp_fragment_t *bcmp_rx_fram
 //  eeprom_read_nbyte();
 //}
 
-bool save_charger_configuration(charger_settings_t * ptr)
-{
-  bool ret = false;
-  ret = eeprom_write_nbyte(0, (unsigned char *)ptr, sizeof(charger_settings_t));
-  return ret;
-}
 
 static void bcmp_config_charger_settings_req_response(const bcmp_fragment_t *bcmp_rx_frame_p)
 {
@@ -296,7 +291,7 @@ static void bcmp_config_charger_settings_req_response(const bcmp_fragment_t *bcm
   
   charger_settings_t * ptr = ( charger_settings_t * )bcmp_rx_frame_p->u8;//类型强制转换
   //save in eeprom
-  save_charger_configuration(ptr);
+  save_charger_configuration(ptr, sizeof(charger_settings_t));
     
   //update setting of charger 
   DC2039A_Config_Param(ptr);

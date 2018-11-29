@@ -3,6 +3,8 @@
 
 
 /* Private macro -------------------------------------------------------------*/
+#define CAPACITY_ZERO_QCOUNT 16384
+#define CAPACITY_FULL_QCOUNT 49152
 /* Private variables ---------------------------------------------------------*/
 bool ltc4015_powered = false;
 bool No_VIN_Flag = false;
@@ -14,6 +16,8 @@ const double Rp = 10000;//Ω
 const double T2 = (273.15+25.0);//
 const double Bx = 3380;//,NCP18XH103F0SRB
 const double Ka = 273.15;//
+
+__IO uint16_t g_remained_qcount = CAPACITY_ZERO_QCOUNT;//保存的库伦值
 
 __IO uint16_t ADCConvertedValue;     // ADC为12位模数转换器，只有ADCConvertedValue的低12位有效
 __IO LTC4015_charger_state_t charger_state;
@@ -31,6 +35,8 @@ void charger_monitor_task(void *);
 
 //typedef bcmp_alert_info_reply_t g_alerts_t;
 volatile g_alerts_t g_alerts;
+
+extern void read_charger_configuration(void*p, unsigned short length);
 
 /* Private functions ---------------------------------------------------------*/
 uint16_t INTVCC_ADC_Read(void)
@@ -115,6 +121,22 @@ void charger_monitor_task(void *p)
   DC2039A_Run(p);
 
 }
+
+void record_current_qcount_task(void *p)
+{
+  //定时缓存电池当前的实际容量
+  //电池容量记忆功能：换了电池就不准了。
+  //eeprom_write_nbyte(0, (unsigned char* )p, length);
+  static unsigned short value = 0;
+  unsigned short temp_value = 0;
+  memcpy((void*)&temp_value, p, sizeof(temp_value));
+  if((p!=NULL) && (value != temp_value))//存在，且发生了改变
+  {
+    value = temp_value;//地址所指的2个字节长度的数据，读指针所指向的值
+    save_current_charger_qcount(value);
+  }
+}
+
 void DC2039A_Init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;  
@@ -177,13 +199,15 @@ void DC2039A_Init(void)
     
     SMBus_Init();//新增SMBus接口，与IIC相比，ACK,NACK的机制要求更强
     
-    uint8_t cat5140_id = Get_CAT5140_ID();
+    //uint8_t cat5140_id = Get_CAT5140_ID();
     
-    CAT5140_Optional_Handle();
+    //CAT5140_Optional_Handle();
+    
+    //9s
+    set_timer_task(BATTERY_MONITOR_TASK, 18*TIME_BASE_500MS, true, charger_monitor_task, NULL);
     
     //3s
-    set_timer_task(BATTERY_MONITOR_TASK, 18*TIME_BASE_500MS, true, charger_monitor_task, NULL);
-  
+    //set_timer_task(BATTERY_QCOUNT_RECORD_TASK, 6*TIME_BASE_500MS, true, record_current_qcount_task, &g_remained_qcount);
 }
 void ADC_GPIO_Configuration(void)
 {
@@ -408,12 +432,25 @@ void DC2039A_Config_Param(charger_settings_t *settings_ptr)
     double vcc_per_bat = 0.0;
     LTC4015_read_register(chip, LTC4015_VBAT_FILT_BF, &value);
     vcc_per_bat = ((double)value*192.264/1000000);
-    unsigned short acount_value_temp = 0 ;
-    LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &acount_value_temp);
+//    unsigned short acount_value_temp = 0 ;
+//    LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &acount_value_temp);
+//    
+//    if((vcc_per_bat < 2.5) && (acount_value_temp <= 0x8000))  
+//     LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 16384);//overwritten to 16384:0%
+//    if(vcc_per_bat < 2.5) 
+//    {
+    unsigned short qcount =0;
+    read_stored_qcount(&qcount);  
+    g_remained_qcount = qcount;//初始化实际库伦值
     
-    if((vcc_per_bat < 2.5) && (acount_value_temp <= 0x8000))  
-     LTC4015_write_register(chip, LTC4015_QCOUNT_BF, 16384);//overwritten to 16384:0%
-     
+    if(vcc_per_bat < 2.5) 
+    {   
+        if(qcount<CAPACITY_ZERO_QCOUNT)qcount=CAPACITY_ZERO_QCOUNT;
+        else if(qcount>CAPACITY_FULL_QCOUNT)qcount=CAPACITY_FULL_QCOUNT;
+        LTC4015_write_register(chip, LTC4015_QCOUNT_BF, qcount);//overwritten to 16384:0%
+       
+    }
+        
 //     //设置库伦高的告警门限值：49149
 //     LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49149);
 //     
@@ -550,10 +587,10 @@ void DC2039A_Config_Param(charger_settings_t *settings_ptr)
     return;
 }
 
-void read_charger_configuration(void*p, unsigned short length)
-{
-  eeprom_read_nbyte(0, (unsigned char* )p, length);
-}
+//void read_charger_configuration(void*p, unsigned short length)
+//{
+//  eeprom_read_nbyte(0, (unsigned char* )p, length);
+//}
 
 static void save_detailed_alert_info(void)
 {
@@ -829,7 +866,7 @@ static void charger_monitor_alert_func(void *p)
            //first_termination_flag =true;
            
                      //49152
-           LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, 49152);
+           LTC4015_write_register(chip, LTC4015_QCOUNT_HI_ALERT_LIMIT_BF, CAPACITY_FULL_QCOUNT);
            
            //使能库伦高告警功能
            LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
@@ -950,6 +987,12 @@ static void charger_monitor_alert_func(void *p)
     {
       log_warning("Charger is in battery error state!");
       g_bat_info.battery_state = BAT_ABNORMAL;
+      g_bat_info.bat_currently_capacity = 0;
+      g_bat_info.bat_total_capacity = 0;
+      g_bat_info.ICHARGER = 0;
+      g_bat_info.NTC =0;
+      g_bat_info.remained_charge_time = 0;
+      g_bat_info.VCHARGER = 0;
     }
     else
     {
@@ -1010,7 +1053,8 @@ static void charger_measure_data_func(void *p)
    //Read Qcount
     double capacity_percent =0.0;
     LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-    capacity_percent = ((double)(value-16384)/32768.0)*100;//%
+    g_remained_qcount = value;//更新库伦值
+    capacity_percent = ((double)(value-CAPACITY_ZERO_QCOUNT)/32768.0)*100;//%
     current_battery_capacity = capacity_percent/100*((double)(g_bat_info.bat_total_capacity)/1000);   
        
     g_bat_info.bat_currently_capacity = (uint32_t)round(current_battery_capacity*1000);
@@ -1157,8 +1201,9 @@ void DC2039A_Run(void *p)
       charger_settings_t settings;
       memset(&settings, 0x00, sizeof(charger_settings_t));
       read_charger_configuration((void*)&settings, sizeof(charger_settings_t));
-      //read_charger_configuration((void*)&settings, sizeof(charger_settings_t));
       DC2039A_Config_Param(&settings);
+      //3s,启动库伦值保护任务
+      set_timer_task(BATTERY_QCOUNT_RECORD_TASK, 6*TIME_BASE_500MS, true, record_current_qcount_task, (void *)&g_remained_qcount);
     }
     
     if(ltc4015_powered == false)//充电器未工作
