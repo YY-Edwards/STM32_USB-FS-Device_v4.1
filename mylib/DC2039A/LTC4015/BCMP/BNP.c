@@ -101,6 +101,8 @@ void bnp_tx(bnp_fragment_t * bnp_tx_p)
   else//need response from device
     custom_send_data.is_data_need_answer   = 1;
   
+  //custom_send_data.is_data_need_answer  = 0;
+  
   memcpy(custom_send_data.phy_valid_data.u8, ptr->u8, bnp_len);
   
   custom_len = 4 + bnp_len;

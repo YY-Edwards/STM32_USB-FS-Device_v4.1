@@ -3,6 +3,7 @@
 
 
 /* Private macro -------------------------------------------------------------*/
+#define ADC_SOFTWARE_START               ((uint32_t)0x00000010)
 #define CAPACITY_ZERO_QCOUNT 16384
 #define CAPACITY_FULL_QCOUNT 49152
 /* Private variables ---------------------------------------------------------*/
@@ -41,7 +42,7 @@ extern void read_charger_configuration(void*p, unsigned short length);
 /* Private functions ---------------------------------------------------------*/
 uint16_t INTVCC_ADC_Read(void)
 {
-  uint16_t ADCConvertedValueLocal, Precent = 0, Voltage = 0;
+  uint16_t ADCConvertedValueLocal = 0, Precent = 0, Voltage = 0;
   
   ADCConvertedValueLocal = ADCConvertedValue;
   Precent = (ADCConvertedValueLocal*100/0x1000);	//算出百分比
@@ -264,16 +265,18 @@ void ADC_GPIO_Configuration(void)
     {
     }
 
-    /* Enable ADC1 clock */
+     /* Enable ADC1 clock */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     /* Common configuration *****************************************************/
-    /* ADCCLK = HSI/1 */
-    ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div1;
+    /* ADCCLK = HSI/2 */
+    ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div2;
     ADC_CommonInit(&ADC_CommonInitStructure);
     /* ADC1 configuration */
-    ADC_InitStructure.ADC_ScanConvMode = ENABLE;
+    ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
+    ADC_InitStructure.ADC_ScanConvMode = DISABLE;//只启用一个通道
     ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
-    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConvEdge_None;
+    ADC_InitStructure.ADC_ExternalTrigConv = ADC_SOFTWARE_START;
+    ADC_InitStructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
     ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
     ADC_InitStructure.ADC_NbrOfConversion = 1;
     ADC_Init(ADC1, &ADC_InitStructure);
@@ -291,8 +294,6 @@ void ADC_GPIO_Configuration(void)
     }
     /* Start ADC1 Software Conversion */
     ADC_SoftwareStartConv(ADC1);
-
-    
 
 #else    
     
@@ -988,7 +989,7 @@ static void charger_monitor_alert_func(void *p)
       log_warning("Charger is in battery error state!");
       g_bat_info.battery_state = BAT_ABNORMAL;
       g_bat_info.bat_currently_capacity = 0;
-      g_bat_info.bat_total_capacity = 0;
+      //g_bat_info.bat_total_capacity = 0;
       g_bat_info.ICHARGER = 0;
       g_bat_info.NTC =0;
       g_bat_info.remained_charge_time = 0;
@@ -1053,11 +1054,23 @@ static void charger_measure_data_func(void *p)
    //Read Qcount
     double capacity_percent =0.0;
     LTC4015_read_register(chip, LTC4015_QCOUNT_BF, &value);
-    g_remained_qcount = value;//更新库伦值
-    capacity_percent = ((double)(value-CAPACITY_ZERO_QCOUNT)/32768.0)*100;//%
-    current_battery_capacity = capacity_percent/100*((double)(g_bat_info.bat_total_capacity)/1000);   
+    if(value>CAPACITY_FULL_QCOUNT)
+    {
+      g_remained_qcount = CAPACITY_FULL_QCOUNT;
+    }
+    else if(value < CAPACITY_ZERO_QCOUNT)
+    {
+      g_remained_qcount = CAPACITY_ZERO_QCOUNT;
+    }
+    else
+      g_remained_qcount = value;//更新库伦值
+    
+    //用过滤后的库伦值计算当前剩余容量
+    capacity_percent = ((double)(g_remained_qcount-CAPACITY_ZERO_QCOUNT)/32768.0)*100;//0%~100%
+    current_battery_capacity = (capacity_percent/100)*((double)(g_bat_info.bat_total_capacity)/1000);   
        
     g_bat_info.bat_currently_capacity = (uint32_t)round(current_battery_capacity*1000);
+    //保留实际读到库伦值，并输出
     log_info("bat capacity: %d, %f Ah, %f %%. ", value, current_battery_capacity, capacity_percent);
     
       

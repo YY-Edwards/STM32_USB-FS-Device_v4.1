@@ -8,7 +8,7 @@
 
 #pragma pack(1)
 
-static bool timer2_enabled = true;
+static bool timer2_enabled = false;
   
 typedef struct
 {       

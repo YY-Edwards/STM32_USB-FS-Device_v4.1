@@ -199,7 +199,7 @@ void phy_slip_assemble_task(void *p)
               }
               
             }while(remained_bytes > 0);
-            
+                       
             if(ptr->is_data_need_answer == 1)
             {
               custom_send_state = CUSTOM_WAIT_RESPONSE;
