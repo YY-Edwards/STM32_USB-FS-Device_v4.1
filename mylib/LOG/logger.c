@@ -23,15 +23,15 @@ void my_dma_config_and_enabled(void *p, uint16_t p_len)
   
   //while (DMA_GetFlagStatus(DMA1_FLAG_TC4) == RESET);//等待DMA数据传输完毕
   
-  DMA_DeInit(DMA1_Channel4);//重置DMA1的CH4
+  DMA_DeInit(DMA1_Channel7);//重置DMA1的CH4
   //DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)usart_send_buffer;//设置DMA缓冲区地址
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)p;//设置DMA缓冲区地址
   DMA_InitStructure.DMA_BufferSize = send_len;//要传送数据长度
-  DMA_Init(DMA1_Channel4, &DMA_InitStructure);//初始化DMA1的CH7
+  DMA_Init(DMA1_Channel7, &DMA_InitStructure);//初始化DMA1的CH7
   
-  DMA_ITConfig(DMA1_Channel4,DMA_IT_TC,ENABLE);//使能传输完成中断
+  DMA_ITConfig(DMA1_Channel7,DMA_IT_TC,ENABLE);//使能传输完成中断
   
-  DMA_Cmd(DMA1_Channel4, ENABLE);//打开DMA的通道4，这时候数据就发送出去了！
+  DMA_Cmd(DMA1_Channel7, ENABLE);//打开DMA的通道4，这时候数据就发送出去了！
 
 }
 
@@ -46,12 +46,20 @@ static void usart1_gpio_init()
       /* Peripheral clock enable */
     
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    //RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+    
     
     /**USART1 GPIO Configuration    
     PA9     ------> USART1_TX
     PA10     ------> USART1_RX 
     */
+      
+         
+    /**USART1 GPIO Configuration    
+    PA2     ------> USART2_TX
+    PA3     ------> USART2_RX 
+    */ 
     
     //首先开启复用，再确定复用成哪一种，因为同一个端口可能支持多种复用功能
     //串口1对应引脚复用映射,与F1的端口重映射不同。
@@ -62,10 +70,10 @@ static void usart1_gpio_init()
     //而在L1中，外设功能可以通过复用即可在不同的管脚实现外设功能。
     
     //简而言之，F1不能通过复用操作来时实现在不同管脚的相同外设功能。
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_USART1);
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_USART1);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_USART2);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource3, GPIO_AF_USART2);
     
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9|GPIO_Pin_10;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2|GPIO_Pin_3;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; /* Push-pull or open drain */
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
@@ -88,7 +96,8 @@ static void usart1_dma_interrupt_config()
   
   NVIC_InitTypeDef NVIC_InitStructure;
   
-  NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;         //通道设置为DMA1_4中断  
+   NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel7_IRQn;         //通道设置为DMA1_4中断 
+  //NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;         //通道设置为DMA1_4中断  
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;       //中断占先等级2 
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;              //中断响应优先级0
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                 //打开中断  
@@ -105,8 +114,8 @@ static void usart1_dma_init()
   
 #if defined(STM32L1XX_MD)
   
- 
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+  //RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART2, ENABLE);
     
   /* USART1 configured as follow:  
         - BaudRate = 115200 baud  
@@ -124,21 +133,21 @@ static void usart1_dma_init()
   USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;  /*发送和接收*/
 
   /*配置串口1 */
-  USART_Init(USART1, &USART_InitStructure);
+  USART_Init(USART2, &USART_InitStructure);
     
     
-  USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);//打开DMA发送请求
+  USART_DMACmd(USART2, USART_DMAReq_Tx, ENABLE);//打开DMA发送请求
   
   //USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);//打开串口接收中断
   
-  USART_Cmd(USART1, ENABLE);//打开串口
+  USART_Cmd(USART2, ENABLE);//打开串口
   
   
     /* Enable DMA1 clock */
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);		        //使能DMA时钟
   /* DMA1 channel4 configuration ----------------------------------------------*/
-  DMA_DeInit(DMA1_Channel4);		                                //开启DMA1的第4通道
-  DMA_InitStructure.DMA_PeripheralBaseAddr              =  (uint32_t)(&USART1->DR);              //DMA对应的外设基地址:USART1
+  DMA_DeInit(DMA1_Channel7);		                                //开启DMA1的第4通道
+  DMA_InitStructure.DMA_PeripheralBaseAddr              =  (uint32_t)(&USART2->DR);              //DMA对应的外设基地址:USART1
   DMA_InitStructure.DMA_MemoryBaseAddr                  = (uint32_t)usart_send_buffer;                              //内存存储基地址
   DMA_InitStructure.DMA_DIR                             = DMA_DIR_PeripheralDST;	                //DMA的转换模式为DST模式，由内存搬移到外设
   DMA_InitStructure.DMA_BufferSize                      = sizeof(usart_send_buffer);		                 //DMA缓存大小，1个
@@ -150,9 +159,9 @@ static void usart1_dma_init()
   DMA_InitStructure.DMA_Priority                        = DMA_Priority_High;	                //DMA优先级高
   DMA_InitStructure.DMA_M2M                             = DMA_M2M_Disable;		                //M2M模式禁用
   
-  DMA_Init(DMA1_Channel4, &DMA_InitStructure);  
+  DMA_Init(DMA1_Channel7, &DMA_InitStructure);  
   
-  DMA_ITConfig(DMA1_Channel4,DMA_IT_TC,ENABLE);//使能传输完成中断
+  DMA_ITConfig(DMA1_Channel7,DMA_IT_TC,ENABLE);//使能传输完成中断
   
   /* Enable DMA1 channel4 */
   //DMA_Cmd(DMA1_Channel4, ENABLE);
@@ -198,6 +207,28 @@ void usart_output_log_task(void *p)//将参数传递进去
           
         }  
     }
+}
+
+void DMA1_Channel7_IRQHandler(void)
+{
+
+   if (DMA_GetITStatus(DMA1_IT_TC7) != RESET)
+  {
+    //清除标志位  	
+    DMA_ClearFlag(DMA1_FLAG_TC7);	
+    
+    //DMA_ClearITPendingBit(DMA1_FLAG_TC4);  	
+    //DMA1->IFCR |= DMA1_FLAG_TC4;	
+    //关闭DMA	
+    DMA_Cmd(DMA1_Channel7, DISABLE); 
+    
+    //DMA1_Channel4->CCR &= ~(1<<0); 
+    
+    //允许再次发送	
+    DMA_ALLOW_SEND_FLAG = true;
+    //Flag_Uart_Send = 0;
+  }
+
 }
 
 void DMA1_Channel4_IRQHandler(void)

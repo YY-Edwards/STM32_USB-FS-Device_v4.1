@@ -8,7 +8,7 @@
 #define CAPACITY_FULL_QCOUNT 49152
 /* Private variables ---------------------------------------------------------*/
 bool ltc4015_powered = false;
-bool No_VIN_Flag = false;
+bool VIN_Below_VBAT_Flag = false;
 const double charger_efficency = 0.925;
 //const double battery_total_capacity = 16.8;//Ah
 const double Kqc=8333.33;//hz
@@ -67,7 +67,7 @@ void charger_monitor_task(void *p)
   //t++;
   //log_debug("[charger_monitor_task] is running :%d", t);
 //  charger_settings_t settings;
-//  settings.uvcl                 = 12000;//mv
+//  settings.uvcl                 = 13000;//mv
 //  settings.jeita                = 0;
 //  settings.vcharge_cell         = 4200;//mv
 //  settings.icharge_cell         = 5000;//ma
@@ -86,7 +86,7 @@ void charger_monitor_task(void *p)
 //  idx++;
 //  settings.limits[idx].id         = VIN_LO_ALERT_LIMIT;
 //  settings.limits[idx].operation  = 0x01;
-//  settings.limits[idx].value      = 12000;
+//  settings.limits[idx].value      = 12800;
 //   idx++;
 //  settings.limits[idx].id         = VIN_HI_ALERT_LIMIT;
 //  settings.limits[idx].operation  = 0x01;
@@ -117,7 +117,7 @@ void charger_monitor_task(void *p)
 //  settings.limits[idx].value      = 6000;
 //  
 //  
-//  save_charger_configuration(&settings);
+//  save_charger_configuration(&settings, sizeof(settings) - ((10-(idx+1))*sizeof(bcmp_limit_config_t)));
   
   DC2039A_Run(p);
 
@@ -144,24 +144,31 @@ void DC2039A_Init(void)
     
 #if defined(STM32L1XX_MD)
     
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIO_TEST_TP, ENABLE);
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);    
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
     /********************************************/
-    /*  Configure nSMBALLERT,CAT5140_NWP*/
+    /*  Configure VSYS, nSMBALLERT,CAT5140_NWP*/
     /********************************************/
     
+    GPIO_InitStructure.GPIO_Pin = VSYS_SWITCH_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; /* Push-pull or open drain */
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz; /* 400 KHz, 2, 10 or 40MHz */   
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+  
     GPIO_InitStructure.GPIO_Pin = CAT5140_NWP_PIN | LTC4015_DVCC_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; /* Push-pull or open drain */
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; /* None, Pull-up or pull-down */
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz; /* 400 KHz, 2, 10 or 40MHz */
-    
-    GPIO_Init(TEST_TP, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz; /* 400 KHz, 2, 10 or 40MHz */   
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
      
     
     GPIO_InitStructure.GPIO_Pin = nSMBALLERT_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL; /* None, Pull-up or pull-down */
-    GPIO_Init(TEST_TP, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
     
 #else
   
@@ -192,6 +199,8 @@ void DC2039A_Init(void)
 //   U5NWP_OUT_PIN   = 1;
 //   U5NWP_OUT_PIN   = 0;
     
+    VSYS_SWITCH_OUT_PIN = 1;//turn on vsys-switch
+  
     U5NWP_OUT_PIN = 1;//close write protect
     
     ADC_GPIO_Configuration();//EQ_ADC接口配置  
@@ -381,6 +390,7 @@ void DC2039A_Config_Param(charger_settings_t *settings_ptr)
     g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
 
     //Set min UVCL ;输入电压至少13V，才能开启充电功能
+    //单节电池电压4.2v，默认3串，即总电压为4.2*3=12.6v,又系统规定VIN>Vbat+200mv，因此，VIN最小为：12.6+0.2=12.8V
     LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(((double)(settings_ptr->uvcl)/1000))); // Initialize UVCL Lo Limit to 12V
     
     //Set max VCHARGE_SETTING ；设置单节电池的满电电压值,是否是31，验证一下
@@ -785,11 +795,12 @@ static void charger_monitor_alert_func(void *p)
     
     //Read system status
     LTC4015_read_register(chip, LTC4015_SYSTEM_STATUS, (uint16_t *)&system_status);
-      
-    if(system_status.vin_gt_vbat == false)//no vin
+
+    if(system_status.vin_gt_vbat == false)//vin<vbat+200mv
     {
-      log_warning("No Input Power!");
-      No_VIN_Flag = true;
+      log_warning("VIN below the Vbat!");
+    
+      VIN_Below_VBAT_Flag = true;
       //系统有12ms的预热时间，当测量结果有效时，会有提示，通过nSMBALERT   
       //Enable measurement valid alert；使能测量有效提示
       LTC4015_write_register(chip, LTC4015_EN_MEAS_SYS_VALID_ALERT_BF, true);   
@@ -857,7 +868,7 @@ static void charger_monitor_alert_func(void *p)
     else//有输入电源
     {
       
-        No_VIN_Flag = false;
+        VIN_Below_VBAT_Flag = false;
         
         if((charger_state.c_over_x_term == true) || (charger_state.timer_term == true)) 
         {
@@ -1091,14 +1102,14 @@ static void charger_measure_data_func(void *p)
     max_bat_charge_current = (value+1)/4;//A
     //log_info("max charge current: %f A . ", max_bat_charge_current);
     
-    //if(No_VIN_Flag == false)
+    //if(VIN_Below_VBAT_Flag == false)
     {
       //Read VIN
       LTC4015_read_register(chip, LTC4015_VIN_BF, &value);
       input_power_vcc = ((double)(signed short)value)*1.648/1000;//v
       g_bat_info.VIN = (int16_t)round(input_power_vcc*1000);
       log_info("VIN: %f V . ", input_power_vcc);
-      
+  
        //Read IIN
       LTC4015_read_register(chip, LTC4015_IIN_BF, &value);
       input_power_current = ((double)(signed short)value)*((1.46487/3)*0.001);//A

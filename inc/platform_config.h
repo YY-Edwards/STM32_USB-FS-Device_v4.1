@@ -184,8 +184,11 @@
   #define CAT5140_NWP_PIN                     GPIO_Pin_8
   #define LTC4015_DVCC_PIN                    GPIO_Pin_12
   #define NEQ_PIN                             //GPIO_Pin_6
+  #define VSYS_SWITCH_PIN                      GPIO_Pin_0
 
-  #define RCC_AHBPeriph_GPIO_TEST_TP         RCC_AHBPeriph_GPIOB
+                                      
+  //#define RCC_AHBPeriph_GPIOB_CONTROL         RCC_AHBPeriph_GPIOB
+  //#define RCC_AHBPeriph_GPIOA_CONTROL         RCC_AHBPeriph_GPIOA   
 
   #define RCC_AHBPeriph_ALLGPIO              (RCC_AHBPeriph_GPIOA \
                                                | RCC_AHBPeriph_GPIOB \

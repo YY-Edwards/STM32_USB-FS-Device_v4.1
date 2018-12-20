@@ -101,14 +101,15 @@ int main(void)
   unsigned int run_counts = 0;
   while (1)
   {
-    if (bDeviceState == CONFIGURED)
+    //if (bDeviceState == CONFIGURED)
+    if (1)
     {
       
       start_timer_task_schedule();
       
       log_debug("start task schedule.");
       
-      while(bDeviceState == CONFIGURED)
+      while(1)
       {
         
         task_process();
@@ -127,7 +128,7 @@ int main(void)
     else
     {
       STM_EVAL_LEDToggle(LED3);//指示等待上位机识别   
-      delay_ms(100); 
+      delay_ms(100);  
     }
   }
 } 

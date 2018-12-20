@@ -22,6 +22,7 @@ extern "C" {
 #define SMBALERT_IN_PIN              PBin(14)
 #define U5NWP_OUT_PIN                PBout(8) 
 #define DVCC_OUT_PIN                 PBout(12) 
+#define VSYS_SWITCH_OUT_PIN          PAout(0)   
 #define DR_ADDRESS                  ((uint32_t)0x40012458) //ADC1 DR¼Ä´æÆ÷»ùµØÖ·
 
 #else

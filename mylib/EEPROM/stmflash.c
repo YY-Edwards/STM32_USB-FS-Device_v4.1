@@ -66,7 +66,7 @@ bool save_charger_configuration(void*p, unsigned short length)
 {
   bool ret = false;
   if(length<=GLOBAL_CONFIG_OFFSET)
-    ret = eeprom_write_nbyte(BAT_QCOUNT_START_ADDR, (unsigned char *)p, length);
+    ret = eeprom_write_nbyte(GLOBAL_CONFIG_START_ADDR, (unsigned char *)p, length);
   return ret;
 }
 
