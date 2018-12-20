@@ -101,15 +101,15 @@ int main(void)
   unsigned int run_counts = 0;
   while (1)
   {
-    //if (bDeviceState == CONFIGURED)
-    if (1)
+    if (bDeviceState == CONFIGURED)
+    //if (1)
     {
       
       start_timer_task_schedule();
       
       log_debug("start task schedule.");
       
-      while(1)
+      while(bDeviceState == CONFIGURED)
       {
         
         task_process();
