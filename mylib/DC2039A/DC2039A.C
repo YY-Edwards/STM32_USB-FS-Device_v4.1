@@ -389,9 +389,18 @@ void DC2039A_Config_Param(charger_settings_t *settings_ptr)
     g_bat_info.battery_state    = BAT_IDLE_SUSPEND;
     g_bat_info.alert_identifier = ALERT_INFO_RESULT_NOTHING;
 
-    //Set min UVCL ;输入电压至少13V，才能开启充电功能
+   /*
+    Note that when MPPT is disabled, and the MPPT UVCLFB
+    10k and 294k resistor divider values are used, the default
+    VIN_UVCL_SETTING of 1.2V will result in the LTC4015
+    not charging the battery.
+    */
+    //Set min UVCL 
     //单节电池电压4.2v，默认3串，即总电压为4.2*3=12.6v,又系统规定VIN>Vbat+200mv，因此，VIN最小为：12.6+0.2=12.8V
     LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(((double)(settings_ptr->uvcl)/1000))); // Initialize UVCL Lo Limit to 12V
+    //此处值的含义为1.2*30.4 = 36.48V.文档中提示应该设置1.2这个scale,但此处的算法实际是最终值。
+     //LTC4015_write_register(chip, LTC4015_VIN_UVCL_SETTING_BF, LTC4015_VIN_UVCL(13.0)); // Initialize UVCL Lo Limit to 13V
+    
     
     //Set max VCHARGE_SETTING ；设置单节电池的满电电压值,是否是31，验证一下
     //是一个目标值
