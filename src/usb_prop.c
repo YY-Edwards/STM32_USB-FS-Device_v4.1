@@ -236,8 +236,8 @@ void Virtual_Com_Port_SetConfiguration(void)
   {
     /* Device configured */
     bDeviceState = CONFIGURED;
-    STM_EVAL_LEDOff(LED1);
-    STM_EVAL_LEDOn(LED2); 
+    //STM_EVAL_LEDOff(LED1);
+    //STM_EVAL_LEDOn(LED2); 
   }
 }
 

@@ -116,7 +116,7 @@ int main(void)
         run_counts++;
         if(run_counts == 10*60000)
         {
-          STM_EVAL_LEDToggle(LED2);
+          STM_EVAL_LEDToggle(LED1);
           run_counts = 0;
         }
       }
@@ -127,7 +127,7 @@ int main(void)
     }
     else
     {
-      STM_EVAL_LEDToggle(LED3);//指示等待上位机识别   
+      STM_EVAL_LEDToggle(LED1);//指示等待上位机识别   
       delay_ms(100);  
     }
   }

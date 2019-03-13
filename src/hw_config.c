@@ -448,11 +448,13 @@ void hardware_init()
   
   logger_init();//logger 初始化
   
-  STM_EVAL_LEDInit(LED2);//根据原理图，修改函数里的LED宏定义即可
-  STM_EVAL_LEDInit(LED3);
+  STM_EVAL_LEDInit(LED1);
   
-  STM_EVAL_LEDOn(LED2);//高电平，点亮
-  STM_EVAL_LEDOn(LED3);
+  //STM_EVAL_LEDInit(LED2);//根据原理图，修改函数里的LED宏定义即可
+  //STM_EVAL_LEDInit(LED3);
+  
+  STM_EVAL_LEDOn(LED1);//高电平，点亮
+  //STM_EVAL_LEDOn(LED3);
   
   DC2039A_Init();//充电器模块初始化
                         

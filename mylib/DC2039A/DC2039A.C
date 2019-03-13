@@ -200,6 +200,9 @@ void DC2039A_Init(void)
 //   U5NWP_OUT_PIN   = 0;
     
     VSYS_SWITCH_OUT_PIN = 1;//turn on vsys-switch
+    
+   // VSYS_SWITCH_OUT_PIN = 0;//turn on vsys-switch
+    
   
     U5NWP_OUT_PIN = 1;//close write protect
     
@@ -1128,6 +1131,14 @@ static void charger_measure_data_func(void *p)
       //if(max_bat_charge_current != 0)
       {
         //Read Bat charge current
+        //write
+        
+//        unsigned short write_temp = 35768;//0~66635   
+//        LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
+//        //LTC4015_write_register(chip, LTC4015_IBAT_BF, write_temp);
+//        LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
+        
+         
         LTC4015_read_register(chip, LTC4015_IBAT_BF, &value);
         actual_bat_current = ((double)((signed short)value)*((1.46487/4)*0.001));//A     
         //有方向的
