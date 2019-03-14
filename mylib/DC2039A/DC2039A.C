@@ -479,6 +479,13 @@ void DC2039A_Config_Param(charger_settings_t *settings_ptr)
 //     
 //     //使能库伦高告警功能
 //     LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+    
+     uint16_t low_limit_value = (CAPACITY_FULL_QCOUNT - CAPACITY_ZERO_QCOUNT)*0.01 + CAPACITY_ZERO_QCOUNT;
+    //设置库伦低的告警门限值：
+     LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, low_limit_value);   
+     //使能库伦低告警功能
+     LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, true);
+    
      
     //设置最大的恒压充电时间为30分钟：1800sec
      LTC4015_write_register(chip, LTC4015_MAX_CV_TIME_BF, LTC4015_MAX_CV_TIME_BF_PRESET__1HOUR);
@@ -852,7 +859,7 @@ static void charger_monitor_alert_func(void *p)
                 {  
                   log_warning("QCOUNT_LO_ALERT(no vin): true! reset charge and  charging again."); 
                    //关闭库伦低告警功能
-                  LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
+                  //LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
                   
                   //allow the battery to charge again.
                   LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
@@ -916,18 +923,18 @@ static void charger_monitor_alert_func(void *p)
                       log_warning("QCOUNT_HI_ALERT(49152): true! suspend charge.");
                       //LTC4015_read_register(chip, LTC4015_CHARGER_STATE, (uint16_t *)&charger_state);
                       //suspend charger.
-                      LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, true); 
+                      //LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, true); 
                       
                        //设置库伦低的告警门限值：16384+32768*0.9995 = 49135.232.
-                      LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, 49135);
+                      //LTC4015_write_register(chip, LTC4015_QCOUNT_LO_ALERT_LIMIT_BF, 49135);
                       
-                      LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, false); 
+                      //LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, false); 
      
                       //使能库伦低告警功能
-                      LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, true);  
+                      //LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, true);  
                       
-                      log_info("EN_QCOUNT_LOW_ALERT(49135):    true. ");
-                      log_info("EN_QCOUNT_HIGH_ALERT:   fasle. ");
+                      //log_info("EN_QCOUNT_LOW_ALERT(49135):    true. ");
+                      //log_info("EN_QCOUNT_HIGH_ALERT:   fasle. ");
                       
                       alerts_bits = ((~LTC4015_QCOUNT_HI_ALERT_BF_MASK)&value);
                         
@@ -937,9 +944,9 @@ static void charger_monitor_alert_func(void *p)
                     {
                       log_warning("QCOUNT_LO_ALERT: true! reset charge and allow the battery to charge again.");                    
                        //关闭库伦低告警功能
-                      LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
+                      //LTC4015_write_register(chip, LTC4015_EN_QCOUNT_LOW_ALERT_BF, false);                      
                        //使能库伦高告警功能
-                      LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
+                      //LTC4015_write_register(chip, LTC4015_EN_QCOUNT_HIGH_ALERT_BF, true);
                       
                       //allow the battery to charge again.
                       LTC4015_write_register(chip, LTC4015_SUSPEND_CHARGER_BF, false); 
